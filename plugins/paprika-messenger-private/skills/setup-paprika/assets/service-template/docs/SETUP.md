@@ -8,8 +8,8 @@ The production board belongs to the configured owner account and is stored in cl
 
 | Component | Current version | Verification |
 | --- | --- | --- |
-| Complete account or local setup package | 1.3.9 | Installed root manifest and native account release metadata |
-| Bundled service and MCP server | 0.5.6 | Service package/lockfile and actual MCP discovery or initialization serverInfo |
+| Complete account or local setup package | 1.3.11 | Installed root manifest and native account release metadata |
+| Bundled service and MCP server | 0.5.8 | Service package/lockfile and actual MCP discovery or initialization serverInfo |
 | Site-provisioned account connection | Platform-managed listing version; a reported instance displays 1.0.0 | That exact Site connection’s backend metadata |
 
 The observed 1.0.0 comes from the canonical Site-generated compatibility manifest in the installed service plugin cache. It is retained as the underlying App identity while the standalone package uses the current version. The Site connection’s displayed version is independent of the complete setup package and deployed server. This repository does not ship a Paprika 1.0.0 release. The account and local packages must use the same latest manifest version. A downloaded ZIP, local cache or Site connection card does not prove that complete account package is installed; retain unverified account version or runtime version checks as pending. Preserve the Site connection’s identity when updating the service.
@@ -24,7 +24,7 @@ First complete the default [private account installation](https://github.com/new
 
 The plugin bundle includes both skills and the complete service template. After installing it, invoke `$setup-paprika` in a supported Work or Codex environment. Onboarding checks Sites and build capabilities, verifies an existing connected service or discovers an owner-private instance, and reuses that instance. First-time setup builds and deploys the bundled source with a new private database, then merges the verified existing App binding into one private package with both skills. A progress checkpoint lets interrupted setup resume without creating another Site. If Sites needs connecting or a workspace administrator has disabled it, complete the supported connection or access step before continuing. Installing the bundle alone does not deploy the service.
 
-Plugin and service versions are separate. The current source builds bundle 1.3.9 with service source 0.5.6. The [GitHub installation guide](https://github.com/newbiesitl/paprika-messenger/blob/main/docs/GITHUB-INSTALL.md) starts with account installation and includes an optional local flow. The template's integrity metadata is checked before initialization. New builds need Node.js 24 or later and a writable workspace; an already connected service can be verified without local build tools.
+Plugin and service versions are separate. The current source builds bundle 1.3.11 with service source 0.5.8. The [GitHub installation guide](https://github.com/newbiesitl/paprika-messenger/blob/main/docs/GITHUB-INSTALL.md) starts with account installation and includes an optional local flow. The template's integrity metadata is checked before initialization. New builds need Node.js 24 or later and a writable workspace; an already connected service can be verified without local build tools.
 
 1. Run `npm run bundle` in the source checkout and extract `artifacts/paprika-messenger-template.tar.gz` into a new folder. Open the extracted `paprika-messenger` directory. The generated `.openai/hosting.json` has the logical `DB` binding and `mcp` capability, with no existing Site ID.
 2. Ask Sites to deploy that folder as a new private Site. Register it once and save its returned `project_id` in the manifest. The ordinary Sites source/version/deployment workflow builds `dist/server/index.js` and packages the `drizzle/` migrations. Do not reuse another owner's project ID, database, plugin or endpoint.
@@ -71,6 +71,8 @@ Add `thread_id` when registering a session to make that exact ID usable as an ad
 `resolve_participant` accepts `board` and exactly one of `participant_id`, `thread_id` or `label`. For sending, inbox reads and event filters, use exactly one of `receiver_id`, `receiver_thread_id` or `receiver_label`. For example, the recipient portion of a `post_message` request can be `{"receiver_label":"Review session"}` instead of `{"receiver_id":"codex-review"}`. To send by thread ID, register that ID first and use `{"receiver_thread_id":"the-registered-session-id"}`. Labels and thread IDs use exact, case-sensitive matching, including whitespace. Unknown or duplicate matches are rejected. Keep the returned canonical participant ID for receipts and ongoing cursor checks.
 
 ## Copyable onboarding
+
+For full onboarding across ordinary Chat, Work Local/Cloud, Codex Local/Cloud and optional Dot, follow [Client capabilities](CLIENT-CAPABILITIES.md). Verify each available surface separately. Fresh onboarding reuses the service and includes requested Dot subscriptions; it does not merely reconnect the initiating chat. Keep unsupported native routes or unavailable clients pending, with their precise missing prerequisite.
 
 Replace the board, participant ID and label with the values chosen for this client:
 

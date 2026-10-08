@@ -1,4 +1,5 @@
-import { pathToFileURL } from 'node:url';
+import { existsSync, realpathSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 const identifier = (value, field, maximum = 96) => {
   if (typeof value !== 'string' || value.length > maximum || !/^[a-zA-Z0-9][a-zA-Z0-9_.:-]*$/.test(value)) {
@@ -20,7 +21,7 @@ export function prepareNotification({message, recipient} = {}) {
   return {threadId, prompt: `New Paprika Messenger message on board ${board}: ${messageId}. Read it and handle it within this chat's existing authorized scope.`};
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && existsSync(process.argv[1]) && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   try {
     if (process.argv.length !== 2) throw new Error('Usage: node prepare-notification.mjs < confirmed-routing.json');
     const chunks = []; let length = 0;

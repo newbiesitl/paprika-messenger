@@ -72,13 +72,13 @@ test('receiver readiness distinguishes missing, paused, expired and limited subs
     const missing=await f.events.setup({board:'main',receiver_thread_id:'thread-review'});
     assert.equal(missing.state,'subscription_required');assert.equal(missing.notification_ready,false);
     assert.deepEqual(missing.event,{name:'message.created',arguments:{board:'main',receiver_id:'receiver'}});
-    assert.deepEqual(missing.connection_policy,{new_binding_default:'mcp_events',cloud_binding_default:'mcp_events',local_binding_default:'on_demand',no_peer_default:'receiving_only',receiving_host_capability_verification_required:true,heartbeat_requires_explicit_choice:true,local_event_wake_bridge_available:false});
+    assert.deepEqual(missing.connection_policy,{new_binding_board_default:'main',subscription_lifetime_default:'indefinite',new_binding_default:'mcp_events',cloud_binding_default:'mcp_events',local_binding_default:'on_demand',no_peer_default:'receiving_only',receiving_host_capability_verification_required:true,heartbeat_requires_explicit_choice:true,local_event_wake_bridge_available:false});
     assert.equal(f.db.connection.prepare('SELECT COUNT(*) n FROM event_subscriptions').get().n,0);
     assert.equal(f.requests.length,0);
     const noRuntime=await new EventService(f.board,{},f.options).setup({board:'main',receiver_id:'receiver'});
     assert.equal(noRuntime.state,'events_not_configured');
     assert.deepEqual(noRuntime.connection_policy,missing.connection_policy);
-    const sub=await f.events.subscribe(f.params());
+    const sub=await f.events.subscribe({...f.params(),ttlMs:3600000});
     assert.equal((await f.events.setup({board:'main',receiver_label:'Review chat'})).state,'ready');
     await f.events.configure({subscription_id:sub.id,paused:true});
     assert.equal((await f.events.setup({board:'main',receiver_id:'receiver'})).state,'paused');
@@ -90,6 +90,81 @@ test('receiver readiness distinguishes missing, paused, expired and limited subs
     const expired=await f.events.setup({board:'main',receiver_id:'receiver'});assert.equal(expired.state,'subscription_required');assert.equal(expired.subscriptions[0].expired,true);
     assert.equal((await f.events.setup({board:'main',receiver_id:'other'})).state,'subscription_required');
     await assert.rejects(()=>f.events.setup({board:'main',receiver_id:'receiver',receiver_label:'Review chat'}),{code:'invalid_address'});
+  }finally{f.db.close();}
+});
+
+test('explicit non-expiring leases survive restarts and preserve controls, progress and key rotation',async()=>{
+  const f=await fixture();try {
+    const params={...f.params(),ttlMs:null},first=await f.events.subscribe(params);
+    assert.equal(first.refreshBefore,null);
+    await f.events.configure({subscription_id:first.id,paused:true,notification_mode:'process_inbox',wake_limit:1});
+    const pending=await f.post();await f.events.reconcile();
+    f.tick(30*86400000);
+    const restarted=new EventService(f.board,f.env,f.options);
+    const ready=await restarted.setup({board:'main',receiver_id:'receiver'});
+    assert.equal(ready.state,'paused');assert.equal(ready.subscriptions[0].expired,false);
+    assert.equal(ready.subscriptions[0].refresh_before,null);
+    const listed=(await restarted.listSubscriptions({board:'main'})).subscriptions[0];
+    assert.equal(listed.expires_at,null);assert.equal(listed.refresh_before,null);
+    const replacement=`whsec_${randomBytes(32).toString('base64')}`;
+    const refreshed=await restarted.subscribe({...params,delivery:{...params.delivery,secret:replacement}});
+    assert.equal(refreshed.id,first.id);assert.equal(refreshed.refreshBefore,null);
+    assert.equal((await restarted.setup({board:'main',receiver_id:'receiver'})).state,'paused');
+    await restarted.configure({subscription_id:first.id,paused:false});
+    assert.equal((await restarted.dispatch()).accepted,1);
+    const request=f.requests.at(-1);verifySignature(request,replacement);verifySignature(request);
+    assert.equal(request.body.data.message_id,pending.message.id);
+    assert.equal(request.body.data.notification_mode,'process_inbox');
+    await f.post();assert.equal((await restarted.dispatch()).attempted,0);
+    assert.equal((await restarted.setup({board:'main',receiver_id:'receiver'})).state,'limited');
+    f.tick(3600001);assert.equal((await restarted.dispatch()).accepted,1);
+    const stopped=await f.post();await restarted.reconcile();
+    await restarted.unsubscribe({name:params.name,arguments:params.arguments,delivery:{mode:'webhook',url:params.delivery.url}});
+    assert.equal((await restarted.dispatch()).attempted,0);
+    assert.equal((await restarted.status({board:'main',message_id:stopped.message.id})).deliveries[0].state,'cancelled');
+    assert.equal((await restarted.setup({board:'main',receiver_id:'receiver'})).state,'subscription_required');
+  }finally{f.db.close();}
+});
+
+test('omitted lifetime grants ongoing delivery across service recreation until unsubscribe',async()=>{
+  const f=await fixture();try {
+    const response=await rpc({jsonrpc:'2.0',id:1,method:'events/subscribe',params:f.params()},f.board,null,f.events);
+    assert.equal(response.result.refreshBefore,null);
+    f.tick(366*86400000);
+    const restarted=new EventService(f.board,f.env,f.options);
+    const setup=await restarted.setup({board:'main',receiver_id:'receiver'});
+    assert.equal(setup.state,'ready');assert.equal(setup.subscriptions[0].refresh_before,null);
+    const sent=await f.post();
+    assert.equal((await restarted.dispatch()).accepted,1);
+    assert.equal(f.requests.at(-1).body.data.message_id,sent.message.id);
+    const params=f.params();
+    await restarted.unsubscribe({name:params.name,arguments:params.arguments,delivery:{mode:'webhook',url:params.delivery.url}});
+    await f.post();assert.equal((await restarted.dispatch()).attempted,0);
+    assert.equal((await restarted.setup({board:'main',receiver_id:'receiver'})).state,'subscription_required');
+  }finally{f.db.close();}
+});
+
+test('finite and non-expiring requests retain exact grants and existing leases are not extended by reads',async()=>{
+  const f=await fixture();try {
+    for(const ttlMs of [1000,3600000,86400001]) {
+      const sub=await f.events.subscribe({...f.params(),ttlMs});
+      assert.equal(Date.parse(sub.refreshBefore)-f.now(),Math.min(ttlMs,86400000));
+    }
+    const sub=await f.events.subscribe({...f.params(),ttlMs:null});assert.equal(sub.refreshBefore,null);
+    const pending=await f.post();await f.events.reconcile();
+    const finite=await f.events.subscribe({...f.params(),ttlMs:1000});assert.equal(finite.id,sub.id);
+    f.tick(1001);
+    assert.equal((await f.events.setup({board:'main',receiver_id:'receiver'})).state,'subscription_required');
+    await f.events.configure({subscription_id:sub.id,paused:false});
+    assert.equal((await f.events.setup({board:'main',receiver_id:'receiver'})).subscriptions[0].expired,true);
+    await f.events.dispatch();
+    assert.equal((await f.events.status({board:'main',message_id:pending.message.id})).deliveries[0].state,'cancelled');
+    const renewed=await f.events.subscribe({...f.params(),ttlMs:null});assert.equal(renewed.refreshBefore,null);
+    assert.equal((await f.events.dispatch()).attempted,0);
+    f.env.OWNER_USER_ID='different-owner';
+    assert.equal((await f.events.setup({board:'main',receiver_id:'receiver'})).notification_ready,false);
+    await f.events.dispatch();
+    assert.equal(f.db.connection.prepare('SELECT active FROM event_subscriptions WHERE id=?').get(sub.id).active,0);
   }finally{f.db.close();}
 });
 

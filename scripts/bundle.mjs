@@ -1,3 +1,4 @@
+import { existsSync, realpathSync } from 'node:fs';
 import { cp, lstat, mkdir, mkdtemp, readFile, readdir, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
@@ -8,7 +9,7 @@ const repository = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 export const templateMetadataFile = 'paprika-service-template.json';
 // This allowlist intentionally excludes account installation records and runtime state.
 export const templateFiles = ['src', 'web', 'db', 'drizzle', 'tests', 'skills/paprika-messenger',
-  'docs/SETUP.md', 'docs/SERVICE-TYPES.md', 'docs/WINDOWS-SITES-PACKAGING.md', 'docs/SECURITY.md', 'docs/SCHEDULING.md', 'docs/UPGRADING.md', 'docs/PARTICIPANTS.json',
+  'docs/SETUP.md', 'docs/SERVICE-TYPES.md', 'docs/CLIENT-CAPABILITIES.md', 'docs/WINDOWS-SITES-PACKAGING.md', 'docs/SECURITY.md', 'docs/SCHEDULING.md', 'docs/UPGRADING.md', 'docs/PARTICIPANTS.json',
   'scripts/build.mjs', 'scripts/dev.mjs', 'scripts/bundle.mjs', 'scripts/package.mjs',
   'package.json', 'package-lock.json', 'drizzle.config.ts', 'README.md', 'LICENSE', '.env.example', '.gitignore', '.gitattributes'];
 export const forbiddenResource = /(?:^|\/)(?:\.git|node_modules|dist|artifacts|\.dev-data|\.sites-runtime|\.paprika)(?:\/|$)|(?:^|\/)(?:\.env(?:\..+)?|credentials[^/]*|auth\.json|[^/]*\.sqlite[^/]*)$/;
@@ -106,7 +107,7 @@ export async function stageTemplate(destination, { source = repository } = {}) {
   await verifyTemplate(destination);
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && existsSync(process.argv[1]) && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   const root = resolve(repository, 'artifacts'); await mkdir(root, { recursive: true });
   const stage = await mkdtemp(resolve(root, 'template-stage-'));
   await stageTemplate(resolve(stage, 'paprika-messenger'));

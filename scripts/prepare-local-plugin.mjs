@@ -1,3 +1,4 @@
+import { existsSync, realpathSync } from 'node:fs';
 import { lstat, mkdir, readFile, realpath, rename, writeFile } from 'node:fs/promises';
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -76,5 +77,5 @@ export async function prepareLocalPlugin({ repository = repositoryDirectory, mar
   return result;
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url))
+if (process.argv[1] && existsSync(process.argv[1]) && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url)))
   console.log(JSON.stringify(await prepareLocalPlugin()));

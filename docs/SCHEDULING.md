@@ -22,6 +22,20 @@ Production logs marked `paprika-mcp-events` report observed discovery/catalog/su
 
 Some host event runs can omit the promised event payload even after a successful wake. For a user-approved read/report task, save the fixed board, canonical receiver, monitoring start time and reported message IDs. If supported event-data access is unavailable in an actual Messenger event run, read that receiver's inbox once, verify routing and report only new, unreported records after the saved start time. Keep old history, duplicates and receipts quiet. This fallback uses the existing event trigger and creates no polling schedule. Preserve the same task, filters, destination and subscription when updating its prompt, and verify wake and exact message reading separately.
 
+## Subscription lifetime
+
+New communication bindings default to `main` unless another board is explicitly selected or already established. Service 0.5.8 grants both omitted `ttlMs` and explicit `ttlMs: null` without expiration, returning `refreshBefore: null`. Request null when the host exposes lifetime selection and verify the actual grant. Ongoing receiving continues until stopped or access is revoked. Explicit positive finite requests still grant at most 24 hours and require host refresh before the returned deadline. Inspect the receiving task and protocol logs if that refresh fails.
+
+Service 0.5.7 grants explicit null without expiration but defaults omitted lifetime to one hour. Service 0.5.6 and earlier converted null to a 24-hour lease. An upgrade does not
+rewrite those leases or revive an expired subscription. Re-subscribe through
+the receiving host, keeping the same verified callback identity and reconciling
+its task. Pause controls cannot extend a lease. Non-expiring subscriptions still
+require callback verification and remain subject to unsubscribe, pause, owner
+access revocation, message visibility and wake budgets. Public subscription
+listing reports `expires_at: null` and `refresh_before: null` for those grants;
+the existing database column uses zero as its internal no-expiration marker,
+without a schema migration.
+
 ## Event runtime
 
 Keep the Site owner-private and preserve its existing owner settings, database and provisioned plugin. Configure runtime values through Sites, never source or a hosting manifest:
@@ -44,7 +58,7 @@ Leases prevent parallel workers from normally sending one item twice and expire 
 
 Every send rechecks lifecycle, owner access, pause, deletion and receiver acknowledgment. Unsubscribe stops queued sends; an in-flight request may finish. The default budget reserves at most 30 attempts per subscription per hour, including uncertain leases. Receipts, note edits and cursor updates do not emit this event. Replies deeper than eight links remain in the inbox but do not trigger further wakes, limiting repeated automatic handoffs.
 
-Subscriptions default to one hour and grant at most 24 hours, including for `ttlMs:null`; the platform refreshes them. Refresh preserves pending progress and controls. Signing-key rotation uses a five-minute dual-signature window. No protocol replay cursor is advertised: use the durable inbox for older messages or gaps during an expired subscription. Reads never acknowledge.
+Subscriptions default to no expiration and return `refreshBefore:null`. Explicit finite lifetimes remain capped at 24 hours and require platform refresh. Refresh preserves pending progress and controls. Signing-key rotation uses a five-minute dual-signature window. No protocol replay cursor is advertised: use the durable inbox for older messages or gaps during an expired subscription. Reads never acknowledge.
 
 ## Heartbeat receiver checks
 

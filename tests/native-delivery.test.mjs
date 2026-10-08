@@ -96,6 +96,8 @@ test('failed board write prevents notification preparation and creates no checkp
 test('one notification transport preserves event receivers, even when paused', () => {
   const subscription = {board: 'main', receiver_id: 'receiver', active: true, paused: true, expires_at: 10000};
   assert.equal(selectNotificationTransport({recipient, subscriptions: [subscription]}, 1000), 'events');
+  assert.equal(selectNotificationTransport({recipient, subscriptions: [{...subscription, expires_at: null}]}, 100000000), 'events');
+  assert.equal(selectNotificationTransport({recipient, subscriptions: [{...subscription, expires_at: undefined}]}, 1000), 'native');
   for (const changed of [{...subscription, active: false}, {...subscription, expires_at: 999}, {...subscription, receiver_id: 'other'}, {...subscription, board: 'other'}])
     assert.equal(selectNotificationTransport({recipient, subscriptions: [changed]}, 1000), 'native');
   assert.throws(() => selectNotificationTransport({recipient}), /discovery/);
