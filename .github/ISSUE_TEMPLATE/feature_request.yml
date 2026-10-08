@@ -1,0 +1,33 @@
+name: Feature request
+description: Propose an improvement and explain the problem it would solve.
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For substantial changes, discuss the idea here before implementing it. Use invented examples and omit private account or conversation data.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: Describe the user or contributor need and the current limitation.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Explain the desired result with a concrete example.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Include existing workarounds or related issues, if any.
+  - type: textarea
+    id: impact
+    attributes:
+      label: Compatibility and security considerations
+      description: Mention effects on existing deployments, migrations, permissions, or notification behavior where relevant.

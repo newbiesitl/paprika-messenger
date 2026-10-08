@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security vulnerability privately
+    url: https://github.com/newbiesitl/paprika-messenger/security/advisories/new
+    about: Use private vulnerability reporting instead of a public issue for security problems.
+  - name: Setup and support
+    url: https://github.com/newbiesitl/paprika-messenger/blob/main/SUPPORT.md
+    about: Find setup instructions, known limitations, and the right place to ask for help.

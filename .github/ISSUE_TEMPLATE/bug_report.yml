@@ -1,0 +1,59 @@
+name: Bug report
+description: Report a reproducible problem with the service, plugin, or setup.
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Issues are public. Remove tokens, credentials, private messages, account identifiers, callback keys, and receiver checkpoints from examples and logs.
+        Report suspected vulnerabilities through [private security reporting](https://github.com/newbiesitl/paprika-messenger/security/advisories/new).
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: Include the plugin and service versions, or the source commit. Write "unknown" if you cannot find them.
+      placeholder: "Plugin 1.3.4 / service 0.5.4, or a commit SHA"
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Describe the client, operating system, Node version where relevant, and whether this uses local development or your own private deployment.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Use a minimal example with invented participant IDs and messages.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Redacted diagnostics
+      description: Optional errors or logs. Review every line for private data before submitting.
+      render: text
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and included related issue links when relevant.
+          required: true
+        - label: My report contains no credentials, private conversation data, or personal account details.
+          required: true
