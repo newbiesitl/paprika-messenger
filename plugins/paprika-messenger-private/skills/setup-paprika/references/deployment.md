@@ -1,6 +1,6 @@
 # Private Sites deployment and resume
 
-Use the installed Sites building, hosting and MCP skills and native tool schemas for current registration, source synchronization, packaging and publication. Discover actual tools before using them; names in this reference describe the native operations, not permission to invent an unavailable tool. The bundled service version is **0.5.4**. The package version is independent and appears in the plugin manifest.
+Use the installed Sites building, hosting and MCP skills and native tool schemas for current registration, source synchronization, packaging and publication. Discover actual tools before using them; names in this reference describe the native operations, not permission to invent an unavailable tool. The bundled service version is **0.5.5**. The package version is independent and appears in the plugin manifest.
 
 ## Select before creating
 
@@ -12,14 +12,24 @@ A working existing instance is reused for connection setup. Do not copy the temp
 
 ## Keep a non-secret checkpoint
 
-Persist setup progress atomically in a user-owned workspace outside the installed plugin, for example `.paprika/setup-state.json`. Exclude it from source archives and commits. Before the first mutation, record the selected account/workspace context, destination and phase; before registration record that a creation attempt is pending. Retain only values needed to resume:
+Persist setup progress atomically in a user-owned workspace outside the installed plugin, for example `.paprika/setup-state.json`. Exclude it from source archives and commits. Before the first mutation, record the selected account/workspace context, destination and phase; before an account save or Site registration record that a creation attempt is pending. Retain only values needed to resume.
+
+Also retain the verified account setup package's backend plugin ID, actual USER/WORKSPACE scope, plugin URL, release ID and installation status, separately from the Site's provisioned service plugin. Resume an existing saved account package instead of creating another one; a package save with uncertain outcome requires discovery before retrying. A local installation or a deployed Site alone leaves account installation pending. Never include these owner-specific checkpoint values in a reusable archive.
 
 ```json
 {
   "schema_version": 1,
-  "service_version": "0.5.1",
+  "service_version": "0.5.5",
   "source_directory": "/absolute/user-workspace/paprika-service",
   "phase": "source_ready",
+  "account_save_pending": false,
+  "account_plugin": {
+    "plugin_id": null,
+    "scope": null,
+    "plugin_url": null,
+    "release_id": null,
+    "installation_status": "pending"
+  },
   "registration_pending": false,
   "project_id": null,
   "site_url": null,
@@ -32,7 +42,7 @@ Persist setup progress atomically in a user-owned workspace outside the installe
 }
 ```
 
-Replace example paths and nulls only with actual values. Use phases such as `source_ready`, `registration_pending`, `registered`, `runtime_configured`, `published`, `connection_pending` and `verified`. Record the account/workspace context only as a non-secret identifier already provided by the host; do not derive an identity from a display name. A verified-client entry identifies the host/client and the read-only check time, without messages or authentication data. Checkpoint claims are hints to revalidate, not authority to use another account or proof a connection is still active.
+Replace example paths and nulls only with actual values. Use phases such as `account_save_pending`, `account_saved`, `account_install_pending`, `source_ready`, `registration_pending`, `registered`, `runtime_configured`, `published`, `connection_pending` and `verified`. An explicitly requested local-only installation may record the account step as skipped with that device scope. Record the account/workspace context only as a non-secret identifier already provided by the host; do not derive an identity from a display name. A verified-client entry identifies the host/client and the read-only check time, without messages or authentication data. Checkpoint claims are hints to revalidate, not authority to use another account or proof a connection is still active.
 
 Never store Git credentials, service tokens, OAuth values, verified-email settings, event keys, callback URLs, signing secrets, message bodies or private histories in this file. Keep credentials in session memory/hidden stdin only. On resume, reconcile the selected manifest, checkpoint and native Site metadata before acting. Recover a missing source credential for the same registered project. Resolve uncertain registration through native owner discovery/metadata before trying creation again; never blindly repeat `create_site`. Resume an existing deployment by its returned ID, and reuse an already saved archive-backed version when the source is unchanged. Source changes invalidate previous build/commit assertions.
 

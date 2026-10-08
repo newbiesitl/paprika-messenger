@@ -61,6 +61,21 @@ test('enable is an explicit same-chat request, receipts are optional, and host a
   assert.equal(h.elements.stop.hidden,false);
 });
 
+test('receiving-only choice sends an on-demand request without event or scheduler setup',async()=>{
+  const h=harness();await h.initialize();h.show({board:'main',receiver_id:'current',state:'subscription_required'});
+  h.elements.method.value='on_demand';h.elements.method.change();
+  assert.equal(h.sent.filter(m=>m.method==='ui/message').length,0);
+  const action=h.elements.enable.onclick(),request=h.sent.at(-1);
+  assert.equal(request.params.role,'user');
+  assert.match(request.params.content[0].text,/transport on_demand, no cadence and no task IDs/);
+  assert.match(request.params.content[0].text,/Do not create a hook, subscription, heartbeat, scheduled service or background process/);
+  assert.doesNotMatch(request.params.content[0].text,/subscribe to message\.created|I explicitly choose heartbeat|An event route requires/);
+  h.reply(request,{});await action;
+  assert.equal(h.timers.size,0);
+  assert.equal(h.sent.filter(m=>m.method==='ui/message').length,1);
+  assert.equal(h.sent.filter(m=>m.method==='tools/call').length,0);
+});
+
 test('receiving-method choices request events or a five-minute heartbeat only after the user acts',async()=>{
   const h=harness();await h.initialize();h.show({board:'main',receiver_id:'current',state:'subscription_required'});
   h.elements.method.value='inbox_checks';h.elements.method.change();

@@ -1,7 +1,7 @@
 {
   "format": 1,
   "kind": "paprika-messenger-service-template",
-  "service_version": "0.5.4",
+  "service_version": "0.5.5",
   "files": [
     {
       "path": ".env.example",
@@ -40,8 +40,8 @@
     },
     {
       "path": "docs/SCHEDULING.md",
-      "size_bytes": 13459,
-      "sha256": "b2dcd6fa86a5cac6874eef36b85aa6f915269daeab4a49fdec93a8e52c81062f"
+      "size_bytes": 13677,
+      "sha256": "fe5a37b4d60db14c46af739b318cb4c22fc704ded8c0c974b873772b83a96e20"
     },
     {
       "path": "docs/SECURITY.md",
@@ -50,18 +50,23 @@
     },
     {
       "path": "docs/SETUP.md",
-      "size_bytes": 9200,
-      "sha256": "035a759b59abbf91ce2afa2421b16fca405ba015341ea1fd27d16133c7547142"
+      "size_bytes": 10717,
+      "sha256": "329a5c42f077cda8865b21db1b12a97ed26991b49978427a9ca2e70b8a412794"
     },
     {
       "path": "docs/TEST-RESULTS.md",
       "size_bytes": 400,
-      "sha256": "ea44775c323598ee1af8e4fe6dfad899382819e5e1010eb9f7652e704ab72320"
+      "sha256": "8d3a3bd2b0251a0d227b8873d0ea8ad413d5d9bc6240bbdd8a201422d941cec9"
     },
     {
       "path": "docs/UPGRADING.md",
-      "size_bytes": 15154,
-      "sha256": "e2bc5a6acc709d2bcce1928a2714ab23cc98dbe29abdea7f6f74a3a88d6ecc5f"
+      "size_bytes": 16647,
+      "sha256": "bbab5b0aca66a6c0dc68ea98790dc4dcc179acb9af07d33976604fc008722001"
+    },
+    {
+      "path": "docs/WINDOWS-SITES-PACKAGING.md",
+      "size_bytes": 7512,
+      "sha256": "95d4b7323cda6c1bfb332801a69a1bc284558c51932c05baa7fa86cedf9ba491"
     },
     {
       "path": "drizzle.config.ts",
@@ -121,17 +126,17 @@
     {
       "path": "package-lock.json",
       "size_bytes": 50615,
-      "sha256": "6aafc05b365a35f970327c5838f1c821aa68851722e37da0f07e71832ce65035"
+      "sha256": "edd802d881e24341ce571bebcfc099dd297086b6097970a2603ffb35eab0527b"
     },
     {
       "path": "package.json",
       "size_bytes": 440,
-      "sha256": "96986242d8d82127ed8955ba5e2d7d18f3406e2c5e4a156b26510e0eee735455"
+      "sha256": "629536d3c8a7add0c3dbaa5ac6ad48f3d6f99a0d91ea5c30ac49910b4e31e5d2"
     },
     {
       "path": "README.md",
-      "size_bytes": 11848,
-      "sha256": "fa2d549a7738d4d63940042d81eebd45b6bc1aa994a7e3af10ad55202b9ff3a7"
+      "size_bytes": 13395,
+      "sha256": "bf8c24037d5aebc1b3c9500ef9543309afe91617d845900b6686e9d2b867cba4"
     },
     {
       "path": "scripts/build.mjs",
@@ -140,8 +145,8 @@
     },
     {
       "path": "scripts/bundle.mjs",
-      "size_bytes": 9267,
-      "sha256": "3cec1b3aa48850d2f67bfe9cb976d6d8303135cd96e5963cc373a64ff57aa6e1"
+      "size_bytes": 9302,
+      "sha256": "e040bf10ec9ed396afb7a85fc3a0ed5c8b70aac467c28bdcee87c7e4adcd795b"
     },
     {
       "path": "scripts/dev.mjs",
@@ -150,8 +155,8 @@
     },
     {
       "path": "scripts/package.mjs",
-      "size_bytes": 874,
-      "sha256": "2c4613ea380a7651d1aae7351decfa25a7f6dea6f04d450b815397eaa6a76b55"
+      "size_bytes": 9887,
+      "sha256": "de806ea000c102c4617b802bd9d50322b8dc7f87dede1f562fcee842f175bc80"
     },
     {
       "path": "skills/paprika-messenger/agents/openai.yaml",
@@ -165,13 +170,13 @@
     },
     {
       "path": "skills/paprika-messenger/references/connect.md",
-      "size_bytes": 22453,
-      "sha256": "1d27f0a09c4ffc047f1cd020f7fcca5c8951b9fec90cc815b66336f435cc925e"
+      "size_bytes": 25226,
+      "sha256": "993a29163325316136b80d29f04d31cf128461711bbf4137b359b45d2f6b11f9"
     },
     {
       "path": "skills/paprika-messenger/references/connection-ui.md",
-      "size_bytes": 5802,
-      "sha256": "22a92f9816909ba8128c58b5477cca9937bf2a0f6d4f1f0f925cfe05d9ac1c19"
+      "size_bytes": 6500,
+      "sha256": "bfc8956dad95c1e7415c32884ecc8486ce8ce5eb12ab5f1c8e6ce243e7268f92"
     },
     {
       "path": "skills/paprika-messenger/references/direct.md",
@@ -180,8 +185,8 @@
     },
     {
       "path": "skills/paprika-messenger/references/notifications.md",
-      "size_bytes": 9566,
-      "sha256": "fed9c49f225a4d781ce62e908ff6d88470c23a486dd9a5608ef7de78179fa2a5"
+      "size_bytes": 9937,
+      "sha256": "ed0e0d4f5e06e85d2db9908b4d47c29a63154d0f96eb0d580095f85cc1ee3dff"
     },
     {
       "path": "skills/paprika-messenger/scripts/get-thread-id.mjs",
@@ -210,23 +215,23 @@
     },
     {
       "path": "skills/paprika-messenger/SKILL.md",
-      "size_bytes": 11047,
-      "sha256": "4818427b6d4fc04a6b13760a6b2f860f5543addcc43dca91b7fdb73745ac06d5"
+      "size_bytes": 11592,
+      "sha256": "ccb67e68353572ed43ae8357f9337c479b91e178e27b4647b9443494333b7009"
     },
     {
       "path": "src/connection-ui.mjs",
-      "size_bytes": 1902,
-      "sha256": "6e7829ed2eb276aa1827d7bc94fc9f15d1c2d0752ba2da6bc489e91fc0800f2a"
+      "size_bytes": 2168,
+      "sha256": "08b62f21c176f18bca7a7652a626cf4fdf45cfdbb13f3e4d6e78bd2a221c4a5c"
     },
     {
       "path": "src/events.mjs",
-      "size_bytes": 23488,
-      "sha256": "009e058894915b1d0f1c2bdd116642131cb24ac79168d048080208cdeb0c7dcd"
+      "size_bytes": 23864,
+      "sha256": "bd2ccfc9283f42ec44c7ee7adfe289eb9b7c5ad88e5bc8f01f14304e7f80d42c"
     },
     {
       "path": "src/protocol.mjs",
-      "size_bytes": 20306,
-      "sha256": "892757b3caa2037f16f4a7c55c329cd29adb883a5962e1f3ce204276bb1be134"
+      "size_bytes": 21501,
+      "sha256": "323f67387aa9352fbe9ea8196c58137ae6ae557e4e5851f820e22811fe939796"
     },
     {
       "path": "src/service.mjs",
@@ -265,8 +270,8 @@
     },
     {
       "path": "tests/connection-ui.test.mjs",
-      "size_bytes": 8104,
-      "sha256": "6cbb192d17c1551fd576f5daf588bf800ee7815074e072558622b33ceee73d0a"
+      "size_bytes": 9151,
+      "sha256": "a65fe1729c3d7f52e36678f125e60d6d62883887b6d061aab56748605e08c691"
     },
     {
       "path": "tests/d1-adapter.mjs",
@@ -275,8 +280,8 @@
     },
     {
       "path": "tests/events.test.mjs",
-      "size_bytes": 23190,
-      "sha256": "13ee356d9b80530e73c2361821a0525d041881e4842849a6b2ab3ef42954b492"
+      "size_bytes": 23292,
+      "sha256": "8039978bdc95f82f434b49696bdbd0d1163399e68617c48ad732d898c6f817fd"
     },
     {
       "path": "tests/generic.test.mjs",
@@ -315,8 +320,8 @@
     },
     {
       "path": "web/connection-controls.html",
-      "size_bytes": 13278,
-      "sha256": "629d4a3ef5a862047ba8c09b5dc26788bd0e82fc8b5d7b2d2539138b44d48036"
+      "size_bytes": 14380,
+      "sha256": "205b177a9ce0303f7134c5a2a855f5d65dc165d87ff0b969745f55372b5442e9"
     },
     {
       "path": "web/index.html",

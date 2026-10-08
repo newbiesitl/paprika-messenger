@@ -9,6 +9,7 @@ import { preparePluginPackage, verifyPluginPackage } from '../scripts/plugin-pac
 import { inspectReusableFiles, stageTemplate, verifyServiceVersion, verifyTemplate } from '../scripts/bundle.mjs';
 import { prepareLocalPlugin } from '../scripts/prepare-local-plugin.mjs';
 import { prepareGithubPlugin } from '../scripts/prepare-github-plugin.mjs';
+import { prepareDeploymentArchive } from '../scripts/package.mjs';
 
 const repository = fileURLToPath(new URL('../', import.meta.url));
 const run = (command, args, cwd) => {
@@ -17,6 +18,108 @@ const run = (command, args, cwd) => {
   assert.equal(result.status, 0, result.stderr || result.stdout || String(result.error));
   return result.stdout;
 };
+
+async function deploymentFixture() {
+  const root = await mkdtemp(join(tmpdir(), 'paprika-sites-'));
+  const project = join(root, 'service'), sitesPluginRoot = join(root, 'sites');
+  await mkdir(join(project, '.openai'), { recursive: true });
+  await mkdir(join(project, 'dist/server'), { recursive: true });
+  await mkdir(join(project, 'dist/.openai'), { recursive: true });
+  await mkdir(join(project, 'drizzle'), { recursive: true });
+  await mkdir(join(sitesPluginRoot, 'skills/sites-hosting/scripts'), { recursive: true });
+  await writeFile(join(project, '.gitignore'), 'dist/\nartifacts/\n.paprika/\n.env*\n*.sqlite\n');
+  await writeFile(join(project, '.openai/hosting.json'), JSON.stringify({ project_id: 'test-site', d1: 'DB', capabilities: ['mcp'] }));
+  await writeFile(join(project, 'service.mjs'), 'export default {};\n');
+  await writeFile(join(project, 'dist/server/index.js'), 'export default {};\n');
+  await writeFile(join(project, 'dist/_worker.js'), 'export default {};\n');
+  await writeFile(join(project, 'dist/.openai/hosting.json'), JSON.stringify({ artifact_metadata: { source: 'tested-build' } }));
+  await writeFile(join(project, 'drizzle/0001_initial.sql'), 'CREATE TABLE messages(id TEXT);\n');
+  await writeFile(join(project, '.env.local'), 'PRIVATE_TEST_VALUE=excluded\n');
+  await writeFile(join(project, 'local.sqlite'), 'excluded');
+  const validator = join(sitesPluginRoot, 'skills/sites-hosting/scripts/prepare-site-build.cjs');
+  await writeFile(validator, "const fs=require('node:fs'),path=require('node:path');const [project,output]=process.argv.slice(2);fs.writeFileSync(path.join(__dirname,'called.txt'),'validated');if(!fs.existsSync(path.join(project,'dist/server/index.js'))){console.error('Missing Worker');process.exit(2)}fs.cpSync(path.join(project,'dist'),output,{recursive:true});console.log('worker');\n");
+  const git = args => run('git', ['-c', 'safe.directory=' + project.replaceAll('\\', '/'), ...args], project).trim();
+  git(['init', '--initial-branch=main']);
+  const commit = () => {
+    git(['add', '.']);
+    git(['-c', 'user.name=Packaging test', '-c', 'user.email=test@example.invalid', 'commit', '--allow-empty', '-m', 'Fixture source']);
+    return { project_id: 'test-site', checkout_path: project, commit_sha: git(['rev-parse', 'HEAD']) };
+  };
+  const source = commit();
+  const cleanup = async () => {
+    assert(root.startsWith(resolve(tmpdir()) + sep + 'paprika-sites-'));
+    await rm(root, { recursive: true, force: true });
+  };
+  return { root, project, sitesPluginRoot, source, validator, commit, cleanup };
+}
+
+test('Bash-free Site archive retains validator, build attribution, migrations and the exact source revision', async () => {
+  const fixture = await deploymentFixture();
+  try {
+    const report = await prepareDeploymentArchive(fixture);
+    assert.equal(report.commit_sha, fixture.source.commit_sha);
+    assert.equal(report.project_id, fixture.source.project_id);
+    assert.equal(report.build_kind, 'worker');
+    assert.equal(await readFile(join(fixture.sitesPluginRoot, 'skills/sites-hosting/scripts/called.txt'), 'utf8'), 'validated');
+    const entries = run('tar', ['-tzf', report.archive], fixture.project);
+    assert.match(entries, /dist\/server\/index\.js/);
+    assert.match(entries, /dist\/\.openai\/drizzle\/0001_initial\.sql/);
+    assert(!/\.env|\.sqlite|\.git\/|node_modules|\.paprika/.test(entries));
+    const extracted = join(fixture.root, 'extracted'); await mkdir(extracted);
+    run('tar', ['-xf', report.archive, '-C', extracted], fixture.project);
+    assert.deepEqual(JSON.parse(await readFile(join(extracted, 'dist/.openai/hosting.json'), 'utf8')),
+      { project_id: 'test-site', d1: 'DB', capabilities: ['mcp'], artifact_metadata: { source: 'tested-build' } });
+    const previous = await readFile(report.archive);
+    await assert.rejects(prepareDeploymentArchive(fixture), /Archive already exists/);
+    assert.deepEqual(await readFile(report.archive), previous);
+  } finally { await fixture.cleanup(); }
+});
+
+test('Site packaging refuses stale, dirty and wrong-Site source before running a validator', async () => {
+  const fixture = await deploymentFixture();
+  try {
+    await assert.rejects(prepareDeploymentArchive({ ...fixture, source: { ...fixture.source, commit_sha: '0'.repeat(40) } }), /verified pushed revision/);
+    await assert.rejects(prepareDeploymentArchive({ ...fixture, source: { ...fixture.source, project_id: 'other-site' } }), /project_id does not match/);
+    await writeFile(join(fixture.project, 'service.mjs'), 'changed source');
+    await assert.rejects(prepareDeploymentArchive(fixture), /source is dirty/);
+    await assert.rejects(readFile(join(fixture.sitesPluginRoot, 'skills/sites-hosting/scripts/called.txt')), { code: 'ENOENT' });
+  } finally { await fixture.cleanup(); }
+});
+
+test('Site packaging rejects conflicting attribution and private build output without overwriting an archive', async () => {
+  const fixture = await deploymentFixture();
+  try {
+    await writeFile(join(fixture.project, '.openai/hosting.json'), JSON.stringify({ project_id: 'test-site', d1: 'DB', capabilities: ['mcp'], artifact_metadata: { source: 'different-build' } }));
+    fixture.source = fixture.commit();
+    await assert.rejects(prepareDeploymentArchive(fixture), /Conflicting artifact_metadata/);
+    await writeFile(join(fixture.project, '.openai/hosting.json'), JSON.stringify({ project_id: 'test-site', d1: 'DB', capabilities: ['mcp'] }));
+    fixture.source = fixture.commit();
+    await writeFile(join(fixture.project, 'dist/.env'), 'PRIVATE_TEST_VALUE=refused');
+    await assert.rejects(prepareDeploymentArchive(fixture), /Private or development file/);
+    await assert.rejects(readFile(join(fixture.project, 'artifacts/dot-board.tar.gz')), { code: 'ENOENT' });
+  } finally { await fixture.cleanup(); }
+});
+
+test('Site packaging refuses a build changed during validation even when Git source stays clean', async () => {
+  const fixture = await deploymentFixture();
+  try {
+    await writeFile(fixture.validator, (await readFile(fixture.validator, 'utf8'))
+      + "fs.writeFileSync(path.join(project,'dist/server/index.js'),'changed during validation');\n");
+    await assert.rejects(prepareDeploymentArchive(fixture), /Build or migrations changed while packaging/);
+    await assert.rejects(readFile(join(fixture.project, 'artifacts/dot-board.tar.gz')), { code: 'ENOENT' });
+  } finally { await fixture.cleanup(); }
+});
+
+test('Site validator failure leaves the service identity and source intact', async () => {
+  const fixture = await deploymentFixture();
+  try {
+    const before = await readFile(join(fixture.project, '.openai/hosting.json'));
+    await writeFile(fixture.validator, "console.error('Invalid Worker build');process.exit(2);\n");
+    await assert.rejects(prepareDeploymentArchive(fixture), /Sites build validation failed: Invalid Worker build/);
+    assert.deepEqual(await readFile(join(fixture.project, '.openai/hosting.json')), before);
+    await assert.rejects(readFile(join(fixture.project, 'artifacts/dot-board.tar.gz')), { code: 'ENOENT' });
+  } finally { await fixture.cleanup(); }
+});
 
 test('account ZIP initializes a complete independent service and preserves portable onboarding metadata', async () => {
   const directory = await mkdtemp(join(tmpdir(), 'paprika-package-'));
