@@ -2,8 +2,8 @@
   "format": 1,
   "plugin_version": "1.3.11",
   "service_version": "0.5.8",
-  "source_commit": "7392e9775e5f7828c3986f0734ce18fdfd1448bd",
-  "worker_sha256": "0a78685c593b27662356d24f7ea79a169c309ee66cf59808bd71faea9792f2cc",
+  "source_commit": "0f3ca456addd07950512621ec4a39ddd625c3dc1",
+  "worker_sha256": "c79ff301fbd8bffeb33f0754108e31d69d769ab87f9be5675d57cfde9abcf0eb",
   "platforms": [
     "macOS",
     "Windows"
@@ -13,37 +13,37 @@
       "file": "paprika-messenger-private-1.3.11.zip",
       "kind": "plugin",
       "root": "paprika-messenger-private",
-      "sha256": "278884a56bcea5ecac8e8aef1a2183122efa33a8672e5156b02e3fe22e8c97a8"
+      "sha256": "04fb6163d6c50db78cb52e4deff05d5f6d4c08ce07e039edce809bee5f0f987d"
     },
     {
       "file": "paprika-messenger-private-1.3.11.tar.gz",
       "kind": "plugin",
       "root": "paprika-messenger-private",
-      "sha256": "23caa753447c49c393cde44d31985d3f00d6aa35a86ea1ce162fa95bf9574e7a"
+      "sha256": "4cc3a064e06ed65a8655e2886f4e00f878fff877ea8fa182f8bdc4a95f802732"
     },
     {
       "file": "paprika-messenger-service-0.5.8.zip",
       "kind": "service",
       "root": "paprika-messenger-service",
-      "sha256": "d736def1160fcdf512b62428681e7dfb9f4a0de5633bcd2f47e73848e75d88b8"
+      "sha256": "04a78bce6c0bcd7d8415d62553af1d083d128df1ef34c568d92c41cb69257ccd"
     },
     {
       "file": "paprika-messenger-service-0.5.8.tar.gz",
       "kind": "service",
       "root": "paprika-messenger-service",
-      "sha256": "2334f163efc84932ef395d605e8a0707ba040b51eadb64c100c96d5535b16c5c"
+      "sha256": "f70771e33fda15f67f3c74a6cdc62e97fb55bbfc7ffe38c2696afed7e6790fbc"
     },
     {
       "file": "paprika-messenger-worker-0.5.8.zip",
       "kind": "worker",
       "root": "paprika-messenger-worker",
-      "sha256": "4f93c20a39c0eafc14691e3591e9968f17fde7d6ec472db7e7be6bd3e3afad98"
+      "sha256": "018c8f52ab844f115af2ea692bed9af4fd67227e1dd77f3e505ad16e57ae4f1e"
     },
     {
       "file": "paprika-messenger-worker-0.5.8.tar.gz",
       "kind": "worker",
       "root": "paprika-messenger-worker",
-      "sha256": "bca2c3aa70de33f596996d1a67fe9e00f17bd41ee0820a3ba554751e72ee2ab3"
+      "sha256": "864e74bc542f8291e1ca6ded6a66eb2da8a8cc184ac3297752d9ea49e8b67d02"
     }
   ]
 }
