@@ -1,4 +1,5 @@
-import { pathToFileURL } from 'node:url';
+import { realpathSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 // Read only host-provided current-session metadata. Never search history, titles,
 // working directories or the most recently used thread to infer this value.
@@ -14,7 +15,7 @@ export function getCurrentThreadId(env = process.env) {
   throw new Error('Current thread ID is unavailable. This host must provide current-conversation metadata; an inbox participant ID is not a substitute.');
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   try {
     if (process.argv.length !== 2) throw new Error('Usage: node get-thread-id.mjs');
     console.log(JSON.stringify(getCurrentThreadId()));

@@ -1,3 +1,4 @@
+import { realpathSync } from 'node:fs';
 import { cp, mkdir, readdir } from 'node:fs/promises';
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -24,7 +25,7 @@ export async function initializeService(destination) {
   return { directory: target, service_version: validation.service_version, template_verified: true, registered: false };
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   try { console.log(JSON.stringify(await initializeService(process.argv[2]))); }
   catch (error) { console.error(error.message); process.exitCode = 1; }
 }

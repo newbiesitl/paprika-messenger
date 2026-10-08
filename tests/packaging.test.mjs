@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -33,6 +33,25 @@ test('onboarding selects the service type without assuming Dot entitlements or c
   assert.throws(() => selectServiceType({ requested_service_type: 'dot-chatgpt-codex', dot_available: false }), /Dot is unavailable/);
   for (const invalid of [null, [], { service_type: 'guessed' }, { requested_service_type: 'guessed' }, { existing_service_type: '' }, { dot_available: 'false' }])
     assert.throws(() => selectServiceType(invalid));
+});
+
+test('packaged command helpers execute through directory aliases on macOS and Windows', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'paprika-cli-alias-'));
+  try {
+    const alias = join(directory, 'linked-repository');
+    await symlink(repository, alias, process.platform === 'win32' ? 'junction' : 'dir');
+    const selected = spawnSync(process.execPath, [join(alias, 'plugin-public/skills/setup-paprika/scripts/select-service-type.mjs')],
+      { input: JSON.stringify({ dot_available: false }), encoding: 'utf8', windowsHide: true });
+    assert.equal(selected.status, 0, selected.stderr);
+    assert.equal(JSON.parse(selected.stdout).service_type, 'chatgpt-codex');
+    const cadence = spawnSync(process.execPath, [join(alias, 'skills/paprika-messenger/scripts/parse-cadence.mjs'), '20', 'min'],
+      { encoding: 'utf8', windowsHide: true });
+    assert.equal(cadence.status, 0, cadence.stderr);
+    assert.equal(JSON.parse(cadence.stdout).minutes, 20);
+  } finally {
+    // rm unlinks the directory alias; it does not traverse into the repository.
+    await rm(directory, { recursive: true, force: true });
+  }
 });
 
 async function standaloneFixture(directory) {

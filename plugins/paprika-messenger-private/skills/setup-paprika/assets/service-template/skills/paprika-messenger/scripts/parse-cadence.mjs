@@ -1,4 +1,5 @@
-import { pathToFileURL } from 'node:url';
+import { realpathSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 // Convert user-facing durations without rounding fractional minutes away.
 export function parseCadence(amount, unit) {
@@ -21,7 +22,7 @@ export function parseCadence(amount, unit) {
   return {minutes, label: `every ${minutes} minute${minutes === 1 ? '' : 's'}`, rrule: `RRULE:FREQ=MINUTELY;INTERVAL=${minutes}`};
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   try {
     if (process.argv.length > 4) throw new Error('Usage: node parse-cadence.mjs [amount min|hour]');
     console.log(JSON.stringify(parseCadence(...process.argv.slice(2))));

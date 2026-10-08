@@ -1,7 +1,8 @@
+import { realpathSync } from 'node:fs';
 import { mkdir, open, readFile, rename, unlink, rmdir } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 import { digest, routingId, readJsonInput } from './prepare-delivery.mjs';
 
 const fields = ['deployment', 'board', 'mode', 'key', 'sender_id', 'sender_thread_id',
@@ -111,7 +112,7 @@ export class NotificationState {
   }
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   try {
     const action = process.argv[2];
     if (process.argv.length !== 3 || !['begin', 'record', 'reconcile', 'status'].includes(action))

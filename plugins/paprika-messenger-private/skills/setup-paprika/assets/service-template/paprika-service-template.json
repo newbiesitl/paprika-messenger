@@ -155,8 +155,8 @@
     },
     {
       "path": "scripts/bundle.mjs",
-      "size_bytes": 9674,
-      "sha256": "8a7960fa37f6654e4fb48643822a1e71669c0149f0a6593ccbf75316bbe2daa3"
+      "size_bytes": 9733,
+      "sha256": "7ddd3553255ef7c63c57336323589b2b96af38363c73ae926a39df6286dc8b33"
     },
     {
       "path": "scripts/dev.mjs",
@@ -165,8 +165,8 @@
     },
     {
       "path": "scripts/package.mjs",
-      "size_bytes": 9887,
-      "sha256": "de806ea000c102c4617b802bd9d50322b8dc7f87dede1f562fcee842f175bc80"
+      "size_bytes": 9946,
+      "sha256": "e988ec7e243144496aae71a0b418035dd1d18a393ccf9ba9fb3b63a09f76d932"
     },
     {
       "path": "skills/paprika-messenger/agents/openai.yaml",
@@ -200,28 +200,28 @@
     },
     {
       "path": "skills/paprika-messenger/scripts/get-thread-id.mjs",
-      "size_bytes": 1092,
-      "sha256": "3b4a8e8bad8f0b9e2d09eafa90cdb7b4f10e753531f9c1a86c8e78ea7dcbe094"
+      "size_bytes": 1155,
+      "sha256": "7bac025f10ebe2ddcc9c3b4e9b540c3f6b463541a5576af1e8572ff00fae3392"
     },
     {
       "path": "skills/paprika-messenger/scripts/notification-state.mjs",
-      "size_bytes": 7926,
-      "sha256": "6156bf3035e4a4becc286a06643235336d3b581a3659013dc659ea3768ffa706"
+      "size_bytes": 7989,
+      "sha256": "529f52954756fdd4bb2891c4cc7b2fb9dc5618619ad95e4dfaa87af606d6fb66"
     },
     {
       "path": "skills/paprika-messenger/scripts/parse-cadence.mjs",
-      "size_bytes": 1855,
-      "sha256": "2309f51fb405c9911da2bcbab4e6b78a3efd8a61da38e4832f932b371dcf1132"
+      "size_bytes": 1918,
+      "sha256": "fc72948bd7302beef4b37f77ad01f1affa0aa6071a353ff40c886209ecad5b22"
     },
     {
       "path": "skills/paprika-messenger/scripts/prepare-delivery.mjs",
-      "size_bytes": 6475,
-      "sha256": "2396e8b3d2d5d5524dfe6fd42b2e22f666b00c5029f7a6fe4eb83bc0146c6240"
+      "size_bytes": 6538,
+      "sha256": "cd3be2802bfe877ee48f6e9b4eedb12381fdeb2b59148e16008715f804dd63b0"
     },
     {
       "path": "skills/paprika-messenger/scripts/prepare-notification.mjs",
-      "size_bytes": 1916,
-      "sha256": "108e29e4c773f83e0e2ce87eb0e2e7cc66892e26dc79b4de0875bdf099168179"
+      "size_bytes": 1979,
+      "sha256": "d63e2551584aac04d8668cd8f20c20670a376ab938ac54179d817a6cc04fba81"
     },
     {
       "path": "skills/paprika-messenger/SKILL.md",

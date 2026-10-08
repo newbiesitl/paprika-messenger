@@ -1,5 +1,6 @@
+import { realpathSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 import { getCurrentThreadId } from './get-thread-id.mjs';
 import { prepareNotification } from './prepare-notification.mjs';
 
@@ -103,7 +104,7 @@ export async function readJsonInput(max = 65536) {
   return JSON.parse(Buffer.concat(chunks).toString('utf8'));
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   try {
     const action = process.argv[2];
     if (process.argv.length !== 3 || !['post', 'notify', 'direct'].includes(action))
