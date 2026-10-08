@@ -33,4 +33,5 @@ jobs:
       - name: Automated receiver pilot tests
         run: node --test experiments/local/codex-event-receiver/receiver.test.mjs experiments/local/codex-event-receiver/session-context.test.mjs
       - name: Verify bundled release checksums
-        run: node -e "const fs=require('node:fs'),crypto=require('node:crypto');for(const version of fs.readdirSync('releases')){if(!/^\d+\.\d+\.\d+$/.test(version))continue;const dir='releases/'+version+'/';const [expected,file]=fs.readFileSync(dir+'SHA256SUMS','utf8').trim().split(/\s+/);const actual=crypto.createHash('sha256').update(fs.readFileSync(dir+file)).digest('hex');if(actual!==expected)throw Error('Release checksum mismatch: '+version);console.log('Release checksum verified: '+version)}"
+        run: |
+          node -e "const fs=require('node:fs'),crypto=require('node:crypto');for(const version of fs.readdirSync('releases')){if(!/^\d+\.\d+\.\d+$/.test(version))continue;const dir='releases/'+version+'/';const [expected,file]=fs.readFileSync(dir+'SHA256SUMS','utf8').trim().split(/\s+/);const actual=crypto.createHash('sha256').update(fs.readFileSync(dir+file)).digest('hex');if(actual!==expected)throw Error('Release checksum mismatch: '+version);console.log('Release checksum verified: '+version)}"
