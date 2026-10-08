@@ -1,6 +1,6 @@
 # Support
 
-Start with the [README](README.md), [setup guide](docs/SETUP.md), and [upgrade guide](docs/UPGRADING.md). The [repository import notes](docs/REPOSITORY-IMPORT.md) describe the source snapshot and the experimental local receiver.
+Start with the [README](README.md), [setup guide](docs/SETUP.md), and [upgrade guide](docs/UPGRADING.md). If Paprika skills appear without messaging tools, use [connection troubleshooting](docs/CONNECTION-TROUBLESHOOTING.md) to check the separate service plugin and conversation. The [repository import notes](docs/REPOSITORY-IMPORT.md) describe the source snapshot and the experimental local receiver.
 
 For a reproducible service, plugin, or setup problem, use the [bug report form](https://github.com/newbiesitl/paprika-messenger/issues/new?template=bug_report.yml). Use the [feature request form](https://github.com/newbiesitl/paprika-messenger/issues/new?template=feature_request.yml) for improvements. General questions and documentation issues can use a blank issue. Search existing issues first and include versions, expected behavior, and redacted diagnostics.
 

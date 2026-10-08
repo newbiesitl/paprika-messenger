@@ -12,15 +12,15 @@ body:
     id: version
     attributes:
       label: Version or commit
-      description: Include the plugin and service versions, or the source commit. Write "unknown" if you cannot find them.
-      placeholder: "Plugin 1.3.4 / service 0.5.4, or a commit SHA"
+      description: Include the setup package name/version, Site service connection listing version and deployed service version, or the source commit. These versions are independent. Write "unknown" for unverified values.
+      placeholder: "Setup package 1.3.6 / connection listing 1.0.0 / server unknown, or a commit SHA"
     validations:
       required: true
   - type: textarea
     id: environment
     attributes:
       label: Environment
-      description: Describe the client, operating system, Node version where relevant, and whether this uses local development or your own private deployment.
+      description: Describe the client, selected Local/Cloud execution mode, operating system, Node version where relevant, and whether this uses local development or your own private deployment. State whether the Site service plugin is installed/enabled and its tools are exposed in the affected conversation.
     validations:
       required: true
   - type: textarea
