@@ -34,5 +34,5 @@ jobs:
         run: node scripts/prepare-github-plugin.mjs --check
       - name: Automated receiver pilot tests
         run: node --test experiments/local/codex-event-receiver/receiver.test.mjs experiments/local/codex-event-receiver/session-context.test.mjs
-      - name: Verify bundled release checksum
-        run: node -e "const fs=require('node:fs'),crypto=require('node:crypto');const dir='releases/1.3.4/';const [expected,file]=fs.readFileSync(dir+'SHA256SUMS','utf8').trim().split(/\s+/);const actual=crypto.createHash('sha256').update(fs.readFileSync(dir+file)).digest('hex');if(actual!==expected)throw Error('Release checksum mismatch');console.log('Release checksum verified')"
+      - name: Verify bundled release checksums
+        run: node -e "const fs=require('node:fs'),crypto=require('node:crypto');for(const version of ['1.3.4','1.3.6']){const dir='releases/'+version+'/';const [expected,file]=fs.readFileSync(dir+'SHA256SUMS','utf8').trim().split(/\s+/);const actual=crypto.createHash('sha256').update(fs.readFileSync(dir+file)).digest('hex');if(actual!==expected)throw Error('Release checksum mismatch for '+version);console.log('Release checksum verified for '+version)}"

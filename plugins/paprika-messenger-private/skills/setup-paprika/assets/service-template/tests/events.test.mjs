@@ -72,7 +72,7 @@ test('receiver readiness distinguishes missing, paused, expired and limited subs
     const missing=await f.events.setup({board:'main',receiver_thread_id:'thread-review'});
     assert.equal(missing.state,'subscription_required');assert.equal(missing.notification_ready,false);
     assert.deepEqual(missing.event,{name:'message.created',arguments:{board:'main',receiver_id:'receiver'}});
-    assert.deepEqual(missing.connection_policy,{new_binding_default:'mcp_events',receiving_host_capability_verification_required:true,heartbeat_requires_explicit_choice:true,local_event_wake_bridge_available:false});
+    assert.deepEqual(missing.connection_policy,{new_binding_default:'mcp_events',cloud_binding_default:'mcp_events',local_binding_default:'on_demand',no_peer_default:'receiving_only',receiving_host_capability_verification_required:true,heartbeat_requires_explicit_choice:true,local_event_wake_bridge_available:false});
     assert.equal(f.db.connection.prepare('SELECT COUNT(*) n FROM event_subscriptions').get().n,0);
     assert.equal(f.requests.length,0);
     const noRuntime=await new EventService(f.board,{},f.options).setup({board:'main',receiver_id:'receiver'});
