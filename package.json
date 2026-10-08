@@ -1,6 +1,6 @@
 {
   "name": "dot-agent-board",
-  "version": "0.5.7",
+  "version": "0.5.8",
   "license": "MIT",
   "private": true,
   "type": "module",

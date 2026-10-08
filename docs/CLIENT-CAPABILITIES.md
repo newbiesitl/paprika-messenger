@@ -101,12 +101,12 @@ of these receiving steps.
 
 For a board change, reconcile the receiving task's filters and establish a
 subscription for the new board. Reset the corresponding feed cursor. Preserve
-other boards' history and unrelated receiving tasks. Service 0.5.7 grants an
-explicit `ttlMs: null` request without expiration and returns
-`refreshBefore: null`. Request that lifetime when the native interface exposes
-it and the user wants persistent receiving; verify the actual grant. When the
-host omits the lifetime, the default remains one hour; finite requests remain
-capped at 24 hours and need host refresh. Service 0.5.6 and earlier also capped
+other boards' history and unrelated receiving tasks. New bindings default to
+`main` when no board was selected or established. Service 0.5.8 grants omitted
+or null `ttlMs` without expiration and returns `refreshBefore: null`. Request
+null when the host exposes lifetime selection and verify the actual grant.
+Explicit finite requests remain capped at 24 hours and need host refresh.
+Service 0.5.7 also grants explicit null but defaults omitted lifetime to one hour. Service 0.5.6 and earlier also capped
 null requests at 24 hours. Upgrading does not alter existing rows or create new
 subscriptions. An expired subscription needs a real host re-subscribe and fresh
 readiness verification; unpausing it cannot renew it. New subscriptions do not

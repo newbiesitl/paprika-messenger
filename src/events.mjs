@@ -7,11 +7,13 @@ const evtFirst=(db,sql,...values)=>evtStmt(db,sql,...values).first();
 const evtAll=async(db,sql,...values)=>(await evtStmt(db,sql,...values).all()).results;
 const evtHash=async value=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value))),x=>x.toString(16).padStart(2,'0')).join('');
 const evtAddress={receiver_id:{type:'string'},receiver_thread_id:{type:'string',maxLength:160},receiver_label:{type:'string',maxLength:120}};
-// Zero represents an explicitly granted non-expiring lease in the existing
+// Zero represents a non-expiring lease in the existing
 // NOT NULL column. Public APIs use null; existing finite rows keep their expiry.
 const expired=(subscription,now)=>subscription.expires_at!==0 && subscription.expires_at<=now;
 const refreshBefore=expires=>expires===0?null:new Date(expires).toISOString();
 export const receivingConnectionPolicy=Object.freeze({
+  new_binding_board_default:'main',
+  subscription_lifetime_default:'indefinite',
   new_binding_default:'mcp_events',
   cloud_binding_default:'mcp_events',
   local_binding_default:'on_demand',
@@ -55,7 +57,7 @@ export class EventService {
     const {board,receiver,url,args,subscriptionId}=await this.identity(params),key=await this.key();
     if(params.cursor!==undefined && params.cursor!==null)fail(400,'invalid_cursor','This event does not provide protocol replay; use the durable inbox to recover earlier messages.');
     const secret=params.delivery.secret;decodeSigningSecret(secret);
-    const lifetime=params.ttlMs===null?null:Math.min(integer(params.ttlMs,'ttlMs',1000,Number.MAX_SAFE_INTEGER,3600000),86400000),started=this.now();
+    const lifetime=params.ttlMs==null?null:Math.min(integer(params.ttlMs,'ttlMs',1000,Number.MAX_SAFE_INTEGER),86400000),started=this.now();
     const old=await evtFirst(this.db,'SELECT * FROM event_subscriptions WHERE id=? AND owner_subject=?',subscriptionId,this.subject);
     if((!old || !old.active) && (await evtFirst(this.db,'SELECT COUNT(*) AS count FROM event_subscriptions WHERE active=1')).count>=100)fail(409,'subscription_limit','This private instance supports at most 100 active subscriptions.');
     // Capture before verification so a message committed during the challenge is
@@ -123,7 +125,7 @@ export class EventService {
       event:{name:'message.created',arguments:{board,receiver_id:receiver}},
       ...serviceConfiguration(this.env),
       connection_policy:receivingConnectionPolicy,
-      next_step:state==='subscription_required'?'Check this receiving chat\u2019s execution mode when host metadata exposes it; verify receiving capability through the exact same-chat event task, callback and subscription when mode is unreported. On a supported receiving host, reconcile matching tasks and establish an unscheduled MCP event task for message.created using these exact filters, bound to that conversation. Local execution defaults to receiving only with on-demand inbox reads, no hook or schedule, and no receiving-method question. A missing event subscription is expected for that route. Explicit Cloud/events requests remain pending until a supported cloud route is verified; preserve that choice. Any new heartbeat requires an explicit inbox-check or interval choice. The host supplies and verifies its callback; events/subscribe is a protocol method, not necessarily a visible tool. Verify the saved host task and re-read this exact receiver setup for ready before confirming incoming delivery. A generic scheduler cannot substitute. If the event source is missing, inspect the existing connection\u2019s discovery status; use Refresh or Rescan only if that connection exposes it.':state==='events_not_configured'?'Configure the event runtime secret on this existing private service only when enabling event receiving. On-demand inbox reads need no event runtime or subscription.':state==='paused'?'Resume the existing receiver subscription when requested.':state==='limited'?'Delivery will wait for the existing hourly attempt budget.':'Verify the saved receiving task\u2019s exact conversation and filters, then test webhook acceptance, wake, fetch, display and acknowledgment separately.'};
+      next_step:state==='subscription_required'?'Check this receiving chat\u2019s execution mode when host metadata exposes it; verify receiving capability through the exact same-chat event task, callback and subscription when mode is unreported. On a supported receiving host, reconcile matching tasks and establish an unscheduled MCP event task for message.created using these exact filters, bound to that conversation. Ongoing receiving defaults to no expiration: request ttlMs:null when lifetime selection is exposed and verify the actual refresh_before:null grant. A finite grant must be reported with its deadline. Local execution defaults to receiving only with on-demand inbox reads, no hook or schedule, and no receiving-method question. A missing event subscription is expected for that route. Explicit Cloud/events requests remain pending until a supported cloud route is verified; preserve that choice. Any new heartbeat requires an explicit inbox-check or interval choice. The host supplies and verifies its callback; events/subscribe is a protocol method, not necessarily a visible tool. Verify the saved host task and re-read this exact receiver setup for ready before confirming incoming delivery. A generic scheduler cannot substitute. If the event source is missing, inspect the existing connection\u2019s discovery status; use Refresh or Rescan only if that connection exposes it.':state==='events_not_configured'?'Configure the event runtime secret on this existing private service only when enabling event receiving. On-demand inbox reads need no event runtime or subscription.':state==='paused'?'Resume the existing receiver subscription when requested.':state==='limited'?'Delivery will wait for the existing hourly attempt budget.':'Verify the saved receiving task\u2019s exact conversation and filters, then test webhook acceptance, wake, fetch, display and acknowledgment separately.'};
   }
   async configure(a) {
     strict(a,['subscription_id','paused','notification_mode','wake_limit']);id(a.subscription_id,'subscription_id',80);

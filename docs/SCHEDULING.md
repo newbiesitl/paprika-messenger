@@ -24,16 +24,9 @@ Some host event runs can omit the promised event payload even after a successful
 
 ## Subscription lifetime
 
-Service 0.5.7 grants `ttlMs: null` without expiration and returns
-`refreshBefore: null`, as supported by MCP Events. Request it through the
-receiving host when that interface exposes lifetime selection and the user
-wants persistent receiving; record the actual response. Omitted `ttlMs` still
-grants one hour. Positive finite requests grant at most 24 hours. ChatGPT is
-expected to refresh finite leases before the returned deadline. A ready
-subscription can become expired if that refresh does not complete; inspect host
-task state and service protocol logs before assigning a cause.
+New communication bindings default to `main` unless another board is explicitly selected or already established. Service 0.5.8 grants both omitted `ttlMs` and explicit `ttlMs: null` without expiration, returning `refreshBefore: null`. Request null when the host exposes lifetime selection and verify the actual grant. Ongoing receiving continues until stopped or access is revoked. Explicit positive finite requests still grant at most 24 hours and require host refresh before the returned deadline. Inspect the receiving task and protocol logs if that refresh fails.
 
-Older service versions converted null to a 24-hour lease. An upgrade does not
+Service 0.5.7 grants explicit null without expiration but defaults omitted lifetime to one hour. Service 0.5.6 and earlier converted null to a 24-hour lease. An upgrade does not
 rewrite those leases or revive an expired subscription. Re-subscribe through
 the receiving host, keeping the same verified callback identity and reconciling
 its task. Pause controls cannot extend a lease. Non-expiring subscriptions still
@@ -65,7 +58,7 @@ Leases prevent parallel workers from normally sending one item twice and expire 
 
 Every send rechecks lifecycle, owner access, pause, deletion and receiver acknowledgment. Unsubscribe stops queued sends; an in-flight request may finish. The default budget reserves at most 30 attempts per subscription per hour, including uncertain leases. Receipts, note edits and cursor updates do not emit this event. Replies deeper than eight links remain in the inbox but do not trigger further wakes, limiting repeated automatic handoffs.
 
-Subscriptions default to one hour and grant at most 24 hours, including for `ttlMs:null`; the platform refreshes them. Refresh preserves pending progress and controls. Signing-key rotation uses a five-minute dual-signature window. No protocol replay cursor is advertised: use the durable inbox for older messages or gaps during an expired subscription. Reads never acknowledge.
+Subscriptions default to no expiration and return `refreshBefore:null`. Explicit finite lifetimes remain capped at 24 hours and require platform refresh. Refresh preserves pending progress and controls. Signing-key rotation uses a five-minute dual-signature window. No protocol replay cursor is advertised: use the durable inbox for older messages or gaps during an expired subscription. Reads never acknowledge.
 
 ## Heartbeat receiver checks
 

@@ -72,13 +72,13 @@ test('receiver readiness distinguishes missing, paused, expired and limited subs
     const missing=await f.events.setup({board:'main',receiver_thread_id:'thread-review'});
     assert.equal(missing.state,'subscription_required');assert.equal(missing.notification_ready,false);
     assert.deepEqual(missing.event,{name:'message.created',arguments:{board:'main',receiver_id:'receiver'}});
-    assert.deepEqual(missing.connection_policy,{new_binding_default:'mcp_events',cloud_binding_default:'mcp_events',local_binding_default:'on_demand',no_peer_default:'receiving_only',receiving_host_capability_verification_required:true,heartbeat_requires_explicit_choice:true,local_event_wake_bridge_available:false});
+    assert.deepEqual(missing.connection_policy,{new_binding_board_default:'main',subscription_lifetime_default:'indefinite',new_binding_default:'mcp_events',cloud_binding_default:'mcp_events',local_binding_default:'on_demand',no_peer_default:'receiving_only',receiving_host_capability_verification_required:true,heartbeat_requires_explicit_choice:true,local_event_wake_bridge_available:false});
     assert.equal(f.db.connection.prepare('SELECT COUNT(*) n FROM event_subscriptions').get().n,0);
     assert.equal(f.requests.length,0);
     const noRuntime=await new EventService(f.board,{},f.options).setup({board:'main',receiver_id:'receiver'});
     assert.equal(noRuntime.state,'events_not_configured');
     assert.deepEqual(noRuntime.connection_policy,missing.connection_policy);
-    const sub=await f.events.subscribe(f.params());
+    const sub=await f.events.subscribe({...f.params(),ttlMs:3600000});
     assert.equal((await f.events.setup({board:'main',receiver_label:'Review chat'})).state,'ready');
     await f.events.configure({subscription_id:sub.id,paused:true});
     assert.equal((await f.events.setup({board:'main',receiver_id:'receiver'})).state,'paused');
@@ -126,11 +126,29 @@ test('explicit non-expiring leases survive restarts and preserve controls, progr
   }finally{f.db.close();}
 });
 
+test('omitted lifetime grants ongoing delivery across service recreation until unsubscribe',async()=>{
+  const f=await fixture();try {
+    const response=await rpc({jsonrpc:'2.0',id:1,method:'events/subscribe',params:f.params()},f.board,null,f.events);
+    assert.equal(response.result.refreshBefore,null);
+    f.tick(366*86400000);
+    const restarted=new EventService(f.board,f.env,f.options);
+    const setup=await restarted.setup({board:'main',receiver_id:'receiver'});
+    assert.equal(setup.state,'ready');assert.equal(setup.subscriptions[0].refresh_before,null);
+    const sent=await f.post();
+    assert.equal((await restarted.dispatch()).accepted,1);
+    assert.equal(f.requests.at(-1).body.data.message_id,sent.message.id);
+    const params=f.params();
+    await restarted.unsubscribe({name:params.name,arguments:params.arguments,delivery:{mode:'webhook',url:params.delivery.url}});
+    await f.post();assert.equal((await restarted.dispatch()).attempted,0);
+    assert.equal((await restarted.setup({board:'main',receiver_id:'receiver'})).state,'subscription_required');
+  }finally{f.db.close();}
+});
+
 test('finite and non-expiring requests retain exact grants and existing leases are not extended by reads',async()=>{
   const f=await fixture();try {
-    for(const ttlMs of [undefined,1000,86400001]) {
-      const sub=await f.events.subscribe({...f.params(),...(ttlMs===undefined?{}:{ttlMs})});
-      assert.equal(Date.parse(sub.refreshBefore)-f.now(),ttlMs===undefined?3600000:Math.min(ttlMs,86400000));
+    for(const ttlMs of [1000,3600000,86400001]) {
+      const sub=await f.events.subscribe({...f.params(),ttlMs});
+      assert.equal(Date.parse(sub.refreshBefore)-f.now(),Math.min(ttlMs,86400000));
     }
     const sub=await f.events.subscribe({...f.params(),ttlMs:null});assert.equal(sub.refreshBefore,null);
     const pending=await f.post();await f.events.reconcile();
