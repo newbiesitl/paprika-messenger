@@ -64,7 +64,7 @@ export async function handle(request,env,ctx={}) {
       const args=await readJson(request);
       if(!args || typeof args!=='object' || Array.isArray(args) || Object.keys(args).length)fail(400,'invalid_argument','Maintenance takes an empty object.');
       const db=env.DB.withSession?env.DB.withSession('first-primary'):env.DB;
-      return json(await new EventService(new BoardService(db,null),env).dispatch());
+      return json(await new EventService(new BoardService(db,null,env),env).dispatch());
     }
     if (path==='/mcp') {
       if (request.method!=='POST') return new Response(null,{status:405,headers:{...headers,Allow:'POST'}});
@@ -74,7 +74,7 @@ export async function handle(request,env,ctx={}) {
       const isData=payload?.method==='tools/call' || (typeof payload?.method==='string' && payload.method.startsWith('events/'));
       const subject=isData ? authorize(request,env) : null;
       if (isData && !env.DB) fail(503,'storage_unavailable','Durable storage is unavailable.');
-      const service=isData ? new BoardService(env.DB.withSession ? env.DB.withSession('first-primary') : env.DB,subject) : null;
+      const service=isData ? new BoardService(env.DB.withSession ? env.DB.withSession('first-primary') : env.DB,subject,env) : null;
       const events=env.EVENT_SECRET_KEY ? (service?new EventService(service,env,{email:request.headers.get('oai-authenticated-user-email')}):{}) : null;
       const result=await rpc(payload,service,{entries:skillEntries,resources:skillResources},events,uiResources);
       traceEventProtocol(eventMethod,200,result,null,payload.params);
@@ -87,7 +87,7 @@ export async function handle(request,env,ctx={}) {
     if (path.startsWith('/api/')) {
       const subject=authorize(request,env);
       if (!env.DB) fail(503,'storage_unavailable','Durable storage is unavailable.');
-      const service=new BoardService(env.DB.withSession ? env.DB.withSession('first-primary') : env.DB,subject);
+      const service=new BoardService(env.DB.withSession ? env.DB.withSession('first-primary') : env.DB,subject,env);
       if (path==='/api/session' && request.method==='GET') return json({authenticated:true,can_coordinate:isCoordinator(request,env,subject),identity_kind:'account',participant_identity_kind:'declared_label'});
       if (request.method!=='POST') return json({error:'method_not_allowed'},405);
       if (origin!==expected || request.headers.get('x-dot-board')!=='1') fail(403,'csrf_denied','Use the same-origin board UI.');
@@ -103,7 +103,7 @@ export async function handle(request,env,ctx={}) {
       let result;
       if(name==='get_notification_setup')result=await (events??new EventService(service,env)).setup(args);
       else if(name==='show_connection_controls')result=await connectionControls(service,events,args);
-      else if(eventTools[name]){if(!events)fail(503,'events_not_configured','Events are not configured.');result=await events[eventTools[name]](args);}
+      else if(eventTools[name]){if(!events && name==='configure_event_subscription')fail(503,'events_not_configured','Events are not configured.');result=await (events??new EventService(service,env))[eventTools[name]](args);}
       else if(name==='process_event_deliveries'){if(!events)fail(503,'events_not_configured','Events are not configured.');if(Object.keys(args).some(k=>k!=='limit'))fail(400,'invalid_argument','Unknown dispatch argument.');result=await events.dispatch(args.limit??10);}
       else result=await service[name](args);
       if(name==='post_message')result=await addNotificationStatus(result,events);

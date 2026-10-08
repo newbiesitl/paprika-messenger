@@ -1,8 +1,8 @@
 # One private account package (default)
 
-Paprika **1.3.8** combines the current messaging skill, setup skill, full service source **0.5.5**, original Paprika pixel icon and the required existing service App in one personalized package. The App supplies authenticated MCP tools and the existing OAuth connection. Supported cloud, mobile and desktop clients use that same private account package and service.
+Paprika **1.3.9** combines the current messaging skill, setup skill, full service source **0.5.6**, original Paprika pixel icon and the required existing service App in one personalized package. The App supplies authenticated MCP tools and the existing OAuth connection. Supported cloud, mobile and desktop clients use that same private account package and service.
 
-The [public ZIP](../releases/1.3.8/paprika-messenger-private-1.3.8.zip) and [checksum](../releases/1.3.8/SHA256SUMS) are an owner-neutral installation kit. Each owner binds it to their own private Site before saving the final standalone package. Publishing one owner's App ID or endpoint in a shared archive would connect other installers to the wrong service.
+The [public ZIP](../releases/1.3.9/paprika-messenger-private-1.3.9.zip) and [checksum](../releases/1.3.9/SHA256SUMS) are an owner-neutral installation kit. Each owner binds it to their own private Site before saving the final standalone package. Publishing one owner's App ID or endpoint in a shared archive would connect other installers to the wrong service.
 
 ## Build the single package
 
@@ -30,15 +30,17 @@ Open the returned account plugin link and install it. Complete any requested aut
 
 A saved ZIP, link, installed cache or successful Site deployment does not prove client readiness. Report save, installation, App authentication and each client's actual connection separately. Keep untested cloud/mobile clients and any unavailable solo-package check pending. App references preserve the underlying App's access checks; they do not grant permissions or eliminate OAuth consent.
 
+The listing and composer use the original Paprika PNG in both light and dark themes. Check the displayed icon on the current account plugin page after updating; manifest paths and matching asset bytes do not prove that the host has refreshed its listing. If a generic icon remains, report the display issue separately from package validation and connection readiness.
+
 ## Local installation and receiving defaults
 
-Account installation is the default. For an explicit local-only request, add `--kind local` to the same standalone builder. It uses the same **1.3.8** manifest, binding, skills and Paprika icon; install the resulting package through the supported local interface. Local registration stays device-only.
+Account installation is the default. For an explicit local-only request, add `--kind local` to the same standalone builder. It uses the same **1.3.9** manifest, binding, skills and Paprika icon; install the resulting package through the supported local interface. Local registration stays device-only.
 
 Local receiving defaults to receiving only with on-demand inbox reads and no hooks, schedules or background service. Supported cloud receiving chats default to verified event hooks when the user requests connection/receiving setup. If there is no selected peer, finish receiving-only without asking for a Dot. Each receiving chat establishes its own route; installation alone creates no subscriptions.
 
 ## Why an older entry shows 1.0.0
 
-The inspected canonical Site-generated service plugin has **1.0.0** in its cached compatibility manifest. It contains the service App binding but lacks this repository's two-skill package. That listing version is separate from Paprika package **1.3.8** and service **0.5.5**. The merger copies its verified existing App reference, not its old manifest version, generic icon or listing metadata. It preserves the latest package and original Paprika icon. The old canonical backend identity can remain as the underlying App; changing or deleting it is unnecessary for combining the package.
+The inspected canonical Site-generated service plugin has **1.0.0** in its cached compatibility manifest. It contains the service App binding but lacks this repository's two-skill package. That listing version is separate from Paprika package **1.3.9** and service **0.5.6**. The merger copies its verified existing App reference, not its old manifest version, generic icon or listing metadata. It preserves the latest package and original Paprika icon. The old canonical backend identity can remain as the underlying App; changing or deleting it is unnecessary for combining the package.
 
 ## Copyable installation request
 

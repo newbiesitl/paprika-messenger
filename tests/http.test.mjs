@@ -14,6 +14,80 @@ await new BoardService(db,'owner').create_board({board:'vex',label:'Legacy proje
 const env={DB:db,OWNER_USER_ID:'owner',COORDINATOR_USER_ID:'coordinator',SITE_ORIGIN:'https://board.test'};
 const request=(path,body,subject='owner',extra={})=>new Request(`https://board.test${path}`,{method:body===undefined?'GET':'POST',headers:{'oai-authenticated-user-id':subject,'Content-Type':'application/json',...extra},...(body===undefined?{}:{body:JSON.stringify(body)})});
 
+test('service type stays authenticated and consistent across MCP, browser controls and event configuration',async()=>{
+  const profileDb=new SqliteD1();profileDb.connection.exec(await loadMigrations());
+  const profileEnv={DB:profileDb,OWNER_USER_ID:'owner',SITE_ORIGIN:'https://board.test',PAPRIKA_SERVICE_TYPE:'chatgpt-codex'};
+  const call=(name,args={},subject='owner')=>request('/mcp',{jsonrpc:'2.0',id:1,method:'tools/call',params:{name,arguments:args}},subject);
+  const csrf={Origin:'https://board.test','X-Dot-Board':'1'};
+  try {
+    assert.equal((await handle(call('get_service_config',{},''),profileEnv)).status,401);
+    assert.equal((await handle(call('get_service_config',{},'intruder'),profileEnv)).status,403);
+    assert.equal((await handle(request('/api/get_service_config',{}),profileEnv)).status,403);
+    const config=(await (await handle(call('get_service_config'),profileEnv)).json()).result.structuredContent;
+    assert.equal(config.service_type,'chatgpt-codex');assert.equal(config.dot_enabled,false);
+    assert.deepEqual(config.supported_clients,['chatgpt','codex_local','codex_cloud']);
+    assert.equal(config.receiving_surfaces.includes('Dot'),false);
+    assert.equal(config.service_type_source,'runtime_setting');
+    assert.deepEqual(await (await handle(request('/api/get_service_config',{},'owner',csrf),profileEnv)).json(),config);
+    assert.equal((await (await handle(call('get_service_config',{dot_available:true}),profileEnv)).json()).result.isError,true);
+    const legacy=(await (await handle(call('get_service_config'),{...profileEnv,PAPRIKA_SERVICE_TYPE:undefined})).json()).result.structuredContent;
+    assert.equal(legacy.service_type,'dot-chatgpt-codex');assert.equal(legacy.dot_enabled,true);
+    assert.equal(legacy.service_type_source,'legacy_default');
+    const invalid=(await (await handle(call('get_service_config'),{...profileEnv,PAPRIKA_SERVICE_TYPE:'invalid'})).json()).result;
+    assert.equal(invalid.isError,true);assert.equal(JSON.parse(invalid.content[0].text).error,'invalid_service_type');
+    await new BoardService(profileDb,'owner').register_participant({board:'main',participant_id:'current',label:'Current chat',kind:'thread'});
+    for(const runtime of [profileEnv,{...profileEnv,EVENT_SECRET_KEY:btoa('c'.repeat(32))}]) {
+      for(const [name,args] of [['show_connection_controls',{board:'main'}],['show_connection_controls',{board:'main',receiver_id:'current'}],['get_notification_setup',{board:'main',receiver_id:'current'}]]) {
+        const response=(await (await handle(call(name,args),runtime)).json()).result;
+        assert.equal(response.isError,false);
+        assert.equal(response.structuredContent.service_type,'chatgpt-codex');
+        assert.equal(response.structuredContent.receiving_surfaces.includes('Dot'),false);
+        assert.equal(response.structuredContent.notification_ready,false);
+        assert.equal(response.structuredContent.connection_policy.local_binding_default,'on_demand');
+      }
+    }
+    assert.deepEqual((await (await handle(call('list_event_subscriptions',{board:'main'}),profileEnv)).json()).result.structuredContent,{subscriptions:[]});
+    assert.deepEqual(await (await handle(request('/api/list_event_subscriptions',{board:'main'},'owner',csrf),profileEnv)).json(),{subscriptions:[]});
+    assert.equal(profileDb.connection.prepare('SELECT COUNT(*) n FROM event_subscriptions').get().n,0);
+    assert.equal(profileDb.connection.prepare('SELECT COUNT(*) n FROM messages').get().n,0);
+  } finally {profileDb.close();}
+});
+
+test('ChatGPT exchanges linked replies with local and cloud Codex without Dot or event runtime',async()=>{
+  const exchangeDb=new SqliteD1();exchangeDb.connection.exec(await loadMigrations());
+  const exchangeEnv={DB:exchangeDb,OWNER_USER_ID:'owner',SITE_ORIGIN:'https://board.test',PAPRIKA_SERVICE_TYPE:'chatgpt-codex'};
+  const invoke=async(name,args)=>{
+    const response=await handle(request('/mcp',{jsonrpc:'2.0',id:1,method:'tools/call',params:{name,arguments:args}}),exchangeEnv);
+    assert.equal(response.status,200);const result=(await response.json()).result;
+    assert.equal(result.isError,false,result.content[0].text);return result.structuredContent;
+  };
+  try {
+    for(const id of ['chatgpt','codex-local','codex-cloud'])
+      await invoke('register_participant',{board:'main',participant_id:id,label:id,kind:'thread',thread_id:'fixture-'+id});
+    const replyIds=[];
+    for(const receiver of ['codex-local','codex-cloud']) {
+      const sent=await invoke('post_message',{board:'main',sender_id:'chatgpt',sender_label:'chatgpt',receiver_label:receiver,topic:'handoff',body:'Please review this fixture.',idempotency_key:'request-'+receiver});
+      assert.equal(sent.notification.state,'events_not_configured');
+      const inbox=await invoke('get_inbox',{board:'main',receiver_thread_id:'fixture-'+receiver});
+      assert.equal(inbox.messages[0].id,sent.message.id);
+      const reply=await invoke('post_message',{board:'main',sender_id:receiver,sender_label:receiver,receiver_id:'chatgpt',topic:'handoff',body:'Fixture review complete.',reply_to_id:sent.message.id,idempotency_key:'reply-'+receiver});
+      replyIds.push(reply.message.id);
+      const original=await invoke('get_message',{board:'main',message_id:sent.message.id});
+      assert.equal(original.replies[0].id,reply.message.id);
+      const delivery=await invoke('get_delivery_status',{board:'main',message_id:sent.message.id});
+      assert.equal(delivery.stored,true);assert.equal(delivery.participant_acknowledged,false);
+      assert.equal(delivery.notification.state,'events_not_configured');
+      const browser=await handle(request('/api/get_delivery_status',{board:'main',message_id:sent.message.id},'owner',{Origin:'https://board.test','X-Dot-Board':'1'}),exchangeEnv);
+      assert.equal(browser.status,200);assert.equal((await browser.json()).stored,true);
+    }
+    const replies=await invoke('get_inbox',{board:'main',receiver_id:'chatgpt'});
+    assert.deepEqual(replies.messages.map(message=>message.id).sort(),replyIds.sort());
+    assert.equal(exchangeDb.connection.prepare('SELECT COUNT(*) n FROM participants').get().n,3);
+    assert.equal(exchangeDb.connection.prepare('SELECT COUNT(*) n FROM event_subscriptions').get().n,0);
+    assert.equal(exchangeDb.connection.prepare('SELECT COUNT(*) n FROM acknowledgments').get().n,0);
+  } finally {exchangeDb.close();}
+});
+
 test('generated MCP exposes connection controls and bundled UI without changing receiving state',async()=>{
   const uiDb=new SqliteD1();uiDb.connection.exec(await loadMigrations());
   const service=new BoardService(uiDb,'owner');

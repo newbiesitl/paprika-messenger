@@ -36,6 +36,9 @@ export async function verifyPluginPackage(pluginRoot) {
   await readFile(resolve(pluginRoot, 'skills/paprika-messenger/SKILL.md'));
   if (listing.logo !== './assets/paprika-icon.png' || listing.composerIcon !== listing.logo)
     throw new Error('Both plugin icon settings must use the bundled Paprika icon.');
+  for (const field of ['logoDark', 'composerIconDark'])
+    if (listing[field] != null && listing[field] !== listing.logo)
+      throw new Error('Dark theme must preserve the bundled Paprika icon: ' + field);
   const icon = await readFile(resolve(pluginRoot, listing.logo));
   if (icon.subarray(0, 8).toString('hex') !== '89504e470d0a1a0a') throw new Error('Primary icon must be a PNG.');
   const width = icon.readUInt32BE(16), height = icon.readUInt32BE(20);
