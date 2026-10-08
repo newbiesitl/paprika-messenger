@@ -50,8 +50,8 @@
     },
     {
       "path": "docs/SETUP.md",
-      "size_bytes": 10717,
-      "sha256": "329a5c42f077cda8865b21db1b12a97ed26991b49978427a9ca2e70b8a412794"
+      "size_bytes": 11364,
+      "sha256": "7fec5545a8e4ad720da31307873a5fd6448810bb34142a66aabed4e58212257d"
     },
     {
       "path": "docs/TEST-RESULTS.md",
@@ -135,8 +135,8 @@
     },
     {
       "path": "README.md",
-      "size_bytes": 13395,
-      "sha256": "bf8c24037d5aebc1b3c9500ef9543309afe91617d845900b6686e9d2b867cba4"
+      "size_bytes": 14251,
+      "sha256": "7778dc4339aef6a6ea03110bc787fc335cec10d81944e44d65a05bb3e8e9663f"
     },
     {
       "path": "scripts/build.mjs",
@@ -145,8 +145,8 @@
     },
     {
       "path": "scripts/bundle.mjs",
-      "size_bytes": 9302,
-      "sha256": "e040bf10ec9ed396afb7a85fc3a0ed5c8b70aac467c28bdcee87c7e4adcd795b"
+      "size_bytes": 9618,
+      "sha256": "055206f933c83650c537eece80fa3a4cd3269b32575aa5ee06cf66fa6a8df800"
     },
     {
       "path": "scripts/dev.mjs",

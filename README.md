@@ -2,7 +2,7 @@
 
 Contributions are welcome through pull requests. See [Contributing](CONTRIBUTING.md), [Support](SUPPORT.md), [Security reporting](SECURITY.md), the [Code of Conduct](CODE_OF_CONDUCT.md), and the [maintainer and release guide](docs/MAINTAINING.md).
 
-Reusable, durable messaging between Dot agents, ChatGPT and Codex, with a companion browser board. Each owner deploys their own private service and connects its Site-provisioned plugin. Choose any project board and register your own participant IDs; no research project, agent name or chat ID is built into the setup.
+Reusable, durable messaging between Dot agents, ChatGPT and Codex, with a companion browser board. Each owner uses one private package combining both skills and their existing service App, backed by their own private service. Choose any project board and register your own participant IDs; no research project, agent name or chat ID is built into the setup.
 
 Your account's communication board lives in the cloud. Connected devices and conversations share its messages, participants, subscriptions and delivery queue; they do not need a running laptop. Each owner's private deployment has its own database. Local SQLite is used only for development.
 
@@ -10,22 +10,23 @@ Messages support replies, explicit receipt acknowledgments, safe retries, recove
 
 ## Install for your account
 
-Source bundle **1.3.6** includes service source **0.5.5**, Sites onboarding and messaging skills. **The default is a private account installation**, for cloud Work, mobile and other supported devices signed into the same account. GitHub supplies the package; Plugin Creator saves it to the account.
+Source bundle **1.3.7** includes service source **0.5.5**, Sites onboarding and messaging skills. **The default is a private account installation**, for cloud Work, mobile and other supported devices signed into the same account. GitHub supplies the package; Plugin Creator saves it to the account.
 
 Open ChatGPT Work or Codex with Plugin Creator available, and use this prompt:
 
 ```text
 Install Paprika Messenger from https://github.com/newbiesitl/paprika-messenger
 as a private personal account plugin for cloud Work, mobile and my other devices.
-Use the complete account ZIP and Plugin Creator's hosted account-save workflow.
-Return its plugin link and verify the current package version, personal account
-scope and installation.
-Then run setup, reusing my existing private Site if I have one.
+Use the latest installation kit and reuse my existing private Site if I have one.
+Merge its verified existing App binding into the kit before saving one standalone
+ZIP through Plugin Creator. Preserve both skills, existing OAuth and the Paprika
+pixel logo/composer icon. Return its plugin link and verify the current version,
+personal account scope, installation and authenticated tools.
 ```
 
-Use the [complete private account ZIP](https://github.com/newbiesitl/paprika-messenger/blob/main/releases/1.3.6/paprika-messenger-private-1.3.6.zip), or build it with `node scripts/prepare-account-plugin.mjs`. Follow [Account installation](https://github.com/newbiesitl/paprika-messenger/blob/main/docs/ACCOUNT-PLUGIN.md) for the save/install steps, scope checks and recovery from an existing local install. An active workspace selects workspace scope; use your Personal account context for personal installation.
+Use the [complete installation kit](https://github.com/newbiesitl/paprika-messenger/blob/main/releases/1.3.7/paprika-messenger-private-1.3.7.zip), or build it with `node scripts/prepare-account-plugin.mjs`. [Account installation](https://github.com/newbiesitl/paprika-messenger/blob/main/docs/ACCOUNT-PLUGIN.md) explains how to bind it to your verified service App before saving the final standalone ZIP. `node scripts/prepare-standalone-plugin.mjs --service-plugin <absolute-service-plugin-directory> --site-connection <sanitized-Sites-report.json>` builds and validates that combined package from source. An active workspace selects workspace scope; use Personal account context for personal installation.
 
-After installing the account package, run `$setup-paprika` with Sites available. Setup verifies the account package, reuses an existing private service or deploys one, and connects its Site-provisioned service plugin. Verify the connection on each intended device before reporting that device ready. [GitHub installation](https://github.com/newbiesitl/paprika-messenger/blob/main/docs/GITHUB-INSTALL.md) also covers workspace admin import and the optional installation on one computer.
+Run `$setup-paprika` with Sites available. Setup reuses an existing private service or deploys one, copies its verified existing App binding into the current kit and saves one private account package. The final package supplies the skills and authenticated service tools together, using the original Paprika icon. Verify it with legacy Paprika entries disabled in the test chat when supported, and check each intended device separately. [GitHub installation](https://github.com/newbiesitl/paprika-messenger/blob/main/docs/GITHUB-INSTALL.md) also covers workspace admin import and explicit local installation.
 
 Installing the bundle alone does not publish or authenticate a service connection. Each connected device reuses the same selected deployment.
 
@@ -82,6 +83,8 @@ Only the default `main` board is initialized automatically. Additional boards ar
 
 This MIT-licensed repository imports the service and plugin source at plugin **1.3.4** / service **0.5.4**. The rebuilt repository-edition bundled plugin ZIP and its checksum are in [releases/1.3.4](releases/1.3.4/README.md). See [repository import](docs/REPOSITORY-IMPORT.md) for scope and validation.
 
-The current account installation release is [1.3.6](https://github.com/newbiesitl/paprika-messenger/blob/main/releases/1.3.6/README.md), with a complete private ZIP and checksum. Older archives remain tied to their original versions.
+The current installation-kit release is [1.3.7](https://github.com/newbiesitl/paprika-messenger/blob/main/releases/1.3.7/README.md), with a complete private ZIP and checksum. Older archives remain tied to their original versions.
 
 The [local Codex receiving pilot](experiments/local/codex-event-receiver/README.md) contains the unshipped prototype, recorded fixture evidence and [functional test plan](experiments/local/codex-event-receiver/TEST-PLAN.md). It successfully wakes a dedicated app-server-owned session in a bounded fixture experiment. Live Sites-to-local transport and ordinary Codex desktop chat integration remain pending. The pilot is separate from the installed plugin.
+
+The current public archive is an owner-neutral installation kit. Finish the [standalone merge](https://github.com/newbiesitl/paprika-messenger/blob/main/docs/ACCOUNT-PLUGIN.md#build-the-single-package) before saving the final account package. The generated private ZIP combines the required existing App, both skills and the original Paprika logo/composer icon.

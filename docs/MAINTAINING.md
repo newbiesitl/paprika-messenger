@@ -43,3 +43,5 @@ Dependabot checks npm dependencies and GitHub Actions weekly on Monday at 10:00 
 6. Merge the release preparation through the normal PR process. Tag the validated commit and publish its release assets as a separate owner-authorized release action. Keep previously released archives and checksums immutable.
 
 Merging source does not deploy a Site or publish an installed plugin. Those actions require their own release decision and validation. Documentation and repository-governance changes alone do not require rebuilding or replacing a released plugin archive.
+
+The current public archive is an owner-neutral installation kit. Finish the [standalone merge](https://github.com/newbiesitl/paprika-messenger/blob/main/docs/ACCOUNT-PLUGIN.md#build-the-single-package) before saving the final account package. The generated private ZIP combines the required existing App, both skills and the original Paprika logo/composer icon.

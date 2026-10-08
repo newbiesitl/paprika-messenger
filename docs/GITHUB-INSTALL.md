@@ -4,12 +4,12 @@ GitHub distributes the complete private setup package: both skills, icons, servi
 
 ## Account installation from GitHub (default)
 
-Follow [Private account installation](ACCOUNT-PLUGIN.md): use the [complete private account ZIP](../releases/1.3.6/paprika-messenger-private-1.3.6.zip), save it through Plugin Creator's hosted account-save workflow, open the returned plugin link, install it and verify the intended scope. For a personal plugin, select the Personal account context before saving. An active workspace selects workspace scope.
+Follow [Private account installation](ACCOUNT-PLUGIN.md): use the [complete private account ZIP](../releases/1.3.7/paprika-messenger-private-1.3.7.zip), bind that installation kit to your verified existing service App, then save the resulting standalone ZIP through Plugin Creator's hosted account-save workflow, open the returned plugin link, install it and verify the intended scope. For a personal plugin, select the Personal account context before saving. An active workspace selects workspace scope.
 
 ```text
 Install Paprika Messenger from https://github.com/newbiesitl/paprika-messenger
 as a private personal account plugin for cloud Work, mobile and my other devices.
-Use the complete account ZIP and Plugin Creator's hosted account-save workflow.
+Use the complete current kit, merge my existing service App binding into it, then save one standalone ZIP through Plugin Creator.
 Verify the current package version, account scope and installation, then run setup using my existing private
 Site if I already have one. Report each client's connection separately.
 ```
@@ -39,7 +39,7 @@ Setup uses the complete installed template. New deployment needs Sites access, a
 
 On Windows, inspect the installed Sites packager’s prerequisites before registration. Sites 0.1.75 can fail when Bash is absent even though Node, Git and native tar work. Follow [Windows packaging troubleshooting and recovery](WINDOWS-SITES-PACKAGING.md); the included native packager preserves the same Site and validated source revision.
 
-Connect the exact service plugin returned by Sites in every participating client. Verify `list_boards({})` and a read-only `list_messages` call. Installing the setup package, deploying the service and connecting the service plugin are separate steps. Each receiving chat opts in to notifications separately.
+Enable the one combined package with its required existing Site App in every participating client and complete any requested authentication. Verify `list_boards({})` and a read-only `list_messages` call. Installing the setup package, deploying the service and binding/authenticating its existing App are separate steps. Each receiving chat opts in to notifications separately.
 
 ## ChatGPT workspace installation
 
@@ -89,6 +89,8 @@ Commit the generated `plugins/paprika-messenger-private/` directory with the sou
 
 The GitHub marketplace is a distribution source. This flow does not publish a listing in OpenAI's public Plugins Directory.
 
-CLI marketplace commands manage the local copy. Account package updates use the verified account plugin identity and Plugin Creator's update workflow; they are not applied by refreshing a local marketplace. Connecting the Site-provisioned service plugin from an account's Plugins UI also remains a separate step.
+CLI marketplace commands manage the local copy. Account package updates use the verified account plugin identity and Plugin Creator's update workflow; they are not applied by refreshing a local marketplace. The final personalized package includes the existing service App binding; inspect it before updating and preserve that binding.
 
 See the official [plugin packaging](https://developers.openai.com/plugins/build/plugins), [Codex plugin commands](https://learn.chatgpt.com/docs/cli/reference), [workspace GitHub import](https://learn.chatgpt.com/docs/enterprise/plugin-management), and [Sites](https://learn.chatgpt.com/docs/sites) documentation.
+
+The current public archive is an owner-neutral installation kit. Finish the [standalone merge](https://github.com/newbiesitl/paprika-messenger/blob/main/docs/ACCOUNT-PLUGIN.md#build-the-single-package) before saving the final account package. The generated private ZIP combines the required existing App, both skills and the original Paprika logo/composer icon.
