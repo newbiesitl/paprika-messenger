@@ -1,6 +1,13 @@
-# Paprika service 0.5.6 native Windows deployment archive
+# Paprika native Windows deployment archives
 
-This is the exact native-tar fallback archive built and successfully published on October 9, 2026 JST for the owner's existing Paprika Messenger Site. The owner requested that it be retained in this repository. Verify `SHA256SUMS`; `provenance.json` records the GitHub source, pushed Site source, packager, validation and successful deployment.
+These are the exact native-tar fallback archives built and successfully published on October 9, 2026 JST for the owner's existing Paprika Messenger Site. The owner requested that deployment archives be retained in this repository. Verify `SHA256SUMS` before use.
+
+| Service | Archive | Provenance |
+| --- | --- | --- |
+| 0.5.7, current deployment | [paprika-service-0.5.7-c6f892d1.tar.gz](paprika-service-0.5.7-c6f892d1.tar.gz) | [provenance-0.5.7.json](provenance-0.5.7.json) |
+| 0.5.6, previous deployment | [paprika-service-0.5.6-70f3a150.tar.gz](paprika-service-0.5.6-70f3a150.tar.gz) | [provenance.json](provenance.json) |
+
+Service 0.5.7 grants explicit non-expiring subscription requests. It does not create missing subscriptions or change old finite leases. The 0.5.6 archive and its provenance remain unchanged.
 
 The archive contains the Worker, hosting manifest and existing append-only migrations. It contains no runtime credentials, database contents, message history, subscriptions, Git metadata or dependency directory. The Site's historical migration files were preserved rather than replaced by template copies.
 

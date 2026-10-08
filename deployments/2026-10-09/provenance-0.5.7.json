@@ -1,0 +1,34 @@
+{
+  "format": 1,
+  "archive": "paprika-service-0.5.7-c6f892d1.tar.gz",
+  "sha256": "6208b15e27b7e367e436392cbe00a26b727ed988989d08381a9b17372a9fb7d9",
+  "size_bytes": 2681507,
+  "service_version": "0.5.7",
+  "github_source_commit": "516514ca69fc6d84945dcd8173d41ae256be2865",
+  "site_source_commit": "c6f892d1671cc517114d7b18d43925d7d5b2a24b",
+  "project_id": "appgprj_6abe847f460c81918553a12e0582cdcd",
+  "deployment_id": "appgdep_6ac7fa4bc8dc81918ed487c40dc4255b",
+  "saved_version_id": "appgprj_6abe847f460c81918553a12e0582cdcd~appgver_892b1c73a8f48191a64323e515fabea3",
+  "published_url": "https://dot-agent-board.colplay-lab.chatgpt.site",
+  "packaging": {
+    "platform": "win32",
+    "sites_plugin_version": "0.1.75",
+    "helper": "scripts/package.mjs",
+    "helper_sha256": "de806ea000c102c4617b802bd9d50322b8dc7f87dede1f562fcee842f175bc80",
+    "build_kind": "worker",
+    "file_count": 12
+  },
+  "validation": {
+    "service_tests_passed": 92,
+    "receiver_fixture_checks_passed": 13,
+    "github_validate": "passed",
+    "worker_build": "passed",
+    "archive_validation": "passed",
+    "native_deployment_status": "succeeded",
+    "environment_revision": 2,
+    "authenticated_board_listing": "passed",
+    "authenticated_service_type": "dot-chatgpt-codex",
+    "runtime_server_info_version": null,
+    "live_non_expiring_subscription": "not_tested_host_callback_unavailable"
+  }
+}
