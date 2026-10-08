@@ -10,6 +10,8 @@ Confirm the chosen Site is active and owner-only from its access metadata, inclu
 
 A working existing instance is reused for connection setup. Do not copy the template over it, rotate secrets, replace its database or upgrade it solely because onboarding ships newer source. Source updates require the user's requested update scope and the existing Sites opening workflow.
 
+Track `package_version`, `bundled_service_version` and `deployed_service_version` independently. Verify the first two against their installed manifest and template metadata; verify the third against authenticated MCP `serverInfo.version` when exposed, otherwise leave it null. The Site's native saved version and deployment IDs prove which pushed source was published, not which package a client installed. Reinstalling the package cannot publish the template. Check a requested feature through its actual authenticated capability before reporting setup complete.
+
 ## Keep a non-secret checkpoint
 
 Persist setup progress atomically in a user-owned workspace outside the installed plugin, for example `.paprika/setup-state.json`. Exclude it from source archives and commits. Before the first mutation, record the selected account/workspace context, destination and phase; before an account save or Site registration record that a creation attempt is pending. Retain only values needed to resume.
@@ -19,6 +21,9 @@ Also retain the verified account setup package's backend plugin ID, actual USER/
 ```json
 {
   "schema_version": 1,
+  "package_version": null,
+  "bundled_service_version": "0.5.6",
+  "deployed_service_version": null,
   "service_version": "0.5.6",
   "service_type": "chatgpt-codex",
   "selection_source": "default_without_dot",
@@ -68,6 +73,8 @@ For a new service, set non-secret `PAPRIKA_SERVICE_TYPE` to the onboarding choic
 Do not publish until the required owner settings and exact Site origin are configured. If the origin is unavailable, retrieve the same Site's authoritative metadata or resolve the missing value before deployment. Preserve all unrelated runtime keys and existing secrets. Redacted null secret values mean hidden, not absent; do not replace them merely because reads cannot reveal their plaintext. Runtime-setting updates require deploying a saved version with the new environment revision.
 
 The service is a Cloudflare Worker. Its build creates `dist/server/index.js` and `dist/_worker.js`; deployment includes the generated hosting manifest and append-only `drizzle/` migrations under `dist/.openai/`. Local SQLite development data and its loopback identity adapter are excluded. Use the current Sites source workflow to run any remaining checks/build, push the exact source state, and package the same verified commit. Credentials enter that workflow through hidden stdin, never shell arguments or files. For an existing source update, first open the same Site through the Sites source workflow and retain its opening result.
+
+On Windows, inspect the installed packager before using its archive phase. If it requires missing Bash and native tar is available, complete the normal supported source/build/push workflow, confirming any failure is confined to its final Bash archive phase after successful push, then reopen the same unchanged pushed checkout through Sites without `archivePath` and save only its returned non-secret `project_id`, `checkout_path` and `commit_sha` to `.paprika/site-source.json`. Use the current bundled `scripts/package.mjs` as described in [Windows packaging](../assets/service-template/docs/WINDOWS-SITES-PACKAGING.md), then pass its exact returned archive and commit to native publication. If the Bash failure occurred after successful push, resume at this step without repeating unchanged tests, source mutations or registration. An open-only invocation does not execute `commands` or push source in Sites 0.1.75. Other source/build/push failures must be resolved first. Use a fresh archive name; each tar belongs to its exact Site and source revision.
 
 Publish with the native private operation for the confirmed owner-private Site. Reuse returned version/deployment IDs and inspect nonterminal deployment status until it succeeds or produces a specific blocker. Report a live URL only from a successful native response. Keep project, App/plugin identities, D1 data and audience stable through retries and updates. Do not create an App/plugin wrapper for the Site. Do not create schedules, enable paused maintenance tasks or set event runtime secrets merely because onboarding deploys the board.
 

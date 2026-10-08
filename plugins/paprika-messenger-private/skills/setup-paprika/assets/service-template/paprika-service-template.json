@@ -55,8 +55,8 @@
     },
     {
       "path": "docs/SETUP.md",
-      "size_bytes": 11849,
-      "sha256": "3a29dc02f27dca10dbf956e3b9b7a45a11fe0aac56950914cda5f916d8498f51"
+      "size_bytes": 11851,
+      "sha256": "a71bedc6cd3b81e861a4173777314602b9850756d7d79823c51d86e68baa1430"
     },
     {
       "path": "docs/TEST-RESULTS.md",
@@ -65,13 +65,13 @@
     },
     {
       "path": "docs/UPGRADING.md",
-      "size_bytes": 18190,
-      "sha256": "b23d8e8c5c51dc92ae88564f6ae032f7ae40c4e3ac28144781a9c2d918a9e445"
+      "size_bytes": 18976,
+      "sha256": "54438e4690645bc305ac42145d3ebf30c85b04235cad6acc3c7f72e63d3b9d5a"
     },
     {
       "path": "docs/WINDOWS-SITES-PACKAGING.md",
-      "size_bytes": 7900,
-      "sha256": "8e9e288ef09996965473e12c148d9e43ff8697f5c459dfb6f1057e0fd5644292"
+      "size_bytes": 9031,
+      "sha256": "05fe6283be06179602ab7547e201bb9743bfd16dfaf1900e07bf95d08062e958"
     },
     {
       "path": "drizzle.config.ts",
@@ -140,8 +140,8 @@
     },
     {
       "path": "README.md",
-      "size_bytes": 14583,
-      "sha256": "07cf6fafd62c75d400e6f930937e509aeb67eb19d6c2b5e18a4295181b8cf888"
+      "size_bytes": 14588,
+      "sha256": "1b05f45d878bda1528e797bad22f12c20b93ddb6b3903a01b01384c112107e70"
     },
     {
       "path": "scripts/build.mjs",
