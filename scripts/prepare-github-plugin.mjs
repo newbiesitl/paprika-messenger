@@ -1,4 +1,4 @@
-import { realpathSync } from 'node:fs';
+import { existsSync, realpathSync } from 'node:fs';
 import { lstat, mkdir, mkdtemp, readFile, realpath, rename } from 'node:fs/promises';
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -62,7 +62,7 @@ export async function prepareGithubPlugin({ repository = repositoryDirectory, ch
   return { ...result, ...(backup ? { previous_package_backup: backup } : {}) };
 }
 
-if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
+if (process.argv[1] && existsSync(process.argv[1]) && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   const args = process.argv.slice(2);
   if (args.some(arg => arg !== '--check') || args.length > 1) throw new Error('Usage: node scripts/prepare-github-plugin.mjs [--check]');
   console.log(JSON.stringify(await prepareGithubPlugin({ check: args.includes('--check') })));

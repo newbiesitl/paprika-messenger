@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { preparePluginPackage, verifyPluginPackage } from '../scripts/plugin-package.mjs';
 import { inspectReusableFiles, stageTemplate, verifyServiceVersion, verifyTemplate } from '../scripts/bundle.mjs';
@@ -48,6 +48,12 @@ test('packaged command helpers execute through directory aliases on macOS and Wi
       { encoding: 'utf8', windowsHide: true });
     assert.equal(cadence.status, 0, cadence.stderr);
     assert.equal(JSON.parse(cadence.stdout).minutes, 20);
+    // Library imports from stdin have argv[1] === '-'; they must stay inert.
+    const libraryUrl = pathToFileURL(join(alias, 'plugin-public/skills/setup-paprika/scripts/select-service-type.mjs')).href;
+    const imported = spawnSync(process.execPath, ['--input-type=module', '-'],
+      { input: `await import(${JSON.stringify(libraryUrl)});`, encoding: 'utf8', windowsHide: true });
+    assert.equal(imported.status, 0, imported.stderr);
+    assert.equal(imported.stdout, '');
   } finally {
     // rm unlinks the directory alias; it does not traverse into the repository.
     await rm(directory, { recursive: true, force: true });

@@ -1,4 +1,4 @@
-import { realpathSync } from 'node:fs';
+import { existsSync, realpathSync } from 'node:fs';
 import { cp, lstat, mkdir, mkdtemp, readFile, readdir, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
@@ -107,7 +107,7 @@ export async function stageTemplate(destination, { source = repository } = {}) {
   await verifyTemplate(destination);
 }
 
-if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
+if (process.argv[1] && existsSync(process.argv[1]) && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   const root = resolve(repository, 'artifacts'); await mkdir(root, { recursive: true });
   const stage = await mkdtemp(resolve(root, 'template-stage-'));
   await stageTemplate(resolve(stage, 'paprika-messenger'));

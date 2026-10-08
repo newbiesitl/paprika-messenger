@@ -1,4 +1,4 @@
-import { realpathSync } from 'node:fs';
+import { existsSync, realpathSync } from 'node:fs';
 import { cp, lstat, mkdir, mkdtemp, readFile, realpath, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { dirname, isAbsolute, relative, resolve, sep } from 'node:path';
@@ -187,7 +187,7 @@ export async function mergeServicePlugin({ pluginRoot, servicePluginRoot, siteCo
   return report;
 }
 
-if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
+if (process.argv[1] && existsSync(process.argv[1]) && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   const args = process.argv.slice(2), options = {};
   const fields = { '--plugin': 'pluginRoot', '--service-plugin': 'servicePluginRoot', '--site-connection': 'siteConnection', '--output': 'outputRoot', '--version': 'version' };
   for (let i = 0; i < args.length; i += 2) {
