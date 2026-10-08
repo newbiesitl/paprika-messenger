@@ -1,6 +1,6 @@
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
-const files=['validation','service','webhooks','events','connection-ui','protocol','worker'];
+const files=['validation','service-config','service','webhooks','events','connection-ui','protocol','worker'];
 const assets={};
 for (const [path,file,type] of [['/','web/index.html','text/html; charset=utf-8'],['/board.js','web/board.js','text/javascript; charset=utf-8'],['/state.js','web/state.js','text/javascript; charset=utf-8'],['/board.css','web/board.css','text/css; charset=utf-8']])
   assets[path]={body:await readFile(file,'utf8'),type};

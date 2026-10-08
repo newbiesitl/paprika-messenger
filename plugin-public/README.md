@@ -1,8 +1,10 @@
 # Paprika Messenger bundle
 
-Plugin version **1.3.6** includes service source **0.5.5**, the `setup-paprika` onboarding skill and the `paprika-messenger` messaging skill. The complete service source, migrations and backend tests are bundled under `skills/setup-paprika/assets/service-template/`. There is no shared messaging endpoint, account credential, Site identity or message database in this reusable package.
+Plugin version **1.3.7** includes service source **0.5.6**, the `setup-paprika` onboarding skill and the `paprika-messenger` messaging skill. The complete service source, migrations and backend tests are bundled under `skills/setup-paprika/assets/service-template/`. There is no shared messaging endpoint, account credential, Site identity or message database in this reusable package.
 
 Default installation saves the complete private package through Plugin Creator's hosted account-save workflow, then installs the returned account plugin for supported cloud, mobile and desktop clients signed into the same account. Use Personal context for a personal plugin; an active workspace selects workspace scope. See [Private account installation](https://github.com/newbiesitl/paprika-messenger/blob/main/docs/ACCOUNT-PLUGIN.md). Local Codex installation is an explicit device-only choice.
+
+Dot is optional. Onboarding chooses `chatgpt-codex` for accounts without Dot or unknown availability, or `dot-chatgpt-codex` with verified availability or an explicit choice. It saves the selected workflow on the private service and verifies it with `get_service_config`; each requested client is checked separately. Local receiving keeps its on-demand default.
 
 After installation, use the setup workflow to check Sites and discover an existing private Messenger service. Reuse the selected service when one exists. First-time setup copies the verified template to a new workspace, builds and publishes a private Site with its own database, then offers the exact plugin provisioned by Sites. New builds require Sites and a writable execution environment with Node.js 24 or later. Setup records progress so retries resume the same deployment.
 

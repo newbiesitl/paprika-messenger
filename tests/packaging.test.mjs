@@ -9,9 +9,30 @@ import { preparePluginPackage, verifyPluginPackage } from '../scripts/plugin-pac
 import { inspectReusableFiles, stageTemplate, verifyServiceVersion, verifyTemplate } from '../scripts/bundle.mjs';
 import { prepareLocalPlugin } from '../scripts/prepare-local-plugin.mjs';
 import { prepareGithubPlugin } from '../scripts/prepare-github-plugin.mjs';
+import { selectServiceType } from '../plugin-public/skills/setup-paprika/scripts/select-service-type.mjs';
 import { prepareDeploymentArchive } from '../scripts/package.mjs';
 
 const repository = fileURLToPath(new URL('../', import.meta.url));
+test('onboarding selects the service type without assuming Dot entitlements or changing an existing service', () => {
+  assert.equal(selectServiceType({}).service_type, 'chatgpt-codex');
+  assert.equal(selectServiceType({}).selection_source, 'default_without_dot');
+  assert.equal(selectServiceType({}).dot_available, null);
+  for (const available of [true, false]) {
+    const selected = selectServiceType({ dot_available: available });
+    assert.equal(selected.service_type, available ? 'dot-chatgpt-codex' : 'chatgpt-codex');
+    assert.equal(selected.selection_source, 'host_capability');
+    assert.equal(selected.runtime_setting.PAPRIKA_SERVICE_TYPE, selected.service_type);
+  }
+  const saved = selectServiceType({ existing_service_type: 'dot-chatgpt-codex', dot_available: null });
+  assert.equal(saved.service_type, 'dot-chatgpt-codex');
+  assert.equal(saved.selection_source, 'existing_service');
+  const explicit = selectServiceType({ requested_service_type: 'chatgpt-codex', existing_service_type: 'dot-chatgpt-codex', dot_available: true });
+  assert.equal(explicit.service_type, 'chatgpt-codex');
+  assert.equal(explicit.selection_source, 'explicit_choice');
+  assert.throws(() => selectServiceType({ requested_service_type: 'dot-chatgpt-codex', dot_available: false }), /Dot is unavailable/);
+  for (const invalid of [null, [], { service_type: 'guessed' }, { requested_service_type: 'guessed' }, { existing_service_type: '' }, { dot_available: 'false' }])
+    assert.throws(() => selectServiceType(invalid));
+});
 const run = (command, args, cwd) => {
   const env = { ...process.env }; delete env.NODE_TEST_CONTEXT;
   const result = spawnSync(command, args, { cwd, env, encoding: 'utf8', windowsHide: true, timeout: 120000 });
@@ -152,6 +173,11 @@ test('account ZIP initializes a complete independent service and preserves porta
     assert(participants.participants.every(participant => !participant.thread_id));
     const service = join(directory, 'new-service');
     const initializer = join(plugin, 'skills/setup-paprika/scripts/init-service.mjs');
+    const selected = spawnSync(process.execPath, [join(plugin, 'skills/setup-paprika/scripts/select-service-type.mjs')],
+      { input: JSON.stringify({ dot_available: false }), encoding: 'utf8', windowsHide: true });
+    assert.equal(selected.status, 0, selected.stderr);
+    assert.equal(JSON.parse(selected.stdout).service_type, 'chatgpt-codex');
+    assert((await readFile(join(template, 'docs/SERVICE-TYPES.md'), 'utf8')).includes('cloud Codex'));
     const initialized = JSON.parse(run(process.execPath, [initializer, service], directory));
     assert.deepEqual(initialized, { directory: service, service_version: validation.bundle.service_version,
       template_verified: true, registered: false });

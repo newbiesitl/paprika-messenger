@@ -4,7 +4,7 @@ GitHub distributes the complete private setup package: both skills, icons, servi
 
 ## Account installation from GitHub (default)
 
-Follow [Private account installation](ACCOUNT-PLUGIN.md): use the [complete private account ZIP](../releases/1.3.6/paprika-messenger-private-1.3.6.zip), save it through Plugin Creator's hosted account-save workflow, open the returned plugin link, install it and verify the intended scope. For a personal plugin, select the Personal account context before saving. An active workspace selects workspace scope.
+For source 1.3.7 and service type selection without Dot, build the complete ZIP with `node scripts/prepare-account-plugin.mjs` and follow [Private account installation](ACCOUNT-PLUGIN.md). The previous 1.3.6 release remains available: use the [complete private account ZIP](../releases/1.3.6/paprika-messenger-private-1.3.6.zip), save it through Plugin Creator's hosted account-save workflow, open the returned plugin link, install it and verify the intended scope. For a personal plugin, select the Personal account context before saving. An active workspace selects workspace scope.
 
 ```text
 Install Paprika Messenger from https://github.com/newbiesitl/paprika-messenger

@@ -1,4 +1,5 @@
 import { fail, id, text, plainText, strict, integer, encodeCursor, decodeCursor } from './validation.mjs';
+import { serviceConfiguration } from './service-config.mjs';
 
 // All user identities originate at the Sites hosting boundary. Never trust caller-supplied labels.
 export function authorize(request, env) {
@@ -20,7 +21,11 @@ const resultNote = row => ({...row, body:row.body ?? legacyNoteBody(row)});
 const participantAddressFields = ['participant_id','thread_id','label'];
 const receiverAddressFields = ['receiver_id','receiver_thread_id','receiver_label'];
 export class BoardService {
-  constructor(db, subject) { this.db = db; this.subject = subject; }
+  constructor(db, subject, env = {}) { this.db = db; this.subject = subject; this.env = env; }
+  async get_service_config(a) {
+    strict(a, []);
+    return serviceConfiguration(this.env);
+  }
   async board(value) {
     id(value, 'board', 64);
     if (value === 'main') await this.ensureDefaultBoard();

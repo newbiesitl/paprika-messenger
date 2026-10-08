@@ -2,7 +2,7 @@
 
 Paprika's default installation saves a PRIVATE plugin to the authenticated ChatGPT account so the package is available on supported cloud, mobile and desktop surfaces. The package contains the messaging skill, setup skill and complete service source. A repository checkout or a local Codex marketplace install supplies files on one computer; account saving is a separate required step for this default flow.
 
-Plugin **1.3.6** bundles service **0.5.5**. Download the [complete private account ZIP](../releases/1.3.6/paprika-messenger-private-1.3.6.zip) and its [SHA-256 checksum](../releases/1.3.6/SHA256SUMS). To build from a source checkout, run `node scripts/prepare-account-plugin.mjs`; use the exact absolute `archive` path in the returned report.
+Current source builds plugin **1.3.7** with service **0.5.6**, including service type selection without Dot. Build this version using the source command below. The previous release remains available: download the [complete private account ZIP](../releases/1.3.6/paprika-messenger-private-1.3.6.zip) and its [SHA-256 checksum](../releases/1.3.6/SHA256SUMS). To build from a source checkout, run `node scripts/prepare-account-plugin.mjs`; use the exact absolute `archive` path in the returned report.
 
 ## Save, install and set up
 
@@ -15,7 +15,7 @@ The reusable account setup plugin and the Site's service plugin have separate id
 
 ## Use the same latest package version
 
-Local and account setup packages are built from the same current manifest, **1.3.6**, and must report that version after installation. Compare native account metadata and the stored root plugin.json, or the installed local manifest, with the downloaded release; update an older eligible package through its supported workflow. Saving a Site connection alone does not install the complete account setup package.
+Local and account setup packages are built from the same current manifest, **1.3.7**, and must report that version after installation. Compare native account metadata and the stored root plugin.json, or the installed local manifest, with the downloaded release; update an older eligible package through its supported workflow. Saving a Site connection alone does not install the complete account setup package.
 
 The Site-provisioned connection has a separate plugin ID and listing version. The reported **1.0.0** UI label is not a Paprika package or service release in this repository; the only 1.0.0 reference in the portable manifest is its schema URL. Inspect that exact connection’s native metadata before attributing how its listing version was assigned. Do not overwrite a canonical Site connection with a ZIP or claim that changing a label updates its service. See [Version checks](SETUP.md#version-checks).
 

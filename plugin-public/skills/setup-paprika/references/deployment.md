@@ -1,6 +1,6 @@
 # Private Sites deployment and resume
 
-Use the installed Sites building, hosting and MCP skills and native tool schemas for current registration, source synchronization, packaging and publication. Discover actual tools before using them; names in this reference describe the native operations, not permission to invent an unavailable tool. The bundled service version is **0.5.5**. The package version is independent and appears in the plugin manifest.
+Use the installed Sites building, hosting and MCP skills and native tool schemas for current registration, source synchronization, packaging and publication. Discover actual tools before using them; names in this reference describe the native operations, not permission to invent an unavailable tool. The bundled service version is **0.5.6**. The package version is independent and appears in the plugin manifest.
 
 ## Select before creating
 
@@ -19,7 +19,10 @@ Also retain the verified account setup package's backend plugin ID, actual USER/
 ```json
 {
   "schema_version": 1,
-  "service_version": "0.5.5",
+  "service_version": "0.5.6",
+  "service_type": "chatgpt-codex",
+  "selection_source": "default_without_dot",
+  "dot_available": null,
   "source_directory": "/absolute/user-workspace/paprika-service",
   "phase": "source_ready",
   "account_save_pending": false,
@@ -44,6 +47,8 @@ Also retain the verified account setup package's backend plugin ID, actual USER/
 
 Replace example paths and nulls only with actual values. Use phases such as `account_save_pending`, `account_saved`, `account_install_pending`, `source_ready`, `registration_pending`, `registered`, `runtime_configured`, `published`, `connection_pending` and `verified`. An explicitly requested local-only installation may record the account step as skipped with that device scope. Record the account/workspace context only as a non-secret identifier already provided by the host; do not derive an identity from a display name. A verified-client entry identifies the host/client and the read-only check time, without messages or authentication data. Checkpoint claims are hints to revalidate, not authority to use another account or proof a connection is still active.
 
+Keep the selected `service_type`, its `selection_source` and verified or unknown `dot_available` with this same deployment. Revalidate them against authoritative runtime settings and `get_service_config` on resume. Never automatically change an existing deployment's type based on a different host's missing tools. `verified_clients` distinguishes `chatgpt`, `codex_local`, `codex_cloud` and optional `dot`; an unavailable client remains unverified without blocking available clients.
+
 Never store Git credentials, service tokens, OAuth values, verified-email settings, event keys, callback URLs, signing secrets, message bodies or private histories in this file. Keep credentials in session memory/hidden stdin only. On resume, reconcile the selected manifest, checkpoint and native Site metadata before acting. Recover a missing source credential for the same registered project. Resolve uncertain registration through native owner discovery/metadata before trying creation again; never blindly repeat `create_site`. Resume an existing deployment by its returned ID, and reuse an already saved archive-backed version when the source is unchanged. Source changes invalidate previous build/commit assertions.
 
 ## Build and register
@@ -58,6 +63,8 @@ Register once with native `create_site`. Immediately merge the exact returned ID
 
 Obtain the owner's verified account email from the selected Site's owner metadata or ask the user for the account address when metadata does not provide it. Configure `OWNER_EMAIL` and `COORDINATOR_EMAIL` to that owner through Sites runtime settings, marking sensitive identity values as secrets. Set `SITE_ORIGIN` to the exact origin in registration's `expected_url` or authoritative Site metadata. A Git remote is not the Site origin. Optional `OWNER_USER_ID` and `COORDINATOR_USER_ID` bind Site-scoped subjects only when those subjects are known; do not substitute a general account ID.
 
+For a new service, set non-secret `PAPRIKA_SERVICE_TYPE` to the onboarding choice, `chatgpt-codex` or `dot-chatgpt-codex`. It controls supported workflows and is not an account entitlement or security boundary. Preserve an existing value on retries and upgrades. An absent value on an existing deployment retains the legacy Dot-compatible type; changing it needs a user-requested type change, the same Site and a deployment with the new environment revision. No new database or migration is needed.
+
 Do not publish until the required owner settings and exact Site origin are configured. If the origin is unavailable, retrieve the same Site's authoritative metadata or resolve the missing value before deployment. Preserve all unrelated runtime keys and existing secrets. Redacted null secret values mean hidden, not absent; do not replace them merely because reads cannot reveal their plaintext. Runtime-setting updates require deploying a saved version with the new environment revision.
 
 The service is a Cloudflare Worker. Its build creates `dist/server/index.js` and `dist/_worker.js`; deployment includes the generated hosting manifest and append-only `drizzle/` migrations under `dist/.openai/`. Local SQLite development data and its loopback identity adapter are excluded. Use the current Sites source workflow to run any remaining checks/build, push the exact source state, and package the same verified commit. Credentials enter that workflow through hidden stdin, never shell arguments or files. For an existing source update, first open the same Site through the Sites source workflow and retain its opening result.
@@ -70,4 +77,4 @@ Call `get_site(include_mcp_connection: true)` after publication. Use its exact r
 
 Once the connection is confirmed, call `list_boards({})` through that plugin and `list_messages({"board":"main","limit":1})` for a new instance, or read a selected returned board for an existing instance. Both must succeed as actual authenticated data calls. The initialized `main` board may have no messages. Do not create/delete messages or acknowledge receipts for this check. A 401/403 means the supported connection or owner runtime settings need repair; never weaken access, invent trusted identity headers, or route through a development identity adapter.
 
-Record deployment, ChatGPT, Codex and Dot verification separately. Verify only clients whose execution is actually available; retain the exact provisioned plugin identity for connecting the rest. Follow the messaging skill for user-authorized test exchanges and separately opted-in notifications. The complete setup, security and event guides are shipped under `assets/service-template/docs/`; downloading or importing them alone establishes no connection.
+Record deployment, service type, ChatGPT, Codex local and Codex cloud verification separately, plus Dot only when selected. Verify only clients whose execution is actually available; retain the exact provisioned plugin identity for connecting the rest. Follow the messaging skill for user-authorized test exchanges and separately opted-in notifications. The complete setup, security and event guides are shipped under `assets/service-template/docs/`; downloading or importing them alone establishes no connection.
