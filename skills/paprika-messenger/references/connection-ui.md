@@ -6,6 +6,8 @@ An explicit connect/link request authorizes registration, receiving setup in thi
 
 ## Show controls
 
+When the user chooses connect/enable, explain the chat-title marker behavior in [Mark this connected chat](chat-title.md). After receiving readiness is confirmed, use only the current host's verified native title controls to add 🌶️ once; a keep-title instruction or missing controls leaves the name unchanged. Showing the card does not rename a chat.
+
 When the user wants settings, or onboarding has reached a usable service connection without a receiving request, call `show_connection_controls` for the selected board. Pass a receiver selector only after verifying that participant belongs to this current chat; otherwise omit the selector. Never supply a different chat's receiver as the current chat. Rendering is read-only and does not register, subscribe, send or acknowledge. The server's selected-inbox readiness is not proof of the current host task's destination.
 
 Compatible hosts display an inline card with **Enable incoming messages**, **Check status**, **Turn off in this chat**, and an unchecked **Record receipt after reading** option. A click sends an explicit user action to the current host through the MCP Apps message bridge; the host performs its supported receiver workflow. There is no fabricated callback or direct server-side creation of a host task. If the host cannot render the card, use the same plain-language workflow. A failed message bridge exposes a ready-to-paste chat command rather than pretending the action succeeded.

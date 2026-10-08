@@ -1,0 +1,15 @@
+# Mark this connected chat
+
+On a human request to connect or enable Paprika communication, explain that successful setup will add a single 🌶️ prefix to this chat's existing title where the host supports renaming. Honor “keep my title” or a disabled title-marker preference. Apply the marker only after the exact current chat's incoming route is verified; pending setup must not receive a success marker. Installation and ordinary send, inbox, status or background receiving runs do not rename chats.
+
+Use the host's supported current-conversation metadata and native title controls. Verify the exact conversation ID, backing kind and current title. For example, Codex desktop can expose `read_thread` and `set_thread_title`; a ChatGPT conversation requires the verified `chatgpt` source rather than the default Codex source. A ChatGPT web/mobile host may expose different controls or none. Discover what is actually available; do not invent a tool or assume this Codex app's capabilities exist in every host.
+
+Read the title immediately before updating it. Preserve every character of the current user-chosen title and prepend `🌶️ ` once. If it already starts with the pepper emoji, leave it unchanged. If the current title or exact destination cannot be read reliably, skip decoration rather than choosing a replacement name. Never use a participant label, peer's title or cached previous chat name as the title source.
+
+Call the supported native rename action for this exact current chat, then read back the title to verify the result. Respect host permission controls and explicit user instructions. The Messenger server cannot perform this host action. Ephemeral Codex sessions can reject metadata updates; treat that rejection as unsupported decoration, without changing the session type or creating a replacement chat. Do not use private ChatGPT endpoints, edit local chat databases, or create a new app-server to rename a desktop chat.
+
+Record only the title-marker preference and outcome (`applied`, `already_present`, `skipped` or `unverified`) in the private receiver binding; no title history is needed. An uncertain result must be reconciled through a fresh native read before another rename attempt. Do not create a schedule or hook to maintain the prefix, or restore a previous title after the user edits it. On a later explicit reconnect, use the latest title and the user's saved preference. If the user asks to remove the marker, remove only that prefix from the latest verified title.
+
+Report decoration separately from communication readiness: “I added 🌶️ to this chat's title.” If supported title controls are missing, say “Incoming messages are enabled; this host does not expose chat renaming.” If the result could not be read back, say the title change is unverified. A decoration failure does not disable a verified receiving route and must not claim that messages or event delivery failed.
+
+Codex's documented title operation is [`thread/name/set`](https://learn.chatgpt.com/docs/app-server). That does not establish a general ChatGPT plugin title API or a rename-event subscription.

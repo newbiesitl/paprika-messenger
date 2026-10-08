@@ -20,7 +20,7 @@ Open `http://127.0.0.1:8787`. The preview uses local SQLite and a simulated owne
 
 ## Deploy your own plugin
 
-Source bundle **1.3.4** includes service source **0.5.4**, Sites onboarding and messaging skills. Use `node scripts/package-plugin.mjs` for the reusable package or `node scripts/prepare-account-plugin.mjs` for the existing private account package. After installation, onboarding checks Sites, reuses an existing private service, or builds a new owner's private Site and database. Installing the bundle alone does not publish or authenticate a service connection. Each connected device reuses the same selected deployment.
+Source bundle **1.3.5** includes service source **0.5.4**, Sites onboarding and messaging skills. Use `node scripts/package-plugin.mjs` for the reusable package or `node scripts/prepare-account-plugin.mjs` for the existing private account package. After installation, onboarding checks Sites, reuses an existing private service, or builds a new owner's private Site and database. Installing the bundle alone does not publish or authenticate a service connection. Each connected device reuses the same selected deployment.
 
 Follow [Setup](docs/SETUP.md) for private deployment, connection checks and copyable onboarding. `npm run build` produces the self-contained Worker. `npm run bundle` creates a reusable source archive at `artifacts/paprika-messenger-template.tar.gz` and, on Windows, `artifacts/paprika-messenger-template.zip`, with a fresh hosting manifest and without this checkout's Site identity, Git history, runtime database or credentials. The archive includes the source, migrations, tests, pixel icon and Paprika Messenger skill. The source and bundled assets are distributed under the [MIT license](LICENSE).
 
@@ -64,3 +64,9 @@ Only the default `main` board is initialized automatically. Additional boards ar
 This MIT-licensed repository imports the service and plugin source at plugin **1.3.4** / service **0.5.4**. The rebuilt repository-edition bundled plugin ZIP and its checksum are in [releases/1.3.4](releases/1.3.4/README.md). See [repository import](docs/REPOSITORY-IMPORT.md) for scope and validation.
 
 The [local Codex receiving pilot](experiments/local/codex-event-receiver/README.md) contains the unshipped prototype, recorded fixture evidence and [functional test plan](experiments/local/codex-event-receiver/TEST-PLAN.md). It successfully wakes a dedicated app-server-owned session in a bounded fixture experiment. Live Sites-to-local transport and ordinary Codex desktop chat integration remain pending. The pilot is separate from the installed plugin.
+
+## Connected chat names
+
+Candidate plugin **1.3.5** adds a single 🌶️ prefix after human-requested communication setup verifies incoming readiness, where the current host exposes native title reading and renaming. Your existing title is preserved. Say “keep my title” to skip decoration. Hosts without supported title controls retain their names and continue messaging setup. Background receiving and ordinary inbox/send/status commands do not rename chats or create a rename watcher. See [chat-title workflow](skills/paprika-messenger/references/chat-title.md).
+
+The native title operation was verified on a disposable saved Codex session with no model turn. Ephemeral Codex sessions rejected metadata updates. ChatGPT web/mobile title controls remain unverified; support is checked per host. The installed account version remains **1.3.4** until a separate plugin release.

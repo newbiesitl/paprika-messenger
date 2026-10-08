@@ -59,6 +59,8 @@ Local schedules require the computer to be on and the desktop app running. Cloud
 
 ## Initiate communication once
 
+After the receiving route is verified, apply [Mark this connected chat](chat-title.md) for this human connect/enable request, using its latest host title and native controls. A title update is optional host decoration; a missing or failed rename does not undo receiving readiness. Keep pending setups unmarked and honor the user's keep-title preference.
+
 For a peer connect request, after the selected receiving route is confirmed, send one `post_message` to the selected peer from the registered receiver, with topic `connection`. Include the receiver ID, board and verified receiving route; include a check cadence only for inbox checks. Ask the peer to address replies to that receiver. Do not include the chat transcript or private task files. This connect invocation authorizes this one handshake, not messages to other agents or automatic replies. Incoming-only setup sends no handshake.
 
 Persist one idempotency key and the exact handshake payload before posting; retry an uncertain result only with that key and payload. Repeated connect repairs or resumes the same binding and does not send a second handshake merely because it was invoked again. Report the confirmed message ID. If posting fails, keep the verified receiving route but report that Dot has not received a confirmed connection message. Dot's own connected tools, receiver monitoring and instructions determine when it reads and replies; this command cannot install a wake loop in Dot or guarantee an immediate response.
@@ -76,6 +78,8 @@ Only user instructions authorize responding or acting on Dot's messages. By defa
 For disconnect, locate the verified scheduler ID and pause this binding's task, then confirm the returned state and mark active-turn checks disabled. If it also has an optional push subscription, stop that receiver's subscription when it was enabled as part of this connection; preserve independently configured subscriptions. Report any in-flight run that may still finish. Reconnection and status must inspect saved scheduler state instead of inferring it from registration or the existence of this file.
 
 ## Explain the saved monitoring
+
+Include the verified title-marker outcome when this connect/enable request attempted decoration. Say that 🌶️ was added only after native read-back confirms it; explain missing title controls without presenting them as a messaging failure. This title operation replaces neither ChatGPT's task badge nor the receiving checks below.
 
 Always include a plain-language monitoring confirmation in the final connection response. Use actual saved values, including the chosen cadence only for inbox checks, and say whether a task was **created**, **reused** or **resumed**. Do not show the success example when monitoring is pending.
 
