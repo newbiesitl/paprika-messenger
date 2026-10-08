@@ -23,6 +23,8 @@ Verify the authenticated connection before reporting success.
 
 Setup uses the complete installed template. New deployment needs Sites access, a writable workspace and Node.js 24 or later. Sites is currently available on Plus, Pro, Business, Enterprise and Edu, subject to account limits and workspace controls. Standalone Codex CLI can prepare and test local source; use ChatGPT web or the desktop app for Sites deployment and management. GPT-6 is not a package requirement.
 
+On Windows, verify that the execution environment also provides the package manager and the tools required by its installed Sites packager before registering a new service. Sites 0.1.75's archive helper requires Bash, which may be absent from a bundled Windows runtime even when Node and Git work. See [Windows Sites packaging troubleshooting](WINDOWS-SITES-PACKAGING.md) for the observed failure, prerequisite checks and recovery without creating another Site.
+
 Connect the exact service plugin returned by Sites in every participating client. Verify `list_boards({})` and a read-only `list_messages` call. Installing the setup package, deploying the service and connecting the service plugin are separate steps. Each receiving chat opts in to notifications separately.
 
 ## ChatGPT workspace installation
