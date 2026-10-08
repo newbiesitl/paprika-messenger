@@ -49,6 +49,9 @@ test('standalone ZIP combines existing App authentication with current skills an
     assert.deepEqual(JSON.parse(await readFile(join(plugin, '.app.json'), 'utf8')),
       { apps: { service: { id: fixture.app, required: true } } });
     const listing = validation.manifest.extensions['com.openai'].interface;
+    const nativeManifest = JSON.parse(await readFile(join(plugin, '.codex-plugin/plugin.json'), 'utf8'));
+    assert.equal(nativeManifest.apps, './.app.json');
+    assert.equal(nativeManifest.extensions['com.openai'].apps, undefined);
     assert.equal(listing.logo, './assets/paprika-icon.png'); assert.equal(listing.composerIcon, listing.logo);
     assert.deepEqual(listing.defaultPrompt, JSON.parse(original).extensions['com.openai'].interface.defaultPrompt);
     assert.deepEqual(await readFile(join(plugin, listing.logo)), await readFile(join(repository, 'skills/paprika-messenger/assets/dot-icon.png')));
@@ -56,6 +59,20 @@ test('standalone ZIP combines existing App authentication with current skills an
     assert(!validation.files.some(file => ['mcp.json', '.mcp.json', 'generic-sites-icon.png'].includes(file.path)));
     assert(!(await readFile(join(plugin, 'paprika-connection.json'), 'utf8')).includes('must-not-be-copied'));
     assert.deepEqual(await readFile(join(base.plugin_root, 'plugin.json')), original);
+    // Upgrade from the installed combined package after the legacy package is gone.
+    assert.equal(relative(directory, fixture.servicePluginRoot), 'installed-service');
+    await rm(fixture.servicePluginRoot, { recursive: true, force: true });
+    const upgraded = await mergeServicePlugin({ pluginRoot: base.plugin_root, servicePluginRoot: plugin,
+      siteConnection: fixture.siteConnection, outputRoot: join(directory, 'upgrade') });
+    await verifyPluginPackage(upgraded.plugin_root);
+    assert.deepEqual(await readFile(join(upgraded.plugin_root, '.app.json')), await readFile(join(plugin, '.app.json')));
+    const wrongSite = structuredClone(fixture.siteConnection); wrongSite.id = 'appgprj_' + 'c'.repeat(32);
+    await assert.rejects(readSiteServiceBinding({ servicePluginRoot: plugin, siteConnection: wrongSite }), /selected Site do not match/);
+    nativeManifest.extensions['com.openai'].apps = './wrong.json';
+    await writeFile(join(plugin, '.codex-plugin/plugin.json'), JSON.stringify(nativeManifest));
+    await assert.rejects(verifyPluginPackage(plugin), /discover the standalone App binding/);
+    delete nativeManifest.extensions['com.openai'].apps;
+    await writeFile(join(plugin, '.codex-plugin/plugin.json'), JSON.stringify(nativeManifest));
     await assert.rejects(inspectReusableFiles(plugin), /Owner-specific identity/);
     await writeFile(join(plugin, 'unexpected.txt'), fixture.siteConnection.id);
     await assert.rejects(verifyPluginPackage(plugin), /Owner-specific identity/);

@@ -51,7 +51,7 @@
     {
       "path": "docs/SETUP.md",
       "size_bytes": 11364,
-      "sha256": "7fec5545a8e4ad720da31307873a5fd6448810bb34142a66aabed4e58212257d"
+      "sha256": "65b80570f775ace905886702c336f62ce908bce4da913ac52d8a379be053ce20"
     },
     {
       "path": "docs/TEST-RESULTS.md",
@@ -136,7 +136,7 @@
     {
       "path": "README.md",
       "size_bytes": 14251,
-      "sha256": "7778dc4339aef6a6ea03110bc787fc335cec10d81944e44d65a05bb3e8e9663f"
+      "sha256": "b10aa83b6363e943c0e3620e125e0bad281bee95b7f03ef248899b27542fd2be"
     },
     {
       "path": "scripts/build.mjs",
@@ -215,8 +215,8 @@
     },
     {
       "path": "skills/paprika-messenger/SKILL.md",
-      "size_bytes": 11592,
-      "sha256": "ccb67e68353572ed43ae8357f9337c479b91e178e27b4647b9443494333b7009"
+      "size_bytes": 12093,
+      "sha256": "65eff32405db0dc7510d3d857fbe3ca56df48c7ac517902ff6a36e6068e61928"
     },
     {
       "path": "src/connection-ui.mjs",
