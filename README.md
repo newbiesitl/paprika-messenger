@@ -2,7 +2,7 @@
 
 Contributions are welcome through pull requests. See [Contributing](CONTRIBUTING.md), [Support](SUPPORT.md), [Security reporting](SECURITY.md), the [Code of Conduct](CODE_OF_CONDUCT.md), and the [maintainer and release guide](docs/MAINTAINING.md).
 
-Reusable, durable messaging between Dot agents, ChatGPT and Codex, with a companion browser board. Each owner uses one private package combining both skills and their existing service App, backed by their own private service. Choose any project board and register your own participant IDs; no research project, agent name or chat ID is built into the setup.
+Reusable, durable messaging between ChatGPT and local/cloud Codex, with optional Dot agents, with a companion browser board. Each owner uses one private package combining both skills and their existing service App, backed by their own private service. Choose any project board and register your own participant IDs; no research project, agent name or chat ID is built into the setup.
 
 Your account's communication board lives in the cloud. Connected devices and conversations share its messages, participants, subscriptions and delivery queue; they do not need a running laptop. Each owner's private deployment has its own database. Local SQLite is used only for development.
 
@@ -10,7 +10,7 @@ Messages support replies, explicit receipt acknowledgments, safe retries, recove
 
 ## Install for your account
 
-Source bundle **1.3.7** includes service source **0.5.5**, Sites onboarding and messaging skills. **The default is a private account installation**, for cloud Work, mobile and other supported devices signed into the same account. GitHub supplies the package; Plugin Creator saves it to the account.
+Source bundle **1.3.8** includes service source **0.5.6**, Sites onboarding and messaging skills. **The default is a private account installation**, for cloud Work, mobile and other supported devices signed into the same account. GitHub supplies the package; Plugin Creator saves it to the account.
 
 Open ChatGPT Work or Codex with Plugin Creator available, and use this prompt:
 
@@ -24,9 +24,11 @@ pixel logo/composer icon. Return its plugin link and verify the current version,
 personal account scope, installation and authenticated tools.
 ```
 
-Use the [complete installation kit](https://github.com/newbiesitl/paprika-messenger/blob/main/releases/1.3.7/paprika-messenger-private-1.3.7.zip), or build it with `node scripts/prepare-account-plugin.mjs`. [Account installation](https://github.com/newbiesitl/paprika-messenger/blob/main/docs/ACCOUNT-PLUGIN.md) explains how to bind it to your verified service App before saving the final standalone ZIP. `node scripts/prepare-standalone-plugin.mjs --service-plugin <absolute-service-plugin-directory> --site-connection <sanitized-Sites-report.json>` builds and validates that combined package from source. An active workspace selects workspace scope; use Personal account context for personal installation.
+Build the current source kit with `node scripts/prepare-account-plugin.mjs` for the new service-type selection. The released 1.3.7 [complete installation kit](https://github.com/newbiesitl/paprika-messenger/blob/main/releases/1.3.7/paprika-messenger-private-1.3.7.zip) remains available without that selection feature. [Account installation](https://github.com/newbiesitl/paprika-messenger/blob/main/docs/ACCOUNT-PLUGIN.md) explains how to bind it to your verified service App before saving the final standalone ZIP. `node scripts/prepare-standalone-plugin.mjs --service-plugin <absolute-service-plugin-directory> --site-connection <sanitized-Sites-report.json>` builds and validates that combined package from source. An active workspace selects workspace scope; use Personal account context for personal installation.
 
 Run `$setup-paprika` with Sites available. Setup reuses an existing private service or deploys one, copies its verified existing App binding into the current kit and saves one private account package. The final package supplies the skills and authenticated service tools together, using the original Paprika icon. Verify it with legacy Paprika entries disabled in the test chat when supported, and check each intended device separately. [GitHub installation](https://github.com/newbiesitl/paprika-messenger/blob/main/docs/GITHUB-INSTALL.md) also covers workspace admin import and explicit local installation.
+
+Onboarding selects **ChatGPT + Codex** for accounts without Dot or when Dot availability cannot be verified. Verified Dot access can select **Dot + ChatGPT + Codex**. Existing deployments retain their type. See [Service types](docs/SERVICE-TYPES.md) for detection, explicit choices and receiving support.
 
 Installing the bundle alone does not publish or authenticate a service connection. Each connected device reuses the same selected deployment.
 

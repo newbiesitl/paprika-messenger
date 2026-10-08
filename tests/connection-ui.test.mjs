@@ -40,6 +40,16 @@ test('connection card rendering does not request monitoring and rejects messages
   assert.equal(h.timers.size,0);
 });
 
+test('ChatGPT and Codex service type is visible without requesting Dot or creating monitoring',async()=>{
+  const h=harness();await h.initialize();
+  h.show({board:'main',receiver_id:'current',state:'events_not_configured',service_type:'chatgpt-codex'});
+  assert.match(h.elements.address.textContent,/ChatGPT \+ Codex/);
+  assert.doesNotMatch(h.elements.prompt.value,/\bDot\b/);
+  assert.match(h.elements.detail.textContent,/on-demand inbox reads need no event setup or task/);
+  assert.equal(h.sent.filter(message=>message.method==='ui/message'||message.method==='tools/call').length,0);
+  assert.equal(h.timers.size,0);
+});
+
 test('enable is an explicit same-chat request, receipts are optional, and host acceptance is not readiness',async()=>{
   const h=harness();await h.initialize();h.show({board:'main',receiver_id:'displayed-address',state:'subscription_required'});
   h.elements.acknowledge.checked=true;h.elements.acknowledge.change();

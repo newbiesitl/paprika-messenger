@@ -9,7 +9,7 @@ const db=new SqliteD1('.dev-data/board.sqlite');
 await migrateDevelopmentDatabase(db.connection);
 const port=Number(process.env.DOT_DEV_PORT || 8787);
 if(!Number.isSafeInteger(port) || port<1 || port>65535)throw Error('DOT_DEV_PORT must be a port from 1 to 65535.');
-const env={DB:db,OWNER_USER_ID:'local-development-owner',COORDINATOR_USER_ID:'local-development-owner',SITE_ORIGIN:`http://127.0.0.1:${port}`};
+const env={PAPRIKA_SERVICE_TYPE:process.env.PAPRIKA_SERVICE_TYPE ?? 'chatgpt-codex',DB:db,OWNER_USER_ID:'local-development-owner',COORDINATOR_USER_ID:'local-development-owner',SITE_ORIGIN:`http://127.0.0.1:${port}`};
 // Development adapter binds loopback only and simulates Sites' verified edge identity.
 // This adapter is NEVER included in the Worker build or production package.
 createServer(async(req,res)=>{

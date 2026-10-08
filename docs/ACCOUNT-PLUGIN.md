@@ -1,8 +1,8 @@
 # One private account package (default)
 
-Paprika **1.3.7** combines the current messaging skill, setup skill, full service source **0.5.5**, original Paprika pixel icon and the required existing service App in one personalized package. The App supplies authenticated MCP tools and the existing OAuth connection. Supported cloud, mobile and desktop clients use that same private account package and service.
+Paprika **1.3.8** combines the current messaging skill, setup skill, full service source **0.5.6**, original Paprika pixel icon and the required existing service App in one personalized package. The App supplies authenticated MCP tools and the existing OAuth connection. Supported cloud, mobile and desktop clients use that same private account package and service.
 
-The [public ZIP](../releases/1.3.7/paprika-messenger-private-1.3.7.zip) and [checksum](../releases/1.3.7/SHA256SUMS) are an owner-neutral installation kit. Each owner binds it to their own private Site before saving the final standalone package. Publishing one owner's App ID or endpoint in a shared archive would connect other installers to the wrong service.
+The [public ZIP](../releases/1.3.7/paprika-messenger-private-1.3.7.zip) and [checksum](../releases/1.3.7/SHA256SUMS) are an owner-neutral installation kit. That 1.3.7 kit does not include service-type selection; build the current source for that feature. Each owner binds their kit to their own private Site before saving the final standalone package. Publishing one owner's App ID or endpoint in a shared archive would connect other installers to the wrong service.
 
 ## Build the single package
 
@@ -32,13 +32,13 @@ A saved ZIP, link, installed cache or successful Site deployment does not prove 
 
 ## Local installation and receiving defaults
 
-Account installation is the default. For an explicit local-only request, add `--kind local` to the same standalone builder. It uses the same **1.3.7** manifest, binding, skills and Paprika icon; install the resulting package through the supported local interface. Local registration stays device-only.
+Account installation is the default. For an explicit local-only request, add `--kind local` to the same standalone builder. It uses the same **1.3.8** manifest, binding, skills and Paprika icon; install the resulting package through the supported local interface. Local registration stays device-only.
 
 Local receiving defaults to receiving only with on-demand inbox reads and no hooks, schedules or background service. Supported cloud receiving chats default to verified event hooks when the user requests connection/receiving setup. If there is no selected peer, finish receiving-only without asking for a Dot. Each receiving chat establishes its own route; installation alone creates no subscriptions.
 
 ## Why an older entry shows 1.0.0
 
-The inspected canonical Site-generated service plugin has **1.0.0** in its cached compatibility manifest. It contains the service App binding but lacks this repository's two-skill package. That listing version is separate from Paprika package **1.3.7** and service **0.5.5**. The merger copies its verified existing App reference, not its old manifest version, generic icon or listing metadata. It preserves the latest package and original Paprika icon. The old canonical backend identity can remain as the underlying App; changing or deleting it is unnecessary for combining the package.
+The inspected canonical Site-generated service plugin has **1.0.0** in its cached compatibility manifest. It contains the service App binding but lacks this repository's two-skill package. That listing version is separate from Paprika package **1.3.8** and service **0.5.6**. The merger copies its verified existing App reference, not its old manifest version, generic icon or listing metadata. It preserves the latest package and original Paprika icon. The old canonical backend identity can remain as the underlying App; changing or deleting it is unnecessary for combining the package.
 
 ## Copyable installation request
 
