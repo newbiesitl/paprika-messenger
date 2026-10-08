@@ -1,0 +1,13 @@
+Generation method: built-in ImageGen
+Reference: Paprika pet artwork retrieved from the user's Pets collection.
+Suggested plugin name: Paprika Relay
+
+Use case: logo-brand.
+Asset type: one square plugin icon, designed to remain legible at 32–64 pixels.
+Input image: a reference sprite sheet showing the same Paprika pet in many poses. Use it only as the character identity reference; output ONE avatar, not a sprite sheet.
+Primary request: a polished anime-style Paprika avatar for an agent communication plugin connecting Dot, ChatGPT and Codex.
+Preserve the recognizable short, tousled auburn/copper bob with layered bangs, expressive warm amber-brown eyes, fair skin, and simple bright red crew-neck shirt from the reference. Keep her playful, clever, friendly personality.
+Style: crisp anime linework, confident simplified silhouette, restrained cel shading and clean highlights. Render a head-and-shoulders portrait with natural anime proportions, a warm knowing smile, and a slight three-quarter turn toward the viewer. This is a character avatar, not a pepper vegetable.
+Composition: centered large face, hair and shoulders comfortably inside a circular crop safe area, generous 8 percent edge clearance. Crop at upper chest. The face and hair are the main focal point. Avoid tiny detail.
+Backdrop: solid deep navy-indigo that contrasts with the copper hair and red shirt, matching a dark communication app. One small clean cream speech-bubble symbol near the upper-right of the portrait with three red dots, secondary to the face, to suggest communication.
+Constraints: single square icon, no lettering, no app names, no watermark, no border, no montage, no extra characters, no decorative scenery, no headset. Produce finished avatar artwork suitable for a plugin icon.

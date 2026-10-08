@@ -1,0 +1,127 @@
+{
+  "experiment": "isolated-local-app-server-event-receiver",
+  "started_at": "2026-10-07T14:25:53.496Z",
+  "baseline": {
+    "plugin": "1.3.4",
+    "service": "0.5.4",
+    "published_changes": false
+  },
+  "scope": {
+    "producer": "in-memory fixture using production BoardService and EventService",
+    "event_transport": "explicit fixture mapping to loopback",
+    "receiver": "fresh ephemeral app-server-owned session",
+    "live_sites_delivery_verified": false,
+    "existing_desktop_chat_wake_verified": false,
+    "schedules_created": 0,
+    "automatic_acknowledgments": false,
+    "automatic_replies": false
+  },
+  "stages": [
+    {
+      "stage": "app_server_initialized",
+      "at": "2026-10-07T14:25:53.587Z",
+      "user_agent": "Codex Desktop/0.160.0 (Windows 10.0.26200; x86_64) dumb (paprika_receiver_pilot; 0.1.0)"
+    },
+    {
+      "stage": "existing_runtime_account_available",
+      "at": "2026-10-07T14:25:54.020Z",
+      "account_type": "chatgpt"
+    },
+    {
+      "stage": "ephemeral_owned_session_created_idle",
+      "at": "2026-10-07T14:25:54.142Z",
+      "thread_id": "redacted-pilot-session-3",
+      "sandbox": "readOnly"
+    },
+    {
+      "stage": "authenticated_fixture_mcp_ready",
+      "at": "2026-10-07T14:25:54.150Z"
+    },
+    {
+      "stage": "fixture_signed_callback_verified",
+      "at": "2026-10-07T14:25:54.165Z"
+    },
+    {
+      "stage": "fixture_message_stored",
+      "at": "2026-10-07T14:25:54.166Z",
+      "message_id": "47670d27-67c8-40bc-bf5a-9c29886675fd",
+      "stored_at": "2026-10-07T14:25:54.166Z"
+    },
+    {
+      "stage": "fixture_webhook_http_200",
+      "at": "2026-10-07T14:25:54.174Z",
+      "attempts": 1
+    },
+    {
+      "stage": "idle_verified_before_event_turn",
+      "at": "2026-10-07T14:25:54.305Z"
+    },
+    {
+      "stage": "runtime_turn_started",
+      "at": "2026-10-07T14:25:54.331Z",
+      "turn_id": "redacted-pilot-turn-4",
+      "runtime_observed_at": "2026-10-07T14:25:54.331Z"
+    },
+    {
+      "stage": "runtime_completed_and_report_verified",
+      "at": "2026-10-07T14:26:12.991Z",
+      "message_id": "47670d27-67c8-40bc-bf5a-9c29886675fd",
+      "runtime_observed_at": "2026-10-07T14:26:12.991Z"
+    },
+    {
+      "stage": "pilot_failed",
+      "at": "2026-10-07T14:26:12.992Z",
+      "error": {
+        "code": 23,
+        "message": "The operation was aborted due to timeout"
+      }
+    }
+  ],
+  "model_turn_requests": 1,
+  "result": "failed",
+  "rollback": {
+    "app_server": {
+      "stopped": true,
+      "pid": 18796,
+      "forced": false
+    },
+    "receiver": {
+      "stopped": true,
+      "port": 58034
+    },
+    "fixture_database_closed": true,
+    "live_subscription_created": false,
+    "production_configuration_changed": false
+  },
+  "pilot_thread_id": "redacted-pilot-session-3",
+  "message_id": "47670d27-67c8-40bc-bf5a-9c29886675fd",
+  "nonce": "50de16d5-b1ef-4533-ad4c-d557af55b0b7",
+  "runtime_item_types": [
+    "agentMessage"
+  ],
+  "displayed_report": {
+    "message_id": "47670d27-67c8-40bc-bf5a-9c29886675fd",
+    "sender": "Paprika fixture",
+    "body": "Hello from the isolated Paprika fixture. Pilot marker: 50de16d5-b1ef-4533-ad4c-d557af55b0b7",
+    "nonce": "50de16d5-b1ef-4533-ad4c-d557af55b0b7",
+    "reply_to_id": null
+  },
+  "failure": {
+    "code": 23,
+    "message": "The operation was aborted due to timeout"
+  },
+  "receiver_trace": [
+    {
+      "stage": "event_accepted",
+      "at": "2026-10-07T14:25:54.173Z",
+      "event_id": "evt_47670d27-67c8-40bc-bf5a-9c29886675fd_c673df392b99aab3056f_3",
+      "message_id": "47670d27-67c8-40bc-bf5a-9c29886675fd"
+    },
+    {
+      "stage": "message_fetched",
+      "at": "2026-10-07T14:26:07.904Z",
+      "message_id": "47670d27-67c8-40bc-bf5a-9c29886675fd"
+    }
+  ],
+  "finished_at": "2026-10-07T14:26:13.035Z"
+}

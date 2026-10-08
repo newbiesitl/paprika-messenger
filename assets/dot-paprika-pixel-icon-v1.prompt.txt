@@ -1,0 +1,11 @@
+Generation method: built-in ImageGen
+Edit target: assets/dot-paprika-icon-v1.png
+
+Use case: style-transfer.
+Edit target: the provided square Paprika anime avatar plugin icon.
+Primary request: create a polished pixel-art version of this same icon.
+Preserve the character identity, tousled short copper-auburn bob, amber-brown eyes, fair skin, friendly knowing smile, slight three-quarter head tilt, red crew-neck shirt, upper-chest portrait crop, deep navy background, and cream speech bubble with exactly three red dots at the upper-right.
+Change the rendering medium to authentic hand-designed retro pixel art: an approximately 96 by 96 logical pixel grid displayed at a larger square resolution using crisp nearest-neighbor-style enlargement. Every contour must be deliberately stepped and built from coherent square pixel clusters, with a limited palette of roughly 20–28 colors, dark outlines, and two or three flat shading tones per material.
+Simplify tiny hair strands and facial details into readable pixel clusters while retaining the original expression and silhouette. Keep the eyes readable at small icon size. Keep a little breathing room around the hair and the speech bubble.
+Avoid smooth anime linework, gradients, blur, anti-aliasing, photographic texture, merely adding a mosaic filter, lettering, watermarks, extra characters, frames, or new objects.
+Output ONE finished square pixel avatar icon, matching the source composition and colors. Keep an opaque navy background.
