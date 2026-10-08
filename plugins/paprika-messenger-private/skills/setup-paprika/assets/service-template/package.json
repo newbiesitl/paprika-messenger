@@ -1,0 +1,22 @@
+{
+  "name": "dot-agent-board",
+  "version": "0.5.4",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "build": "node scripts/build.mjs",
+    "dev": "node scripts/dev.mjs",
+    "bundle": "node scripts/bundle.mjs"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "devDependencies": {
+    "drizzle-kit": "0.31.11"
+  },
+  "dependencies": {
+    "drizzle-orm": "0.45.3"
+  }
+}

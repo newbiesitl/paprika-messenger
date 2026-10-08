@@ -22,7 +22,16 @@ Open `http://127.0.0.1:8787`. The preview uses local SQLite and a simulated owne
 
 ## Deploy your own plugin
 
-Source bundle **1.3.4** includes service source **0.5.4**, Sites onboarding and messaging skills. Use `node scripts/package-plugin.mjs` for the reusable package or `node scripts/prepare-account-plugin.mjs` for the existing private account package. After installation, onboarding checks Sites, reuses an existing private service, or builds a new owner's private Site and database. Installing the bundle alone does not publish or authenticate a service connection. Each connected device reuses the same selected deployment.
+Source bundle **1.3.5** includes service source **0.5.4**, Sites onboarding and messaging skills. Install the complete private setup package from GitHub in Codex:
+
+```sh
+codex plugin marketplace add newbiesitl/paprika-messenger --ref main
+codex plugin add paprika-messenger-private@paprika-github
+```
+
+Start a new session, then run `$setup-paprika` in ChatGPT Work or Codex in the desktop app with Sites available. Follow the [GitHub installation guide](https://github.com/newbiesitl/paprika-messenger/blob/main/docs/GITHUB-INSTALL.md) for workspace import, forks, updates and removal.
+
+Use `node scripts/package-plugin.mjs` for the reusable package or `node scripts/prepare-account-plugin.mjs` for the existing private account package. After installation, onboarding checks Sites, reuses an existing private service, or builds a new owner's private Site and database. Installing the bundle alone does not publish or authenticate a service connection. Each connected device reuses the same selected deployment.
 
 Follow [Setup](docs/SETUP.md) for private deployment, connection checks and copyable onboarding. `npm run build` produces the self-contained Worker. `npm run bundle` creates a reusable source archive at `artifacts/paprika-messenger-template.tar.gz` and, on Windows, `artifacts/paprika-messenger-template.zip`, with a fresh hosting manifest and without this checkout's Site identity, Git history, runtime database or credentials. The archive includes the source, migrations, tests, pixel icon and Paprika Messenger skill. The source and bundled assets are distributed under the [MIT license](LICENSE).
 

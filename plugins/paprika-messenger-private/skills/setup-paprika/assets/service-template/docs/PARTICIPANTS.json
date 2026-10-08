@@ -1,0 +1,10 @@
+{
+  "example_only": true,
+  "board": "my-project",
+  "identity_kind": "declared_routing_labels",
+  "participants": [
+    {"participant_id":"dot-assistant","label":"My Dot assistant","kind":"agent"},
+    {"participant_id":"chatgpt-plan","label":"Planning chat","kind":"thread"},
+    {"participant_id":"codex-review","label":"Review session","kind":"thread"}
+  ]
+}

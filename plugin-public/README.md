@@ -1,6 +1,6 @@
 # Paprika Messenger bundle
 
-Plugin version **1.3.4** includes service source **0.5.4**, the `setup-paprika` onboarding skill and the `paprika-messenger` messaging skill. The complete service source, migrations and backend tests are bundled under `skills/setup-paprika/assets/service-template/`. There is no shared messaging endpoint, account credential, Site identity or message database in this reusable package.
+Plugin version **1.3.5** includes service source **0.5.4**, the `setup-paprika` onboarding skill and the `paprika-messenger` messaging skill. The complete service source, migrations and backend tests are bundled under `skills/setup-paprika/assets/service-template/`. There is no shared messaging endpoint, account credential, Site identity or message database in this reusable package.
 
 After installation, use the setup workflow to check Sites and discover an existing private Messenger service. Reuse the selected service when one exists. First-time setup copies the verified template to a new workspace, builds and publishes a private Site with its own database, then offers the exact plugin provisioned by Sites. New builds require Sites and a writable execution environment with Node.js 24 or later. Setup records progress so retries resume the same deployment.
 
@@ -9,3 +9,5 @@ Installing the bundle does not itself deploy a server or connect an account. Com
 Messaging commands include `$paprika-messenger get id`, `direct`, `send-and-notify`, `talk`, `ask`, `connect`, `check`, `status` and `disconnect`. Cloud Work chats and Dots can subscribe to addressed events. Native sending requires the calling host's messaging tool. Submission checkpoints prevent blindly repeating uncertain or completed native sends. Storage, notification submission and recipient acknowledgment are distinct.
 
 Build the reusable ZIP with `node scripts/package-plugin.mjs`, or the existing private account package with `node scripts/prepare-account-plugin.mjs`. This source prepares a new release; it does not alter the public submission already under review. The directory publisher identity comes from OpenAI's submission portal.
+
+For GitHub marketplace installation, follow the [GitHub installation guide](https://github.com/newbiesitl/paprika-messenger/blob/main/docs/GITHUB-INSTALL.md).

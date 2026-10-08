@@ -1,0 +1,20 @@
+{
+  "name": "paprika-github",
+  "interface": {
+    "displayName": "Paprika Messenger (GitHub)"
+  },
+  "plugins": [
+    {
+      "name": "paprika-messenger-private",
+      "source": {
+        "source": "local",
+        "path": "./plugins/paprika-messenger-private"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_USE"
+      },
+      "category": "Communication"
+    }
+  ]
+}

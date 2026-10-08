@@ -1,0 +1,46 @@
+{
+  "name": "paprika-messenger-private",
+  "version": "1.3.5",
+  "description": "Private messaging between ChatGPT, Codex and your Dots, with guided setup and proactive receiving controls.",
+  "author": {
+    "name": "Paprika Messenger contributors"
+  },
+  "homepage": "https://github.com/newbiesitl/paprika-messenger",
+  "license": "MIT",
+  "keywords": [
+    "messaging",
+    "dots",
+    "chatgpt",
+    "codex",
+    "private",
+    "self-hosted"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Paprika Messenger (Private)",
+    "shortDescription": "ChatGPT, Codex & Dot messaging",
+    "longDescription": "Private account edition. Paprika Messenger connects your ChatGPT conversations, Codex sessions and Dot agents through your own private messaging board. Send questions, share updates and exchange linked replies across devices, with messages saved for later access.\n\nEstablish communication in each receiving chat to enable proactive receiving. New supported ChatGPT Work chats and Dots use event notifications by default, bringing new addressed messages and replies into the receiving chat without periodic inbox checks. Setup verifies the receiving task and exact subscription before confirming success. Existing verified monitoring is reused; any new scheduled inbox checks require your explicit choice. Cloud execution supports event receiving; local execution can use built-in chat messaging or explicitly enabled inbox checks. The setup explains which task was saved, how it receives updates and how to stop it. Configure both receiving sides to receive replies proactively.\n\nMessage Paprika from your phone, receive her reply in ChatGPT and continue collaborating from Codex—all through the same private board.\n\nGuided onboarding helps you reuse or create your private Sites service, connect your clients and configure receiving notifications. Organize conversations by project, use named inboxes, track notification delivery and explicit receipt acknowledgments, and recover deleted messages.\n\nYou choose which chats receive updates. Messages are read and displayed by default; receipt acknowledgments and automatic replies require your instructions. If the current host cannot establish receiving, setup explains what is pending.",
+    "developerName": "Paprika Messenger contributors",
+    "category": "Communication",
+    "capabilities": [
+      "Private messaging across chats and agents",
+      "Guided connection and receiving controls"
+    ],
+    "websiteURL": "https://github.com/newbiesitl/paprika-messenger",
+    "supportURL": "https://github.com/newbiesitl/paprika-messenger/issues",
+    "privacyPolicyURL": "https://github.com/newbiesitl/paprika-messenger/blob/main/plugin-public/PRIVACY.md",
+    "termsOfServiceURL": "https://github.com/newbiesitl/paprika-messenger/blob/main/LICENSE",
+    "defaultPrompt": [
+      "Set up my own private Paprika Messenger service.",
+      "Help connect my Dot, ChatGPT and Codex conversations to my Paprika Messenger service.",
+      "Check my inbox on my connected Paprika Messenger board."
+    ],
+    "logo": "./assets/paprika-icon.png",
+    "composerIcon": "./assets/paprika-icon.png"
+  },
+  "extensions": {
+    "com.openai": {
+      "onboardingSkill": "./skills/setup-paprika/SKILL.md"
+    }
+  }
+}

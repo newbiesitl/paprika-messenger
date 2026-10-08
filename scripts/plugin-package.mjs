@@ -1,7 +1,7 @@
 import { cp, mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { resolve } from 'node:path';
-import { inspectReusableFiles, stageTemplate, verifyTemplate } from './bundle.mjs';
+import { inspectReusableFiles, normalizeReusableText, stageTemplate, verifyTemplate } from './bundle.mjs';
 
 export const bundleMetadataFile = 'paprika-bundle.json';
 const templatePath = 'skills/setup-paprika/assets/service-template';
@@ -127,6 +127,7 @@ export async function preparePluginPackage({ repository, kind = 'account', outpu
   if (kind === 'local')
     await writeFile(resolve(pluginRoot, 'README.md'), '# Paprika Messenger (Local)\n\nPlugin version ' + manifest.version
       + ', bundled service version ' + service.service_version + '. This local Codex copy includes the setup workflow, messaging skills and reusable service source. Use the existing authenticated Messenger service connection. Installing the local plugin creates no additional service, subscription or schedule. This copy is separate from the private account plugin and public submission.\n');
+  await normalizeReusableText(pluginRoot);
   const validation = await verifyPluginPackage(pluginRoot);
   const archive = resolve(outputRoot, manifest.name + '-' + manifest.version + '.zip');
   await writeZip(archive, pluginRoot, manifest.name, validation.files);
