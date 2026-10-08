@@ -10,8 +10,98 @@ import { inspectReusableFiles, stageTemplate, verifyServiceVersion, verifyTempla
 import { prepareLocalPlugin } from '../scripts/prepare-local-plugin.mjs';
 import { prepareGithubPlugin } from '../scripts/prepare-github-plugin.mjs';
 import { prepareDeploymentArchive } from '../scripts/package.mjs';
+import { mergeServicePlugin, readSiteServiceBinding } from '../plugin-public/skills/setup-paprika/scripts/merge-service-plugin.mjs';
 
 const repository = fileURLToPath(new URL('../', import.meta.url));
+
+async function standaloneFixture(directory) {
+  const servicePluginRoot = join(directory, 'installed-service');
+  await mkdir(join(servicePluginRoot, '.codex-plugin'), { recursive: true });
+  const app = 'asdk_app_sites_' + 'a'.repeat(32);
+  const siteConnection = { id: 'appgprj_' + 'b'.repeat(32), current_user_role: 'owner', status: 'active',
+    mcp_connection: { plugin_id: 'plugin_' + app, mcp_url: 'https://example.chatgpt.site/mcp',
+      oauth_resource: 'https://example.chatgpt.site/mcp' }, siwc_bypass_bearer_token: 'must-not-be-copied' };
+  await writeFile(join(servicePluginRoot, '.app.json'), JSON.stringify({ apps: { service: { id: app } } }));
+  await writeFile(join(servicePluginRoot, '.codex-plugin/plugin.json'), JSON.stringify({
+    name: 'service', version: '1.0.0', apps: './.app.json',
+    interface: { websiteURL: 'https://example.chatgpt.site', logo: './generic-sites-icon.png' } }));
+  return { servicePluginRoot, siteConnection, app };
+}
+
+test('standalone ZIP combines existing App authentication with current skills and preserves the Local icon', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'paprika-standalone-'));
+  try {
+    const fixture = await standaloneFixture(directory);
+    const base = await preparePluginPackage({ repository, outputRoot: join(directory, 'base') });
+    const original = await readFile(join(base.plugin_root, 'plugin.json'));
+    const siteReport = join(directory, 'site.json');
+    await writeFile(siteReport, JSON.stringify(fixture.siteConnection));
+    // Execute the helper shipped inside the package, independently of the repository.
+    const report = JSON.parse(run(process.execPath, [join(base.plugin_root, 'skills/setup-paprika/scripts/merge-service-plugin.mjs'),
+      '--service-plugin', fixture.servicePluginRoot, '--site-connection', siteReport, '--output', join(directory, 'combined')], directory));
+    const extracted = join(directory, 'extracted'); await mkdir(extracted);
+    run('tar', ['-xf', report.archive, '-C', extracted], directory);
+    const plugin = join(extracted, 'paprika-messenger-private');
+    const validation = await verifyPluginPackage(plugin);
+    assert.equal(validation.bundle.distribution, 'standalone');
+    assert.equal(validation.manifest.version, base.package_version);
+    assert.equal(validation.manifest.extensions['com.openai'].apps, './.app.json');
+    assert.deepEqual(JSON.parse(await readFile(join(plugin, '.app.json'), 'utf8')),
+      { apps: { service: { id: fixture.app, required: true } } });
+    const listing = validation.manifest.extensions['com.openai'].interface;
+    assert.equal(listing.logo, './assets/paprika-icon.png'); assert.equal(listing.composerIcon, listing.logo);
+    assert.deepEqual(listing.defaultPrompt, JSON.parse(original).extensions['com.openai'].interface.defaultPrompt);
+    assert.deepEqual(await readFile(join(plugin, listing.logo)), await readFile(join(repository, 'skills/paprika-messenger/assets/dot-icon.png')));
+    for (const skill of ['paprika-messenger', 'setup-paprika']) assert(validation.files.some(file => file.path === 'skills/' + skill + '/SKILL.md'));
+    assert(!validation.files.some(file => ['mcp.json', '.mcp.json', 'generic-sites-icon.png'].includes(file.path)));
+    assert(!(await readFile(join(plugin, 'paprika-connection.json'), 'utf8')).includes('must-not-be-copied'));
+    assert.deepEqual(await readFile(join(base.plugin_root, 'plugin.json')), original);
+    await assert.rejects(inspectReusableFiles(plugin), /Owner-specific identity/);
+    await writeFile(join(plugin, 'unexpected.txt'), fixture.siteConnection.id);
+    await assert.rejects(verifyPluginPackage(plugin), /Owner-specific identity/);
+  } finally {
+    assert(directory.startsWith(resolve(tmpdir()) + sep + 'paprika-standalone-'));
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('standalone binding refuses wrong Site, wrong App ID, credential endpoints and expanded app permissions', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'paprika-binding-'));
+  try {
+    const fixture = await standaloneFixture(directory);
+    await readSiteServiceBinding(fixture);
+    for (const patch of [{ plugin_id: 'plugin_wrong' }, { mcp_url: 'https://wrong.chatgpt.site/mcp', oauth_resource: 'https://wrong.chatgpt.site/mcp' },
+      { mcp_url: 'https://token@example.chatgpt.site/mcp' }, { oauth_resource: 'https://example.chatgpt.site/mcp?token=secret' }]) {
+      const siteConnection = structuredClone(fixture.siteConnection); Object.assign(siteConnection.mcp_connection, patch);
+      await assert.rejects(readSiteServiceBinding({ ...fixture, siteConnection }), /match|origin|credentials/);
+    }
+    await assert.rejects(readSiteServiceBinding({ ...fixture, siteConnection: { ...fixture.siteConnection, current_user_role: 'viewer' } }), /owner read-back/);
+    await writeFile(join(fixture.servicePluginRoot, '.app.json'), JSON.stringify({ apps: { service: { id: 'plugin_' + fixture.app } } }));
+    await assert.rejects(readSiteServiceBinding(fixture), /exact App ID/);
+    await writeFile(join(fixture.servicePluginRoot, '.app.json'), JSON.stringify({ apps: { service: { id: fixture.app, token: 'secret' } } }));
+    await assert.rejects(readSiteServiceBinding(fixture), /Unexpected connection configuration/);
+  } finally {
+    assert(directory.startsWith(resolve(tmpdir()) + sep + 'paprika-binding-'));
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test('standalone validation rejects missing binding and merge refuses source output or version downgrade', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'paprika-incomplete-'));
+  try {
+    const fixture = await standaloneFixture(directory);
+    const base = await preparePluginPackage({ repository, outputRoot: join(directory, 'base') });
+    await assert.rejects(mergeServicePlugin({ ...fixture, pluginRoot: base.plugin_root, version: '1.0.0' }), /downgrade/);
+    await assert.rejects(mergeServicePlugin({ ...fixture, pluginRoot: base.plugin_root, outputRoot: join(base.plugin_root, 'output') }), /outside the source/);
+    const metadata = join(base.plugin_root, 'paprika-bundle.json');
+    const bundle = JSON.parse(await readFile(metadata, 'utf8')); bundle.distribution = 'standalone';
+    await writeFile(metadata, JSON.stringify(bundle));
+    await assert.rejects(verifyPluginPackage(base.plugin_root), /discover the standalone App binding/);
+  } finally {
+    assert(directory.startsWith(resolve(tmpdir()) + sep + 'paprika-incomplete-'));
+    await rm(directory, { recursive: true, force: true });
+  }
+});
 const run = (command, args, cwd) => {
   const env = { ...process.env }; delete env.NODE_TEST_CONTEXT;
   const result = spawnSync(command, args, { cwd, env, encoding: 'utf8', windowsHide: true, timeout: 120000 });

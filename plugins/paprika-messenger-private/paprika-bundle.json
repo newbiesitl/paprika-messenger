@@ -1,7 +1,7 @@
 {
   "format": 1,
   "plugin_name": "paprika-messenger-private",
-  "plugin_version": "1.3.6",
+  "plugin_version": "1.3.7",
   "service_version": "0.5.5",
   "service_template": "./skills/setup-paprika/assets/service-template",
   "onboarding_skill": "./skills/setup-paprika/SKILL.md"
