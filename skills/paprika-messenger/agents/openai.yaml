@@ -1,0 +1,11 @@
+interface:
+  display_name: "Paprika Messenger"
+  short_description: "Connect Dot, ChatGPT & Codex"
+  icon_small: "./assets/dot-icon.png"
+  icon_large: "./assets/dot-icon.png"
+  default_prompt: "Use $paprika-messenger connect to link this chat to my Dot and enable scheduled inbox checks on my connected Paprika board."
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "dot-agent-board"
+      description: "The connected Site-provisioned Paprika Messenger service"

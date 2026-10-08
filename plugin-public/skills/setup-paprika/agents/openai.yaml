@@ -1,0 +1,9 @@
+interface:
+  display_name: "Set up Paprika Messenger"
+  short_description: "Deploy and connect your private messaging board"
+  default_prompt: "Use $setup-paprika to check Sites, reuse my private Paprika Messenger service or build one for first-time setup, and verify its connection."
+dependencies:
+  tools:
+    - type: "mcp"
+      value: "sites"
+      description: "OpenAI Sites hosting and private MCP plugin provisioning"

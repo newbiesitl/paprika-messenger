@@ -1,0 +1,137 @@
+{
+  "experiment": "isolated-local-app-server-event-receiver",
+  "started_at": "2026-10-07T14:27:59.727Z",
+  "baseline": {
+    "plugin": "1.3.4",
+    "service": "0.5.4",
+    "published_changes": false
+  },
+  "scope": {
+    "producer": "in-memory fixture using production BoardService and EventService",
+    "event_transport": "explicit fixture mapping to loopback",
+    "receiver": "fresh ephemeral app-server-owned session",
+    "live_sites_delivery_verified": false,
+    "existing_desktop_chat_wake_verified": false,
+    "schedules_created": 0,
+    "automatic_acknowledgments": false,
+    "automatic_replies": false
+  },
+  "stages": [
+    {
+      "stage": "app_server_initialized",
+      "at": "2026-10-07T14:27:59.813Z",
+      "user_agent": "Codex Desktop/0.160.0 (Windows 10.0.26200; x86_64) dumb (paprika_receiver_pilot; 0.1.0)"
+    },
+    {
+      "stage": "existing_runtime_account_available",
+      "at": "2026-10-07T14:28:00.294Z",
+      "account_type": "chatgpt"
+    },
+    {
+      "stage": "ephemeral_owned_session_created_idle",
+      "at": "2026-10-07T14:28:00.415Z",
+      "thread_id": "redacted-pilot-session-5",
+      "sandbox": "readOnly"
+    },
+    {
+      "stage": "authenticated_fixture_mcp_ready",
+      "at": "2026-10-07T14:28:00.417Z"
+    },
+    {
+      "stage": "fixture_signed_callback_verified",
+      "at": "2026-10-07T14:28:00.432Z"
+    },
+    {
+      "stage": "fixture_message_stored",
+      "at": "2026-10-07T14:28:00.433Z",
+      "message_id": "65c89384-0cf1-49ee-9055-8504e9954b69",
+      "stored_at": "2026-10-07T14:28:00.433Z"
+    },
+    {
+      "stage": "fixture_webhook_http_200",
+      "at": "2026-10-07T14:28:00.442Z",
+      "attempts": 1
+    },
+    {
+      "stage": "idle_verified_before_event_turn",
+      "at": "2026-10-07T14:28:00.574Z"
+    },
+    {
+      "stage": "runtime_turn_started",
+      "at": "2026-10-07T14:28:00.597Z",
+      "turn_id": "redacted-pilot-turn-6",
+      "runtime_observed_at": "2026-10-07T14:28:00.597Z"
+    },
+    {
+      "stage": "runtime_completed_and_report_verified",
+      "at": "2026-10-07T14:28:22.237Z",
+      "message_id": "65c89384-0cf1-49ee-9055-8504e9954b69",
+      "runtime_observed_at": "2026-10-07T14:28:22.236Z"
+    },
+    {
+      "stage": "duplicate_replay_ignored_no_extra_turn",
+      "at": "2026-10-07T14:28:22.240Z"
+    }
+  ],
+  "model_turn_requests": 1,
+  "result": "passed_isolated_fixture_to_owned_session",
+  "rollback": {
+    "app_server": {
+      "stopped": true,
+      "pid": 24144,
+      "forced": false
+    },
+    "receiver": {
+      "stopped": true,
+      "port": 54106
+    },
+    "fixture_database_closed": true,
+    "live_subscription_created": false,
+    "production_configuration_changed": false
+  },
+  "pilot_thread_id": "redacted-pilot-session-5",
+  "message_id": "65c89384-0cf1-49ee-9055-8504e9954b69",
+  "nonce": "27736c1b-e810-4dbe-bc63-33b7ddaea7cd",
+  "runtime_notification_methods": [
+    "mcpServer/startupStatus/updated",
+    "thread/status/changed",
+    "turn/started",
+    "item/started",
+    "item/completed",
+    "thread/tokenUsage/updated",
+    "item/agentMessage/delta",
+    "turn/completed"
+  ],
+  "runtime_item_types": [
+    "agentMessage",
+    "userMessage",
+    "reasoning",
+    "mcpToolCall"
+  ],
+  "displayed_report": {
+    "message_id": "65c89384-0cf1-49ee-9055-8504e9954b69",
+    "sender": "Paprika fixture",
+    "body": "Hello from the isolated Paprika fixture. Pilot marker: 27736c1b-e810-4dbe-bc63-33b7ddaea7cd",
+    "nonce": "27736c1b-e810-4dbe-bc63-33b7ddaea7cd",
+    "reply_to_id": null
+  },
+  "receiver_trace": [
+    {
+      "stage": "event_accepted",
+      "at": "2026-10-07T14:28:00.441Z",
+      "event_id": "evt_65c89384-0cf1-49ee-9055-8504e9954b69_c673df392b99aab3056f_3",
+      "message_id": "65c89384-0cf1-49ee-9055-8504e9954b69"
+    },
+    {
+      "stage": "message_fetched",
+      "at": "2026-10-07T14:28:16.551Z",
+      "message_id": "65c89384-0cf1-49ee-9055-8504e9954b69"
+    },
+    {
+      "stage": "duplicate_ignored",
+      "at": "2026-10-07T14:28:22.239Z",
+      "message_id": "65c89384-0cf1-49ee-9055-8504e9954b69"
+    }
+  ],
+  "finished_at": "2026-10-07T14:28:22.276Z"
+}
