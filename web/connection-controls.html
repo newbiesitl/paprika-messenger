@@ -16,7 +16,7 @@
 <label class="method" for="method">Receive updates<select id="method"><option value="auto">Cloud events / local inbox / keep setup</option><option value="on_demand">Receiving only, read inbox on request</option><option value="mcp_events">Event notifications only</option><option value="inbox_checks">Check inbox every 5 minutes</option></select></label>
 <label><input id="acknowledge" type="checkbox"><span>Record receipt after reading<br><small style="color:var(--muted)">Show each message once and acknowledge that it was read.</small></span></label>
 <div class="actions"><button id="enable" disabled>Enable incoming messages</button><button id="refresh" class="secondary" disabled>Check status</button><button id="stop" class="secondary" hidden>Turn off in this chat</button></div>
-<p class="hint">New supported ChatGPT connections and Dots use event notifications. Existing monitoring is reused; scheduled inbox checks are an explicit choice. Events require a supported cloud receiving host. Local inbox checks need your explicit choice. ChatGPT confirms the receiving task and how to stop it.</p>
+<p class="hint">Supported cloud receiving chats use event notifications. Existing monitoring is reused; scheduled inbox checks are an explicit choice. Events require a supported cloud receiving host. Local inbox checks need your explicit choice. ChatGPT confirms the receiving task and how to stop it.</p>
 <p id="feedback" role="status"></p>
 <details id="fallback"><summary>Use a chat command instead</summary><textarea id="prompt" readonly aria-label="Incoming message setup command"></textarea></details>
 </main>

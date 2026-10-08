@@ -30,7 +30,7 @@ Existing deployments preserve their selected type. An absent setting retains the
 
 Verify the authenticated service connection separately in each requested client. No Dot, event secret, subscription or native thread-sending tool is required for basic messaging and inbox reads. Native chat notifications and events are optional capabilities with separate verification. A missing notification route leaves messages stored and available for an on-demand read.
 
-`$paprika-messenger connect` sets up the current receiver. Without a selected peer, it sends no handshake and asks for no Dot. `connect to <peer>`, `talk` and `ask` can use a registered ChatGPT or Codex peer. If `talk` or `ask` has no established recipient, choose one explicitly. `get id`, addressed sends, replies, receipts and disconnect keep their existing behavior.
+`connect to <peer>`, `talk` and `ask` follow the selected service type when choosing a registered peer. If `talk` or `ask` has no established recipient, choose one explicitly. `get id`, addressed sends, replies, receipts and disconnect keep their existing behavior.
 
 ## Selection helper
 

@@ -13,7 +13,6 @@ export function serviceConfiguration(env = {}) {
     service_type_source: configured ? 'runtime_setting' : 'legacy_default',
     dot_enabled: dotEnabled,
     supported_clients: ['chatgpt', 'codex_local', 'codex_cloud', ...(dotEnabled ? ['dot'] : [])],
-    receiving_surfaces: ['ChatGPT Work web', 'ChatGPT Work desktop with Cloud selected', ...(dotEnabled ? ['Dot'] : [])],
-    receiving_host_capability_verification_required: true
+    receiving_surfaces: ['ChatGPT Work web', 'ChatGPT Work desktop with Cloud selected', ...(dotEnabled ? ['Dot'] : [])]
   };
 }

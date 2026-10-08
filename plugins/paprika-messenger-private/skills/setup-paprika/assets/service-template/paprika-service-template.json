@@ -50,8 +50,8 @@
     },
     {
       "path": "docs/SERVICE-TYPES.md",
-      "size_bytes": 4106,
-      "sha256": "6872a4c108bc477962eecff53786eea1620e0f1f48778ede9df6d271a6a40715"
+      "size_bytes": 4001,
+      "sha256": "4bacdf8999aca98cd0915715944ff88731925425e0c33dfcaeef36e8aaf65efc"
     },
     {
       "path": "docs/SETUP.md",
@@ -140,8 +140,8 @@
     },
     {
       "path": "README.md",
-      "size_bytes": 13967,
-      "sha256": "0c5ed4c84b36d998971ce62a331675f7c730c7f8d29659f1f1606ce5da596719"
+      "size_bytes": 13890,
+      "sha256": "73e7754fe7b4edaae37e56eed253c1069590ec8eafa2121f3d6d4239582a24a1"
     },
     {
       "path": "scripts/build.mjs",
@@ -175,8 +175,8 @@
     },
     {
       "path": "skills/paprika-messenger/references/connect.md",
-      "size_bytes": 25823,
-      "sha256": "f5fc65a76c0bbad3b0f5080cc9134dad2bd3dc11b6c4df05652bac1dffe47e84"
+      "size_bytes": 25447,
+      "sha256": "35cd99c4e13161da558efed83398c4dd7f31eced3b36cd05de52fe85f491eb27"
     },
     {
       "path": "skills/paprika-messenger/references/connection-ui.md",
@@ -220,8 +220,8 @@
     },
     {
       "path": "skills/paprika-messenger/SKILL.md",
-      "size_bytes": 12820,
-      "sha256": "d8f1fec349241852c01659f9a24384632daaef22e1bbdb3db17673170c3a2a24"
+      "size_bytes": 12191,
+      "sha256": "10006836d79905d10dba03c9daae994fddffd6e09507f64f63a7eb3e984903f8"
     },
     {
       "path": "src/connection-ui.mjs",
@@ -235,13 +235,13 @@
     },
     {
       "path": "src/protocol.mjs",
-      "size_bytes": 22347,
-      "sha256": "f8aeab6b6dfb77f94662693b855fe08a4fe24d8cc469c33ff6b969e163ef415d"
+      "size_bytes": 22248,
+      "sha256": "926ced30f674f9be89808086fa41a85f4dfcb9aa637a1df91cead3901587b610"
     },
     {
       "path": "src/service-config.mjs",
-      "size_bytes": 1082,
-      "sha256": "19239ccaaf5c3e22763c0ee6eeed9d61e18c8a6437f1267bdd45324b1ffd3d8e"
+      "size_bytes": 1023,
+      "sha256": "48c76db102a84684a6753f44be2d72171b4313ff880d6573bc2ed81ecad3d157"
     },
     {
       "path": "src/service.mjs",
@@ -330,8 +330,8 @@
     },
     {
       "path": "web/connection-controls.html",
-      "size_bytes": 14431,
-      "sha256": "605de6111fe82d029712a7cdbed3ca61b4ac5c389c23d97cf1293eea22681ff4"
+      "size_bytes": 14420,
+      "sha256": "759603487612e1f6c6cbe3db6180d3f063caaaab05e2b975baf16bcf4f47e98f"
     },
     {
       "path": "web/index.html",
