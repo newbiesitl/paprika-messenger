@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "paprika-messenger",
-  "version": "1.3.4",
+  "version": "1.3.5",
   "description": "Private messaging between ChatGPT, Codex and your Dots, with guided setup and proactive receiving controls.",
   "author": {
     "name": "Paprika Messenger contributors"
@@ -46,7 +46,7 @@
       },
       "publication": {
         "countries": [],
-        "release_notes": "Bundles complete service source 0.5.4. Removes the implicit local heartbeat default: any new periodic inbox task requires an explicit choice, including in ChatGPT Work with Local selected and local Codex. Initialization verifies the receiving host’s actual execution mode, prefers events on supported cloud hosts and Dots, and keeps unsupported or unverified event setup pending. Setup responses include this receiving policy, and the card explains Cloud versus local receiving. Preserves existing verified routes, task cadence, subscriptions, receipts, audience and the 1.3.3 receiver-schema fix. No database migration or local event wake bridge is added."
+        "release_notes": "Adds GitHub marketplace distribution of the complete private setup package, with reproducible packaging and a CI freshness check. Normalizes bundled text before hashing so template checksums survive Git checkout. Corrects stale setup version references. Bundles service source 0.5.4 and preserves the existing deployment, connection and receiving policies. Each account runs setup for its own private service; installing the package creates no service, subscription or schedule."
       }
     }
   }

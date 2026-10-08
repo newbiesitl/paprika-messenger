@@ -1,5 +1,7 @@
 # Local plugin setup
 
+To install the complete private setup package directly from this repository, follow [GitHub installation](GITHUB-INSTALL.md). The developer workflow below builds a separate local testing copy.
+
 Run `node scripts/prepare-local-plugin.mjs` to build the local marketplace package from this source. The helper preserves the previous package and existing marketplace policies while verifying the new bundle. Use the supported Codex plugin installation interface to install or update it. Local installation applies to that computer; account installation is a separate workflow described in [Account plugin packaging](ACCOUNT-PLUGIN.md).
 
 The package supplies skills and service source. Run the setup skill to connect your existing private service or deploy a new owner-private instance. Installation alone creates no second messaging database, subscription or schedule.

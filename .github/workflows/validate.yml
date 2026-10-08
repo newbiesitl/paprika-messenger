@@ -30,6 +30,8 @@ jobs:
         run: npm test
       - name: Build hosted Worker
         run: npm run build
+      - name: Verify GitHub install package matches source
+        run: node scripts/prepare-github-plugin.mjs --check
       - name: Automated receiver pilot tests
         run: node --test experiments/local/codex-event-receiver/receiver.test.mjs experiments/local/codex-event-receiver/session-context.test.mjs
       - name: Verify bundled release checksum

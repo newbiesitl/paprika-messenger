@@ -8,6 +8,7 @@ import { spawnSync } from 'node:child_process';
 import { preparePluginPackage, verifyPluginPackage } from '../scripts/plugin-package.mjs';
 import { inspectReusableFiles, stageTemplate, verifyServiceVersion, verifyTemplate } from '../scripts/bundle.mjs';
 import { prepareLocalPlugin } from '../scripts/prepare-local-plugin.mjs';
+import { prepareGithubPlugin } from '../scripts/prepare-github-plugin.mjs';
 
 const repository = fileURLToPath(new URL('../', import.meta.url));
 const run = (command, args, cwd) => {
@@ -132,5 +133,39 @@ test('local restaging preserves prior source and marketplace policies while vali
     assert.equal(compatibility.extensions['com.openai'].onboardingSkill, './skills/setup-paprika/SKILL.md');
     const docs = await readdir(join(plugin, 'skills/setup-paprika/assets/service-template/docs'));
     assert(!docs.includes('ACCOUNT-PLUGIN.md'));
+  } finally { await rm(directory, { recursive: true, force: true }); }
+});
+
+test('GitHub marketplace ships a complete independent package and detects stale extra files', async () => {
+  const directory = await mkdtemp(join(tmpdir(), 'paprika-github-package-'));
+  try {
+    const { cp } = await import('node:fs/promises');
+    for (const path of ['src', 'web', 'db', 'drizzle', 'tests', 'skills', 'docs', 'scripts', 'plugin-public',
+      'package.json', 'package-lock.json', 'drizzle.config.ts', 'README.md', 'LICENSE', '.env.example', '.gitignore', '.gitattributes', '.agents'])
+      await cp(join(repository, path), join(directory, path), { recursive: true });
+    const copiedService = join(directory, 'src/service.mjs');
+    const copiedSetup = join(directory, 'plugin-public/skills/setup-paprika/scripts/init-service.mjs');
+    for (const file of [copiedService, copiedSetup])
+      await writeFile(file, (await readFile(file, 'utf8')).replace(/\r?\n/g, '\r\n'));
+    const report = await prepareGithubPlugin({ repository: directory });
+    assert.equal(report.plugin_id, 'paprika-messenger-private@paprika-github');
+    assert.equal((await prepareGithubPlugin({ repository: directory, check: true })).checked, true);
+    const validation = await verifyPluginPackage(report.plugin_root);
+    assert(validation.files.some(file => file.path === 'skills/setup-paprika/scripts/init-service.mjs'));
+    assert(validation.files.some(file => file.path === 'skills/paprika-messenger/SKILL.md'));
+    assert(validation.files.some(file => file.path === '.codex-plugin/plugin.json'));
+    for (const file of ['skills/setup-paprika/assets/service-template/src/service.mjs', 'skills/setup-paprika/scripts/init-service.mjs'])
+      assert(!(await readFile(join(report.plugin_root, file), 'utf8')).includes('\r\n'));
+    const service = join(directory, 'independent-service');
+    const initialized = JSON.parse(run(process.execPath,
+      [join(report.plugin_root, 'skills/setup-paprika/scripts/init-service.mjs'), service], directory));
+    assert.equal(initialized.service_version, report.service_version);
+    assert.equal(initialized.registered, false);
+    await writeFile(join(report.plugin_root, 'stale.txt'), 'Stale generated file');
+    await assert.rejects(prepareGithubPlugin({ repository: directory, check: true }), /differs from current source/);
+    const updated = await prepareGithubPlugin({ repository: directory });
+    assert.equal(await readFile(join(updated.previous_package_backup, 'stale.txt'), 'utf8'), 'Stale generated file');
+    await assert.rejects(readFile(join(updated.plugin_root, 'stale.txt')), { code: 'ENOENT' });
+    assert.equal((await prepareGithubPlugin({ repository: directory, check: true })).checked, true);
   } finally { await rm(directory, { recursive: true, force: true }); }
 });

@@ -1,0 +1,76 @@
+# Install Paprika Messenger from GitHub
+
+This repository is a Codex plugin marketplace. It contains the complete private setup package: both skills, icons, service source, migrations, tests and integrity metadata. Each person installs the package and runs setup with their own account. The package creates no service or account connection during installation.
+
+## Personal installation in Codex
+
+Use a current Codex CLI with `codex plugin` support. In a terminal, run:
+
+```sh
+codex plugin marketplace add newbiesitl/paprika-messenger --ref main
+codex plugin add paprika-messenger-private@paprika-github
+```
+
+Start a new Codex session or refresh the desktop app, then open **Plugins** and confirm **Paprika Messenger (Private)** is installed and enabled. The installation is local to that computer. It does not make the package available in ChatGPT on the web or on another device.
+
+In ChatGPT Work or Codex in the desktop app, with Sites available, run:
+
+```text
+$setup-paprika Set up my private Paprika Messenger service. Reuse my existing
+private service if I already have one, otherwise deploy my own private instance.
+Verify the authenticated connection before reporting success.
+```
+
+Setup uses the complete installed template. New deployment needs Sites access, a writable workspace and Node.js 24 or later. Sites is currently available on Plus, Pro, Business, Enterprise and Edu, subject to account limits and workspace controls. Standalone Codex CLI can prepare and test local source; use ChatGPT web or the desktop app for Sites deployment and management. GPT-6 is not a package requirement.
+
+Connect the exact service plugin returned by Sites in every participating client. Verify `list_boards({})` and a read-only `list_messages` call. Installing the setup package, deploying the service and connecting the service plugin are separate steps. Each receiving chat opts in to notifications separately.
+
+## ChatGPT workspace installation
+
+A workspace admin can make the package available on supported ChatGPT and Codex surfaces:
+
+1. Open **Admin > Plugins > Add > Import marketplace**.
+2. Set **Source** to `https://github.com/newbiesitl/paprika-messenger`, leave **Path** empty, and set **Branch, tag, or commit** to `main`.
+3. Authorize the supported GitHub connection and review the import results.
+4. Configure the imported plugin's installation policy for the intended roles. Members then install it and run the setup workflow with their own account.
+
+Workspace import and sync use the admin's GitHub access and workspace policies. Importing this skills package does not grant Sites access or authenticate a messaging service. Use private ZIP installation through Plugin Creator for a personal ChatGPT web account; see [Account plugin packaging](ACCOUNT-PLUGIN.md).
+
+## Forks and private GitHub repositories
+
+Forking is optional. This marketplace uses a relative package path, so a complete fork works without editing the manifest. Substitute your fork's `owner/repo` in the marketplace command, or its repository URL for workspace import. A private repository also requires the installing GitHub identity to have read access through the supported client connection. A public upstream fork is not automatically a private repository; hosting a private messaging service is separate from repository visibility.
+
+## Updates and removal
+
+Refresh the registered marketplace, then reinstall the package through Codex:
+
+```sh
+codex plugin marketplace upgrade paprika-github
+codex plugin add paprika-messenger-private@paprika-github
+```
+
+Start a new session after updating. Workspace admins can use **Sync now**; new workspace imports otherwise sync daily. An update refreshes setup files and skills; upgrade an existing service separately with [Upgrading](UPGRADING.md).
+
+To remove the local setup package and its marketplace:
+
+```sh
+codex plugin remove paprika-messenger-private@paprika-github
+codex plugin marketplace remove paprika-github
+```
+
+Uninstalling the setup package does not delete a private Site, its database or any receiving task. Manage those through their respective supported interfaces.
+
+## Maintain the GitHub package
+
+Edit the canonical source under `src/`, `skills/`, `plugin-public/` and the other service directories. Bump the plugin version for a new package release, then run:
+
+```sh
+node scripts/prepare-github-plugin.mjs
+node scripts/prepare-github-plugin.mjs --check
+```
+
+Commit the generated `plugins/paprika-messenger-private/` directory with the source changes. The generator retains any previous package in ignored `artifacts/` storage. CI compares every generated file with current source, checks template integrity and rejects personal credentials or deployment identities. Packaging normalizes bundled text to LF before hashing, and `.gitattributes` preserves LF during checkout. Existing released ZIPs and checksums remain immutable.
+
+The GitHub marketplace is a distribution source. This flow does not publish a listing in OpenAI's public Plugins Directory.
+
+See the official [plugin packaging](https://developers.openai.com/plugins/build/plugins), [Codex plugin commands](https://learn.chatgpt.com/docs/cli/reference), [workspace GitHub import](https://learn.chatgpt.com/docs/enterprise/plugin-management), and [Sites](https://learn.chatgpt.com/docs/sites) documentation.
