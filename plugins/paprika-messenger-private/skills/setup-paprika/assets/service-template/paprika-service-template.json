@@ -55,8 +55,8 @@
     },
     {
       "path": "docs/SETUP.md",
-      "size_bytes": 11181,
-      "sha256": "7b7686c9428c1e857690695428b83222e9f6451cf19c5c9e3bb0757b5623f72f"
+      "size_bytes": 11849,
+      "sha256": "a0e7bf86ec4242f73521cb7b2f7a2533d4576831a7151bef2a67f910b921fafa"
     },
     {
       "path": "docs/TEST-RESULTS.md",
@@ -65,8 +65,8 @@
     },
     {
       "path": "docs/UPGRADING.md",
-      "size_bytes": 17458,
-      "sha256": "b00190af5120eca5faee2e8c2408d182a0cf47df7d5a7e835e6345007d7c2a37"
+      "size_bytes": 17539,
+      "sha256": "ca983cead826ea3aeb41270a680a0fbe9a785d8c1c3c8fc1b6ab2751fe0f28f0"
     },
     {
       "path": "docs/WINDOWS-SITES-PACKAGING.md",
@@ -140,8 +140,8 @@
     },
     {
       "path": "README.md",
-      "size_bytes": 13890,
-      "sha256": "73e7754fe7b4edaae37e56eed253c1069590ec8eafa2121f3d6d4239582a24a1"
+      "size_bytes": 14695,
+      "sha256": "27f1e74366678e42cf23b9ea2a00b8ba31b60575c630266586a785c7eff5e7f6"
     },
     {
       "path": "scripts/build.mjs",
@@ -150,8 +150,8 @@
     },
     {
       "path": "scripts/bundle.mjs",
-      "size_bytes": 9327,
-      "sha256": "937ccb5fc43ef542967f3997d720f642392b3ddc1df7deb372855975f4627a0f"
+      "size_bytes": 9643,
+      "sha256": "e836e4cdf1b5b59c51a8d97cf2a3157e8ada44d7c3394070a58b4e86c73f0dff"
     },
     {
       "path": "scripts/dev.mjs",

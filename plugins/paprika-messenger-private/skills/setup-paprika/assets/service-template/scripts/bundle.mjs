@@ -12,12 +12,15 @@ export const templateFiles = ['src', 'web', 'db', 'drizzle', 'tests', 'skills/pa
   'scripts/build.mjs', 'scripts/dev.mjs', 'scripts/bundle.mjs', 'scripts/package.mjs',
   'package.json', 'package-lock.json', 'drizzle.config.ts', 'README.md', 'LICENSE', '.env.example', '.gitignore', '.gitattributes'];
 export const forbiddenResource = /(?:^|\/)(?:\.git|node_modules|dist|artifacts|\.dev-data|\.sites-runtime|\.paprika)(?:\/|$)|(?:^|\/)(?:\.env(?:\..+)?|credentials[^/]*|auth\.json|[^/]*\.sqlite[^/]*)$/;
-export const privateIdentity = /appgprj_[a-z0-9]+|plugin_asdk_app_sites_[a-z0-9]+|plugins_[a-z0-9]{16,}|pluginrel_[a-z0-9]{16,}|oaiapp_[a-z0-9]{16,}|\b01a[0-9a-f]{5}-[0-9a-f-]{20,}\b/i;
+export const privateIdentity = /appgprj_[a-z0-9]+|(?:plugin_)?asdk_app_sites_[a-z0-9]+|plugins_[a-z0-9]{16,}|pluginrel_[a-z0-9]{16,}|oaiapp_[a-z0-9]{16,}|\b01a[0-9a-f]{5}-[0-9a-f-]{20,}\b/i;
 const privateSecret = /\b(?:sk-(?:proj-)?[A-Za-z0-9_-]{20,}|whsec_[A-Za-z0-9+/]{32,}={0,2}|gh[opsu]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,})\b/;
 const textResource = /\.(?:mjs|js|ts|json|ya?ml|md|html|css|txt|sql)$|(?:^|\/)(?:LICENSE|\.env\.example)$/;
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 
-export async function inspectReusableFiles(directory) {
+export async function inspectReusableFiles(directory, { ownerBindingFiles = [] } = {}) {
+  const permitted = new Set(ownerBindingFiles);
+  if ([...permitted].some(path => !['.app.json', 'paprika-connection.json'].includes(path)))
+    throw new Error('Owner identity is permitted only in the standalone connection files.');
   const files = [];
   async function inspect(current) {
     for (const entry of await readdir(current, { withFileTypes: true })) {
@@ -29,7 +32,7 @@ export async function inspectReusableFiles(directory) {
       if (entry.isDirectory()) { await inspect(absolute); continue; }
       if (!entry.isFile()) throw new Error('Unsupported resource in reusable package: ' + path);
       const bytes = await readFile(absolute);
-      if (textResource.test(path) && (privateIdentity.test(bytes.toString('utf8')) || privateSecret.test(bytes.toString('utf8'))))
+      if (textResource.test(path) && ((!permitted.has(path) && privateIdentity.test(bytes.toString('utf8'))) || privateSecret.test(bytes.toString('utf8'))))
         throw new Error('Owner-specific identity or secret in reusable package: ' + path);
       files.push({ path, size_bytes: bytes.length, sha256: sha256(bytes) });
     }
@@ -38,8 +41,8 @@ export async function inspectReusableFiles(directory) {
   return files.sort((a, b) => a.path.localeCompare(b.path));
 }
 
-export async function normalizeReusableText(directory) {
-  for (const file of await inspectReusableFiles(directory)) {
+export async function normalizeReusableText(directory, options) {
+  for (const file of await inspectReusableFiles(directory, options)) {
     if (!textResource.test(file.path) && !/(?:^|\/)(?:\.gitignore|\.gitattributes)$/.test(file.path)) continue;
     const absolute = resolve(directory, file.path);
     const bytes = await readFile(absolute);

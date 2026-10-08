@@ -1,6 +1,6 @@
 # Paprika Messenger bundle
 
-Plugin version **1.3.7** includes service source **0.5.6**, the `setup-paprika` onboarding skill and the `paprika-messenger` messaging skill. The complete service source, migrations and backend tests are bundled under `skills/setup-paprika/assets/service-template/`. There is no shared messaging endpoint, account credential, Site identity or message database in this reusable package.
+Plugin version **1.3.8** includes service source **0.5.6**, the `setup-paprika` onboarding skill and the `paprika-messenger` messaging skill. The complete service source, migrations and backend tests are bundled under `skills/setup-paprika/assets/service-template/`. There is no shared messaging endpoint, account credential, Site identity or message database in this reusable package.
 
 Default installation saves the complete private package through Plugin Creator's hosted account-save workflow, then installs the returned account plugin for supported cloud, mobile and desktop clients signed into the same account. Use Personal context for a personal plugin; an active workspace selects workspace scope. See [Private account installation](https://github.com/newbiesitl/paprika-messenger/blob/main/docs/ACCOUNT-PLUGIN.md). Local Codex installation is an explicit device-only choice.
 
