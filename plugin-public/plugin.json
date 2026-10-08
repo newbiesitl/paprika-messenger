@@ -48,7 +48,7 @@
       },
       "publication": {
         "countries": [],
-        "release_notes": "Separates installed package, bundled source and running service version checks during onboarding. Uses validated native Windows tar packaging when the installed Sites helper requires unavailable Bash, preserving the existing Site, App, OAuth, source revision, data and audience. Includes service source 0.5.6 and optional Dot selection; installation, deployment, client discovery and receiving subscriptions remain separately verified."
+        "release_notes": "Verifies ordinary Chat, Work Local/Cloud, Codex Local/Cloud and optional Dot separately. Full onboarding includes requested Dot receiving setup on the selected board, with native bootstrap first and a copyable instruction as the last fallback. Service 0.5.7 grants explicit non-expiring event subscriptions while preserving finite leases and receiver controls. Separates package/service versions and retains validated native Windows tar recovery."
       }
     }
   }

@@ -22,6 +22,27 @@ Production logs marked `paprika-mcp-events` report observed discovery/catalog/su
 
 Some host event runs can omit the promised event payload even after a successful wake. For a user-approved read/report task, save the fixed board, canonical receiver, monitoring start time and reported message IDs. If supported event-data access is unavailable in an actual Messenger event run, read that receiver's inbox once, verify routing and report only new, unreported records after the saved start time. Keep old history, duplicates and receipts quiet. This fallback uses the existing event trigger and creates no polling schedule. Preserve the same task, filters, destination and subscription when updating its prompt, and verify wake and exact message reading separately.
 
+## Subscription lifetime
+
+Service 0.5.7 grants `ttlMs: null` without expiration and returns
+`refreshBefore: null`, as supported by MCP Events. Request it through the
+receiving host when that interface exposes lifetime selection and the user
+wants persistent receiving; record the actual response. Omitted `ttlMs` still
+grants one hour. Positive finite requests grant at most 24 hours. ChatGPT is
+expected to refresh finite leases before the returned deadline. A ready
+subscription can become expired if that refresh does not complete; inspect host
+task state and service protocol logs before assigning a cause.
+
+Older service versions converted null to a 24-hour lease. An upgrade does not
+rewrite those leases or revive an expired subscription. Re-subscribe through
+the receiving host, keeping the same verified callback identity and reconciling
+its task. Pause controls cannot extend a lease. Non-expiring subscriptions still
+require callback verification and remain subject to unsubscribe, pause, owner
+access revocation, message visibility and wake budgets. Public subscription
+listing reports `expires_at: null` and `refresh_before: null` for those grants;
+the existing database column uses zero as its internal no-expiration marker,
+without a schema migration.
+
 ## Event runtime
 
 Keep the Site owner-private and preserve its existing owner settings, database and provisioned plugin. Configure runtime values through Sites, never source or a hosting manifest:

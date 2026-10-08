@@ -93,6 +93,63 @@ test('receiver readiness distinguishes missing, paused, expired and limited subs
   }finally{f.db.close();}
 });
 
+test('explicit non-expiring leases survive restarts and preserve controls, progress and key rotation',async()=>{
+  const f=await fixture();try {
+    const params={...f.params(),ttlMs:null},first=await f.events.subscribe(params);
+    assert.equal(first.refreshBefore,null);
+    await f.events.configure({subscription_id:first.id,paused:true,notification_mode:'process_inbox',wake_limit:1});
+    const pending=await f.post();await f.events.reconcile();
+    f.tick(30*86400000);
+    const restarted=new EventService(f.board,f.env,f.options);
+    const ready=await restarted.setup({board:'main',receiver_id:'receiver'});
+    assert.equal(ready.state,'paused');assert.equal(ready.subscriptions[0].expired,false);
+    assert.equal(ready.subscriptions[0].refresh_before,null);
+    const listed=(await restarted.listSubscriptions({board:'main'})).subscriptions[0];
+    assert.equal(listed.expires_at,null);assert.equal(listed.refresh_before,null);
+    const replacement=`whsec_${randomBytes(32).toString('base64')}`;
+    const refreshed=await restarted.subscribe({...params,delivery:{...params.delivery,secret:replacement}});
+    assert.equal(refreshed.id,first.id);assert.equal(refreshed.refreshBefore,null);
+    assert.equal((await restarted.setup({board:'main',receiver_id:'receiver'})).state,'paused');
+    await restarted.configure({subscription_id:first.id,paused:false});
+    assert.equal((await restarted.dispatch()).accepted,1);
+    const request=f.requests.at(-1);verifySignature(request,replacement);verifySignature(request);
+    assert.equal(request.body.data.message_id,pending.message.id);
+    assert.equal(request.body.data.notification_mode,'process_inbox');
+    await f.post();assert.equal((await restarted.dispatch()).attempted,0);
+    assert.equal((await restarted.setup({board:'main',receiver_id:'receiver'})).state,'limited');
+    f.tick(3600001);assert.equal((await restarted.dispatch()).accepted,1);
+    const stopped=await f.post();await restarted.reconcile();
+    await restarted.unsubscribe({name:params.name,arguments:params.arguments,delivery:{mode:'webhook',url:params.delivery.url}});
+    assert.equal((await restarted.dispatch()).attempted,0);
+    assert.equal((await restarted.status({board:'main',message_id:stopped.message.id})).deliveries[0].state,'cancelled');
+    assert.equal((await restarted.setup({board:'main',receiver_id:'receiver'})).state,'subscription_required');
+  }finally{f.db.close();}
+});
+
+test('finite and non-expiring requests retain exact grants and existing leases are not extended by reads',async()=>{
+  const f=await fixture();try {
+    for(const ttlMs of [undefined,1000,86400001]) {
+      const sub=await f.events.subscribe({...f.params(),...(ttlMs===undefined?{}:{ttlMs})});
+      assert.equal(Date.parse(sub.refreshBefore)-f.now(),ttlMs===undefined?3600000:Math.min(ttlMs,86400000));
+    }
+    const sub=await f.events.subscribe({...f.params(),ttlMs:null});assert.equal(sub.refreshBefore,null);
+    const pending=await f.post();await f.events.reconcile();
+    const finite=await f.events.subscribe({...f.params(),ttlMs:1000});assert.equal(finite.id,sub.id);
+    f.tick(1001);
+    assert.equal((await f.events.setup({board:'main',receiver_id:'receiver'})).state,'subscription_required');
+    await f.events.configure({subscription_id:sub.id,paused:false});
+    assert.equal((await f.events.setup({board:'main',receiver_id:'receiver'})).subscriptions[0].expired,true);
+    await f.events.dispatch();
+    assert.equal((await f.events.status({board:'main',message_id:pending.message.id})).deliveries[0].state,'cancelled');
+    const renewed=await f.events.subscribe({...f.params(),ttlMs:null});assert.equal(renewed.refreshBefore,null);
+    assert.equal((await f.events.dispatch()).attempted,0);
+    f.env.OWNER_USER_ID='different-owner';
+    assert.equal((await f.events.setup({board:'main',receiver_id:'receiver'})).notification_ready,false);
+    await f.events.dispatch();
+    assert.equal(f.db.connection.prepare('SELECT active FROM event_subscriptions WHERE id=?').get(sub.id).active,0);
+  }finally{f.db.close();}
+});
+
 test('post responses report notification readiness and preserve confirmed writes when diagnostics fail',async()=>{
   const f=await fixture();try {
     const post=key=>rpc({jsonrpc:'2.0',id:1,method:'tools/call',params:{name:'post_message',arguments:{board:'main',sender_id:'sender',sender_label:'Sender',receiver_id:'receiver',topic:'test',body:'Notification test',idempotency_key:key}}},f.board,null,f.events);

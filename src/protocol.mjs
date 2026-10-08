@@ -2,7 +2,7 @@ import { BoardError, fail } from './validation.mjs';
 import { CallbackEndpointError, EventService } from './events.mjs';
 import { connectionWidgetMeta, connectionControls } from './connection-ui.mjs';
 const serverInfo = {
-  name:'Paprika Messenger', version:'0.5.6',
+  name:'Paprika Messenger', version:'0.5.7',
   icons:[{src:'https://raw.githubusercontent.com/newbiesitl/paprika-messenger/main/skills/paprika-messenger/assets/dot-icon.png',mimeType:'image/png',sizes:['1254x1254']}]
 };
 const serverMetadata = {'io.modelcontextprotocol/serverInfo':serverInfo};

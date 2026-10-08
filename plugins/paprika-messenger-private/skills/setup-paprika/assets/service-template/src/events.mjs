@@ -7,6 +7,10 @@ const evtFirst=(db,sql,...values)=>evtStmt(db,sql,...values).first();
 const evtAll=async(db,sql,...values)=>(await evtStmt(db,sql,...values).all()).results;
 const evtHash=async value=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value))),x=>x.toString(16).padStart(2,'0')).join('');
 const evtAddress={receiver_id:{type:'string'},receiver_thread_id:{type:'string',maxLength:160},receiver_label:{type:'string',maxLength:120}};
+// Zero represents an explicitly granted non-expiring lease in the existing
+// NOT NULL column. Public APIs use null; existing finite rows keep their expiry.
+const expired=(subscription,now)=>subscription.expires_at!==0 && subscription.expires_at<=now;
+const refreshBefore=expires=>expires===0?null:new Date(expires).toISOString();
 export const receivingConnectionPolicy=Object.freeze({
   new_binding_default:'mcp_events',
   cloud_binding_default:'mcp_events',
@@ -51,8 +55,7 @@ export class EventService {
     const {board,receiver,url,args,subscriptionId}=await this.identity(params),key=await this.key();
     if(params.cursor!==undefined && params.cursor!==null)fail(400,'invalid_cursor','This event does not provide protocol replay; use the durable inbox to recover earlier messages.');
     const secret=params.delivery.secret;decodeSigningSecret(secret);
-    const ttl=params.ttlMs===null?86400000:integer(params.ttlMs,'ttlMs',1000,Number.MAX_SAFE_INTEGER,3600000);
-    const lifetime=Math.min(ttl,86400000),started=this.now();
+    const lifetime=params.ttlMs===null?null:Math.min(integer(params.ttlMs,'ttlMs',1000,Number.MAX_SAFE_INTEGER,3600000),86400000),started=this.now();
     const old=await evtFirst(this.db,'SELECT * FROM event_subscriptions WHERE id=? AND owner_subject=?',subscriptionId,this.subject);
     if((!old || !old.active) && (await evtFirst(this.db,'SELECT COUNT(*) AS count FROM event_subscriptions WHERE active=1')).count>=100)fail(409,'subscription_limit','This private instance supports at most 100 active subscriptions.');
     // Capture before verification so a message committed during the challenge is
@@ -60,7 +63,7 @@ export class EventService {
     const start=(await evtFirst(this.db,'SELECT COALESCE(MAX(sequence),0) AS sequence FROM events WHERE board=?',board)).sequence;
     let oldSecret=null;
     if(old?.secret_box)oldSecret=await openEventSecret(key,subscriptionId,old.secret_box);
-    const cached=old?.active && old.expires_at>started && old.verified_at>started-60000 && constantTimeEqual(oldSecret,secret);
+    const cached=old?.active && !expired(old,started) && old.verified_at>started-60000 && constantTimeEqual(oldSecret,secret);
     if(!cached) {
       const challenge=crypto.randomUUID(),body=JSON.stringify({type:'verification',challenge});
       let response;
@@ -78,20 +81,20 @@ export class EventService {
         throw new CallbackEndpointError(timeout?'timeout':'challenge_failed',{failure:timeout?'timeout':'transport'});
       } finally { await response?.body?.cancel().catch(()=>{}); }
     }
-    const now=this.now(),expires=now+lifetime,box=await sealEventSecret(key,subscriptionId,secret);
-    const continuing=old?.active && old.expires_at>now;
+    const now=this.now(),expires=lifetime===null?0:now+lifetime,box=await sealEventSecret(key,subscriptionId,secret);
+    const continuing=old?.active && !expired(old,now);
     const previous=continuing && oldSecret!==secret?old.secret_box:(old?.rotate_until>now?old.previous_secret_box:null);
     const rotateUntil=continuing && oldSecret!==secret?now+300000:(previous?old.rotate_until:0);
     await this.db.batch([
-      evtStmt(this.db,"UPDATE event_deliveries SET state='cancelled',last_error='subscription_replaced',lease_token=NULL,lease_until=0 WHERE subscription_id=? AND state='pending' AND EXISTS(SELECT 1 FROM event_subscriptions s WHERE s.id=? AND (s.active=0 OR s.expires_at<=?))",subscriptionId,subscriptionId,now),
+      evtStmt(this.db,"UPDATE event_deliveries SET state='cancelled',last_error='subscription_replaced',lease_token=NULL,lease_until=0 WHERE subscription_id=? AND state='pending' AND EXISTS(SELECT 1 FROM event_subscriptions s WHERE s.id=? AND (s.active=0 OR (s.expires_at<>0 AND s.expires_at<=?)))",subscriptionId,subscriptionId,now),
       evtStmt(this.db,`INSERT INTO event_subscriptions(id,board,receiver_id,owner_subject,owner_email,event_name,arguments_json,callback_url,secret_box,previous_secret_box,rotate_until,expires_at,active,paused,notification_mode,wake_limit,window_start,wake_count,verified_at,scanned_sequence,created_at)
         VALUES(?,?,?,?,?,'message.created',?,?,?,?,?,?,1,0,'notify_only',30,?,0,?,?,?)
         ON CONFLICT(id) DO UPDATE SET secret_box=excluded.secret_box,previous_secret_box=excluded.previous_secret_box,rotate_until=excluded.rotate_until,expires_at=excluded.expires_at,active=1,owner_email=excluded.owner_email,verified_at=excluded.verified_at,
-          scanned_sequence=CASE WHEN event_subscriptions.active=1 AND event_subscriptions.expires_at>? THEN event_subscriptions.scanned_sequence ELSE excluded.scanned_sequence END`,
+          scanned_sequence=CASE WHEN event_subscriptions.active=1 AND (event_subscriptions.expires_at=0 OR event_subscriptions.expires_at>?) THEN event_subscriptions.scanned_sequence ELSE excluded.scanned_sequence END`,
         subscriptionId,board,receiver,this.subject,this.email,args,url,box,previous,rotateUntil,expires,now,now,start,now,now)
     ]);
     await this.reconcile();
-    return {id:subscriptionId,refreshBefore:new Date(expires).toISOString(),cursor:null,truncated:false};
+    return {id:subscriptionId,refreshBefore:refreshBefore(expires),cursor:null,truncated:false};
   }
   async unsubscribe(params) {
     const {subscriptionId}=await this.identity(params,false);
@@ -104,7 +107,7 @@ export class EventService {
   async listSubscriptions(a) {
     strict(a,['board']);const board=await this.boardService.board(a.board);
     const subscriptions=await evtAll(this.db,`SELECT id,board,receiver_id,active,paused,notification_mode,wake_limit,expires_at FROM event_subscriptions WHERE board=? AND owner_subject=? ORDER BY created_at DESC LIMIT 100`,board,this.subject);
-    return {subscriptions:subscriptions.map(s=>({...s,active:!!s.active,paused:!!s.paused,refresh_before:new Date(s.expires_at).toISOString()}))};
+    return {subscriptions:subscriptions.map(s=>({...s,expires_at:s.expires_at===0?null:s.expires_at,active:!!s.active,paused:!!s.paused,refresh_before:refreshBefore(s.expires_at)}))};
   }
   async setup(a) {
     strict(a,['board',...Object.keys(evtAddress)]);
@@ -113,7 +116,7 @@ export class EventService {
     let runtimeConfigured=true;
     try {await this.key();}catch(error){if(error?.code!=='events_not_configured')throw error;runtimeConfigured=false;}
     const now=this.now(),rows=await evtAll(this.db,'SELECT * FROM event_subscriptions WHERE board=? AND receiver_id=? AND owner_subject=? ORDER BY created_at DESC',board,receiver,this.subject);
-    const subscriptions=rows.map(s=>({id:s.id,active:!!s.active && s.expires_at>now && this.ownerAllowed(s),paused:!!s.paused,expired:s.expires_at<=now,limited:s.window_start>now-3600000 && s.wake_count>=s.wake_limit,notification_mode:s.notification_mode,refresh_before:new Date(s.expires_at).toISOString()}));
+    const subscriptions=rows.map(s=>({id:s.id,active:!!s.active && !expired(s,now) && this.ownerAllowed(s),paused:!!s.paused,expired:expired(s,now),limited:s.window_start>now-3600000 && s.wake_count>=s.wake_limit,notification_mode:s.notification_mode,refresh_before:refreshBefore(s.expires_at)}));
     const active=subscriptions.filter(s=>s.active);
     const state=!runtimeConfigured?'events_not_configured':!active.length?'subscription_required':active.some(s=>!s.paused && !s.limited)?'ready':active.every(s=>s.paused)?'paused':'limited';
     return {board,receiver_id:receiver,state,runtime_configured:runtimeConfigured,notification_ready:state==='ready',subscriptions,
@@ -147,10 +150,10 @@ export class EventService {
   async reconcile() {
     const now=this.now(),subscriptions=await evtAll(this.db,'SELECT * FROM event_subscriptions WHERE active=1 ORDER BY id LIMIT 100');
     for(const subscription of subscriptions) {
-      if(subscription.expires_at<=now || !this.ownerAllowed(subscription)) {
+      if(expired(subscription,now) || !this.ownerAllowed(subscription)) {
         await this.db.batch([
           evtStmt(this.db,'UPDATE event_subscriptions SET active=0 WHERE id=?',subscription.id),
-          evtStmt(this.db,"UPDATE event_deliveries SET state='cancelled',last_error=?,lease_token=NULL,lease_until=0 WHERE subscription_id=? AND state='pending'",subscription.expires_at<=now?'expired':'access_revoked',subscription.id)
+          evtStmt(this.db,"UPDATE event_deliveries SET state='cancelled',last_error=?,lease_token=NULL,lease_until=0 WHERE subscription_id=? AND state='pending'",expired(subscription,now)?'expired':'access_revoked',subscription.id)
         ]);continue;
       }
       const watermark=(await evtFirst(this.db,'SELECT COALESCE(MAX(sequence),0) AS sequence FROM events WHERE board=?',subscription.board)).sequence;
@@ -158,7 +161,7 @@ export class EventService {
         evtStmt(this.db,`INSERT INTO event_deliveries(subscription_id,event_sequence,event_id,state,next_attempt,created_at)
           SELECT ?,e.sequence,'evt_'||e.entity_id||'_'||?||'_'||e.sequence,'pending',?,? FROM events e
           WHERE e.board=? AND e.kind='message_posted' AND e.receiver_id=? AND e.sequence>? AND e.sequence<=?
-            AND EXISTS(SELECT 1 FROM event_subscriptions s WHERE s.id=? AND s.active=1 AND s.expires_at>?)
+            AND EXISTS(SELECT 1 FROM event_subscriptions s WHERE s.id=? AND s.active=1 AND (s.expires_at=0 OR s.expires_at>?))
           ON CONFLICT(subscription_id,event_sequence) DO NOTHING`,subscription.id,subscription.id.slice(4,24),now,now,subscription.board,subscription.receiver_id,subscription.scanned_sequence,watermark,subscription.id,now),
         evtStmt(this.db,'UPDATE event_subscriptions SET scanned_sequence=MAX(scanned_sequence,?) WHERE id=?',watermark,subscription.id)
       ]);
@@ -170,13 +173,13 @@ export class EventService {
     for(let i=0;i<limit && this.now()-started<20000;i++) {
       const now=this.now();
       const candidate=await evtFirst(this.db,`SELECT d.subscription_id,d.event_sequence FROM event_deliveries d JOIN event_subscriptions s ON s.id=d.subscription_id
-        WHERE d.state='pending' AND d.next_attempt<=? AND d.lease_until<=? AND s.active=1 AND s.paused=0 AND s.expires_at>?
+        WHERE d.state='pending' AND d.next_attempt<=? AND d.lease_until<=? AND s.active=1 AND s.paused=0 AND (s.expires_at=0 OR s.expires_at>?)
           AND (s.window_start<=? OR s.wake_count<s.wake_limit) ORDER BY d.next_attempt,d.event_sequence LIMIT 1`,now,now,now,now-3600000);
       if(!candidate)break;
       const token=crypto.randomUUID();
       await this.db.batch([
         evtStmt(this.db,`UPDATE event_deliveries SET lease_token=?,lease_until=?,attempts=attempts+1 WHERE subscription_id=? AND event_sequence=? AND state='pending' AND lease_until<=? AND next_attempt<=?
-          AND EXISTS(SELECT 1 FROM event_subscriptions s WHERE s.id=event_deliveries.subscription_id AND s.active=1 AND s.paused=0 AND s.expires_at>? AND (s.window_start<=? OR s.wake_count<s.wake_limit))`,token,now+30000,candidate.subscription_id,candidate.event_sequence,now,now,now,now-3600000),
+          AND EXISTS(SELECT 1 FROM event_subscriptions s WHERE s.id=event_deliveries.subscription_id AND s.active=1 AND s.paused=0 AND (s.expires_at=0 OR s.expires_at>?) AND (s.window_start<=? OR s.wake_count<s.wake_limit))`,token,now+30000,candidate.subscription_id,candidate.event_sequence,now,now,now,now-3600000),
         evtStmt(this.db,`UPDATE event_subscriptions SET wake_count=CASE WHEN window_start<=? THEN 1 ELSE wake_count+1 END,window_start=CASE WHEN window_start<=? THEN ? ELSE window_start END
           WHERE id=? AND EXISTS(SELECT 1 FROM event_deliveries d WHERE d.subscription_id=? AND d.event_sequence=? AND d.lease_token=?)`,now-3600000,now-3600000,now,candidate.subscription_id,candidate.subscription_id,candidate.event_sequence,token)
       ]);
@@ -185,7 +188,7 @@ export class EventService {
       if(!delivery)continue;
       // Recheck lifecycle, access and inbox state immediately before each send.
       const visible=await evtFirst(this.db,`SELECT id FROM messages m WHERE m.id=? AND m.board=? AND m.deleted_at IS NULL AND NOT EXISTS(SELECT 1 FROM acknowledgments a WHERE a.board=m.board AND a.message_id=m.id AND a.participant_id=m.receiver_id)`,delivery.entity_id,delivery.board);
-      if(!delivery.active || delivery.paused || delivery.expires_at<=this.now() || !this.ownerAllowed(delivery) || !visible) {
+      if(!delivery.active || delivery.paused || expired(delivery,this.now()) || !this.ownerAllowed(delivery) || !visible) {
         await this.finish(delivery,token,'cancelled',null,'no_longer_eligible');continue;
       }
       const chain=await evtFirst(this.db,`WITH RECURSIVE chain(id,reply_to_id,depth) AS (

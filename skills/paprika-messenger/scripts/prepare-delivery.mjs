@@ -54,7 +54,7 @@ export function prepareBoardPost(input, env = process.env) {
 export function selectNotificationTransport({subscriptions, recipient}, now = Date.now()) {
   if (!Array.isArray(subscriptions)) throw new Error('Require confirmed subscription discovery before selecting one notification transport.');
   return subscriptions.some(s => s.board === recipient.board && s.receiver_id === recipient.id
-    && s.active === true && Number.isFinite(s.expires_at) && s.expires_at > now) ? 'events' : 'native';
+    && s.active === true && (s.expires_at === null || (Number.isFinite(s.expires_at) && s.expires_at > now))) ? 'events' : 'native';
 }
 
 function envelope(input, mode, key, hostArgs) {

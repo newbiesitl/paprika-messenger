@@ -1,6 +1,6 @@
 # Private Sites deployment and resume
 
-Use the installed Sites building, hosting and MCP skills and native tool schemas for current registration, source synchronization, packaging and publication. Discover actual tools before using them; names in this reference describe the native operations, not permission to invent an unavailable tool. The bundled service version is **0.5.6**. The package version is independent and appears in the plugin manifest.
+Use the installed Sites building, hosting and MCP skills and native tool schemas for current registration, source synchronization, packaging and publication. Discover actual tools before using them; names in this reference describe the native operations, not permission to invent an unavailable tool. The bundled service version is **0.5.7**. The package version is independent and appears in the plugin manifest.
 
 ## Select before creating
 
@@ -22,9 +22,9 @@ Also retain the verified account setup package's backend plugin ID, actual USER/
 {
   "schema_version": 1,
   "package_version": null,
-  "bundled_service_version": "0.5.6",
+  "bundled_service_version": "0.5.7",
   "deployed_service_version": null,
-  "service_version": "0.5.6",
+  "service_version": "0.5.7",
   "service_type": "chatgpt-codex",
   "selection_source": "default_without_dot",
   "dot_available": null,
@@ -46,13 +46,14 @@ Also retain the verified account setup package's backend plugin ID, actual USER/
   "saved_version_id": null,
   "deployment_id": null,
   "environment_revision": null,
-  "verified_clients": []
+  "verified_clients": [],
+  "client_checks": []
 }
 ```
 
 Replace example paths and nulls only with actual values. Use phases such as `account_save_pending`, `account_saved`, `account_install_pending`, `source_ready`, `registration_pending`, `registered`, `runtime_configured`, `published`, `connection_pending` and `verified`. An explicitly requested local-only installation may record the account step as skipped with that device scope. Record the account/workspace context only as a non-secret identifier already provided by the host; do not derive an identity from a display name. A verified-client entry identifies the host/client and the read-only check time, without messages or authentication data. Checkpoint claims are hints to revalidate, not authority to use another account or proof a connection is still active.
 
-Keep the selected `service_type`, its `selection_source` and verified or unknown `dot_available` with this same deployment. Revalidate them against authoritative runtime settings and `get_service_config` on resume. Never automatically change an existing deployment's type based on a different host's missing tools. `verified_clients` distinguishes `chatgpt`, `codex_local`, `codex_cloud` and optional `dot`; an unavailable client remains unverified without blocking available clients.
+Keep the selected `service_type`, its `selection_source` and verified or unknown `dot_available` with this same deployment. Revalidate them against authoritative runtime settings and `get_service_config` on resume. Never automatically change an existing deployment's type based on a different host's missing tools. Retain legacy `verified_clients` entries as hints, not proof for all ChatGPT modes. Use `client_checks` to distinguish `chatgpt_chat`, `chatgpt_work_local`, `chatgpt_work_cloud`, `codex_local`, `codex_cloud` and optional `dot`, recording sending, inbox access, native reachability and automatic receiving separately. Follow the [client capability guide](../assets/service-template/docs/CLIENT-CAPABILITIES.md); an unavailable client remains unverified without blocking available clients.
 
 Never store Git credentials, service tokens, OAuth values, verified-email settings, event keys, callback URLs, signing secrets, message bodies or private histories in this file. Keep credentials in session memory/hidden stdin only. On resume, reconcile the selected manifest, checkpoint and native Site metadata before acting. Recover a missing source credential for the same registered project. Resolve uncertain registration through native owner discovery/metadata before trying creation again; never blindly repeat `create_site`. Resume an existing deployment by its returned ID, and reuse an already saved archive-backed version when the source is unchanged. Source changes invalidate previous build/commit assertions.
 

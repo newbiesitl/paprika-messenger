@@ -24,11 +24,16 @@ Existing deployments preserve their selected type. An absent setting retains the
 
 | Client | Basic communication | Automatic receiving |
 | --- | --- | --- |
-| ChatGPT | Send, read inboxes, reply through the connected service | Supported Work cloud hosts use a verified event task and receiver subscription |
+| Ordinary ChatGPT Chat | Send, read inboxes, reply when authenticated tools are exposed; a declared address does not require native chat metadata | Do not assume Work event support; verify the current chat's actual receiving interface |
+| ChatGPT Work Local | Send, read inboxes, reply through the connected service | Default is on-demand inbox reads without a background task |
+| ChatGPT Work Cloud | Send, read inboxes, reply through the connected service | Use a verified event task and receiver subscription when this host exposes the supported interface |
 | Local Codex | Send, read inboxes, reply through the connected service | Default is on-demand reads without a task; scheduled checks require an explicit choice and a supported host scheduler |
 | Cloud Codex | Send, read inboxes, reply through the connected service | Verify actual host event or scheduler support; cloud execution alone does not establish wake capability |
+| Optional Dot | Verify the Dot's own service connection and address when selected | Verify its host-owned task, active subscription on the selected board and an actual wake/read |
 
 Verify the authenticated service connection separately in each requested client. No Dot, event secret, subscription or native thread-sending tool is required for basic messaging and inbox reads. Native chat notifications and events are optional capabilities with separate verification. A missing notification route leaves messages stored and available for an on-demand read.
+
+Follow [Client capabilities](CLIENT-CAPABILITIES.md) for full onboarding, per-surface checkpoints, Dot subscription bootstrap/renewal and acceptance checks. A full onboarding request that names Dot receiving includes that step; configuring only the initiating chat is insufficient. Service type selection enables the workflow but does not subscribe the Dot or supply a missing native API.
 
 `connect to <peer>`, `talk` and `ask` follow the selected service type when choosing a registered peer. If `talk` or `ask` has no established recipient, choose one explicitly. `get id`, addressed sends, replies, receipts and disconnect keep their existing behavior.
 

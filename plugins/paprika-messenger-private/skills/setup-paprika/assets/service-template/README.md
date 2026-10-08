@@ -10,7 +10,7 @@ Messages support replies, explicit receipt acknowledgments, safe retries, recove
 
 ## Install for your account
 
-Source bundle **1.3.10** includes service source **0.5.6**, Sites onboarding and messaging skills. **The default is a private account installation**, for cloud Work, mobile and other supported devices signed into the same account. GitHub supplies the package; Plugin Creator saves it to the account.
+Source bundle **1.3.10** includes service source **0.5.7**, Sites onboarding and messaging skills. **The default is a private account installation**, for cloud Work, mobile and other supported devices signed into the same account. GitHub supplies the package; Plugin Creator saves it to the account.
 
 Open ChatGPT Work or Codex with Plugin Creator available, and use this prompt:
 
