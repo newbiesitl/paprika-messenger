@@ -65,8 +65,8 @@
     },
     {
       "path": "docs/WINDOWS-SITES-PACKAGING.md",
-      "size_bytes": 7512,
-      "sha256": "95d4b7323cda6c1bfb332801a69a1bc284558c51932c05baa7fa86cedf9ba491"
+      "size_bytes": 7900,
+      "sha256": "8e9e288ef09996965473e12c148d9e43ff8697f5c459dfb6f1057e0fd5644292"
     },
     {
       "path": "drizzle.config.ts",

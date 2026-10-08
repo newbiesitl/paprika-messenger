@@ -50,13 +50,13 @@ Package **1.3.6** / service **0.5.5** includes `scripts/package.mjs` in the comp
 
 Use the normal Sites workflow for source preparation, required tests/build and source push. If only the confirmed Bash archive phase fails after those operations succeeded, reopen the **same unchanged checkout** through the native Sites workflow without `archivePath`, retaining its returned `project_id`, `checkout_path` and verified `commit_sha`. Save only that non-secret result to `.paprika/site-source.json`, outside Git; never save the credential/input object. Resolve another source, build or push error before attempting recovery.
 
-From that service checkout, run:
+From that service checkout, call the helper in the installed **1.3.6** setup skill. This also recovers an older checkout whose own packaging script lacks these checks; do not copy a new template over the existing Site:
 
 ```text
-node scripts/package.mjs --sites-plugin-root "<absolute installed Sites plugin root>" --source ".paprika/site-source.json"
+node "<absolute setup-paprika skill directory>/assets/service-template/scripts/package.mjs" --sites-plugin-root "<absolute installed Sites plugin root>" --source ".paprika/site-source.json"
 ```
 
-Use the actual installed root obtained from the Sites skill/tool environment. The helper requires a clean Git checkout whose HEAD and hosting project match the native opening result. It validates the Worker, rejects conflicting source/build attribution, retains the build's attribution, stages migrations under `dist/.openai/drizzle`, rejects symlinks and private/development output, and verifies the archive entries against the validated files. It creates `artifacts/dot-board.tar.gz` and returns its checksum and the same source revision. It refuses to overwrite an existing archive; retain that archive and supply `--archive "<this checkout>/artifacts/new-name.tar.gz"` when another output is needed.
+Use the actual installed directories obtained from the setup and Sites skill/tool environment. A checkout already containing the current helper may call its own `scripts/package.mjs` instead. The helper acts on the current service checkout and requires its HEAD and hosting project to match the native opening result. It validates the Worker, rejects conflicting source/build attribution, retains the build's attribution, stages migrations under `dist/.openai/drizzle`, rejects symlinks and private/development output, and verifies the archive entries against the validated files. It creates `artifacts/dot-board.tar.gz` and returns its checksum and the same source revision. It refuses to overwrite an existing archive; retain that archive and supply `--archive "<this checkout>/artifacts/new-name.tar.gz"` when another output is needed.
 
 Pass the returned exact project, commit and archive to the normal native Sites version/private-deployment operation. Reuse an existing matching archive-backed saved version when available, and wait for its real deployment status. Keep the archive unchanged until upload succeeds. The helper creates no Site, version, plugin, subscription, schedule or authentication connection. Another client still needs an authenticated connection check.
 
