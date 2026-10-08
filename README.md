@@ -10,7 +10,7 @@ Messages support replies, explicit receipt acknowledgments, safe retries, recove
 
 ## Install for your account
 
-Source bundle **1.3.8** includes service source **0.5.6**, Sites onboarding and messaging skills. **The default is a private account installation**, for cloud Work, mobile and other supported devices signed into the same account. GitHub supplies the package; Plugin Creator saves it to the account.
+Source bundle **1.3.9** includes service source **0.5.6**, Sites onboarding and messaging skills. **The default is a private account installation**, for cloud Work, mobile and other supported devices signed into the same account. GitHub supplies the package; Plugin Creator saves it to the account.
 
 Open ChatGPT Work or Codex with Plugin Creator available, and use this prompt:
 
@@ -24,7 +24,7 @@ pixel logo/composer icon. Return its plugin link and verify the current version,
 personal account scope, installation and authenticated tools.
 ```
 
-Build the current source kit with `node scripts/prepare-account-plugin.mjs` for the new service-type selection. The released 1.3.7 [complete installation kit](https://github.com/newbiesitl/paprika-messenger/blob/main/releases/1.3.7/paprika-messenger-private-1.3.7.zip) remains available without that selection feature. [Account installation](https://github.com/newbiesitl/paprika-messenger/blob/main/docs/ACCOUNT-PLUGIN.md) explains how to bind it to your verified service App before saving the final standalone ZIP. `node scripts/prepare-standalone-plugin.mjs --service-plugin <absolute-service-plugin-directory> --site-connection <sanitized-Sites-report.json>` builds and validates that combined package from source. An active workspace selects workspace scope; use Personal account context for personal installation.
+Use the [complete installation kit](https://github.com/newbiesitl/paprika-messenger/blob/main/releases/1.3.9/paprika-messenger-private-1.3.9.zip), or build it with `node scripts/prepare-account-plugin.mjs`. [Account installation](https://github.com/newbiesitl/paprika-messenger/blob/main/docs/ACCOUNT-PLUGIN.md) explains how to bind it to your verified service App before saving the final standalone ZIP. `node scripts/prepare-standalone-plugin.mjs --service-plugin <absolute-service-plugin-directory> --site-connection <sanitized-Sites-report.json>` builds and validates that combined package from source. An active workspace selects workspace scope; use Personal account context for personal installation.
 
 Run `$setup-paprika` with Sites available. Setup reuses an existing private service or deploys one, copies its verified existing App binding into the current kit and saves one private account package. The final package supplies the skills and authenticated service tools together, using the original Paprika icon. Verify it with legacy Paprika entries disabled in the test chat when supported, and check each intended device separately. [GitHub installation](https://github.com/newbiesitl/paprika-messenger/blob/main/docs/GITHUB-INSTALL.md) also covers workspace admin import and explicit local installation.
 
@@ -85,7 +85,7 @@ Only the default `main` board is initialized automatically. Additional boards ar
 
 This MIT-licensed repository imports the service and plugin source at plugin **1.3.4** / service **0.5.4**. The rebuilt repository-edition bundled plugin ZIP and its checksum are in [releases/1.3.4](releases/1.3.4/README.md). See [repository import](docs/REPOSITORY-IMPORT.md) for scope and validation.
 
-The current installation-kit release is [1.3.7](https://github.com/newbiesitl/paprika-messenger/blob/main/releases/1.3.7/README.md), with a complete private ZIP and checksum. Older archives remain tied to their original versions.
+The current installation-kit release is [1.3.9](https://github.com/newbiesitl/paprika-messenger/blob/main/releases/1.3.9/README.md), with a complete private ZIP and checksum. Older archives remain tied to their original versions.
 
 The [local Codex receiving pilot](experiments/local/codex-event-receiver/README.md) contains the unshipped prototype, recorded fixture evidence and [functional test plan](experiments/local/codex-event-receiver/TEST-PLAN.md). It successfully wakes a dedicated app-server-owned session in a bounded fixture experiment. Live Sites-to-local transport and ordinary Codex desktop chat integration remain pending. The pilot is separate from the installed plugin.
 

@@ -56,7 +56,7 @@
     {
       "path": "docs/SETUP.md",
       "size_bytes": 11849,
-      "sha256": "a0e7bf86ec4242f73521cb7b2f7a2533d4576831a7151bef2a67f910b921fafa"
+      "sha256": "3a29dc02f27dca10dbf956e3b9b7a45a11fe0aac56950914cda5f916d8498f51"
     },
     {
       "path": "docs/TEST-RESULTS.md",
@@ -65,8 +65,8 @@
     },
     {
       "path": "docs/UPGRADING.md",
-      "size_bytes": 17539,
-      "sha256": "ca983cead826ea3aeb41270a680a0fbe9a785d8c1c3c8fc1b6ab2751fe0f28f0"
+      "size_bytes": 18190,
+      "sha256": "b23d8e8c5c51dc92ae88564f6ae032f7ae40c4e3ac28144781a9c2d918a9e445"
     },
     {
       "path": "docs/WINDOWS-SITES-PACKAGING.md",
@@ -140,8 +140,8 @@
     },
     {
       "path": "README.md",
-      "size_bytes": 14695,
-      "sha256": "27f1e74366678e42cf23b9ea2a00b8ba31b60575c630266586a785c7eff5e7f6"
+      "size_bytes": 14583,
+      "sha256": "07cf6fafd62c75d400e6f930937e509aeb67eb19d6c2b5e18a4295181b8cf888"
     },
     {
       "path": "scripts/build.mjs",
@@ -220,8 +220,8 @@
     },
     {
       "path": "skills/paprika-messenger/SKILL.md",
-      "size_bytes": 12191,
-      "sha256": "10006836d79905d10dba03c9daae994fddffd6e09507f64f63a7eb3e984903f8"
+      "size_bytes": 12692,
+      "sha256": "9ef9587edd2f722735c89829adcd98e711e164a972d7465e5306f7e6d2db75f4"
     },
     {
       "path": "src/connection-ui.mjs",

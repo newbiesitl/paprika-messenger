@@ -64,7 +64,16 @@ export async function readSiteServiceBinding({ servicePluginRoot, siteConnection
     service_plugin_id: site.mcp_connection.plugin_id, app_id: entry.id,
     mcp_url: site.mcp_connection.mcp_url, oauth_resource: site.mcp_connection.oauth_resource };
   const checked = checkConnection(apps, connection);
-  if (manifest.interface?.websiteURL !== checked.origin)
+  let provenance;
+  try { await regular(resolve(servicePluginRoot, 'paprika-connection.json')); provenance = await json(resolve(servicePluginRoot, 'paprika-connection.json')); }
+  catch (error) { if (error.code !== 'ENOENT') throw error; }
+  if (provenance) {
+    const portable = await json(resolve(servicePluginRoot, 'plugin.json'));
+    const bundle = await json(resolve(servicePluginRoot, 'paprika-bundle.json'));
+    await verifyStandaloneBinding(servicePluginRoot, portable, manifest, bundle);
+    if (Object.keys(connection).some(key => provenance[key] !== connection[key]))
+      throw new Error('Existing standalone binding and selected Site do not match.');
+  } else if (manifest.interface?.websiteURL !== checked.origin)
     throw new Error('Installed service plugin and selected Site have different origins.');
   const requiredApps = structuredClone(apps);
   requiredApps.apps[checked.alias].required = true;
@@ -72,8 +81,9 @@ export async function readSiteServiceBinding({ servicePluginRoot, siteConnection
 }
 
 export async function verifyStandaloneBinding(pluginRoot, manifest, compatibility, bundle) {
+  const nestedApps = compatibility.extensions?.['com.openai']?.apps;
   if (manifest.extensions?.['com.openai']?.apps !== './.app.json' || compatibility.apps !== './.app.json'
-      || compatibility.extensions?.['com.openai']?.apps !== './.app.json' || bundle.distribution !== 'standalone')
+      || (nestedApps != null && nestedApps !== './.app.json') || bundle.distribution !== 'standalone')
     throw new Error('Both manifests must discover the standalone App binding.');
   await regular(resolve(pluginRoot, '.app.json')); await regular(resolve(pluginRoot, 'paprika-connection.json'));
   const apps = await json(resolve(pluginRoot, '.app.json')), connection = await json(resolve(pluginRoot, 'paprika-connection.json'));
@@ -151,7 +161,7 @@ export async function mergeServicePlugin({ pluginRoot, servicePluginRoot, siteCo
   manifest.version = version ?? manifest.version;
   compatibility.version = manifest.version; bundle.plugin_version = manifest.version;
   manifest.extensions['com.openai'].apps = './.app.json';
-  compatibility.apps = './.app.json'; compatibility.extensions['com.openai'].apps = './.app.json';
+  compatibility.apps = './.app.json'; delete compatibility.extensions['com.openai'].apps;
   manifest.extensions['com.openai'].interface.displayName = 'Paprika Messenger';
   compatibility.interface = structuredClone(manifest.extensions['com.openai'].interface);
   bundle.distribution = 'standalone';
