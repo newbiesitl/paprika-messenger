@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.sites-runtime/
+.dev-data/
+.paprika/
+artifacts/
+.env*
+!.env.example
+*.tar.gz
