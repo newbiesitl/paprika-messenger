@@ -32,10 +32,27 @@ The diagnostic module then prepared a separately authorized probe asking for a v
 
 The default probe now asks the recipient to post an understandable acknowledgment followed by its unique test token. The verifier also accepts the initial marker-only manual probe for comparison.
 
-## User-visible delivery remains unverified
+## Initial destination mismatch
 
 The two responses above were observed in Codex native thread history. A subsequent comparison with the intended visible ChatGPT conversation found that it has a different conversation ID from the registered Codex recipient route. The host inventory exposes them as separate `codex` and `chatgpt` entries; reading the actual ChatGPT conversation showed no corresponding test input or acknowledgment.
 
-The tests therefore establish wake and response in that Codex thread, not delivery into the intended ChatGPT chat box. A relationship between an execution thread and a ChatGPT conversation must not be treated as a verified user-visible messaging route. The visible receiver acceptance check remains pending. No corrective message was submitted to the ChatGPT conversation as part of this comparison.
+Those two tests establish wake and response in that Codex thread, not delivery into the intended ChatGPT chat box. A relationship between an execution thread and a ChatGPT conversation must not be treated as a verified user-visible messaging route. No corrective message was submitted as part of that initial comparison.
 
-Ordinary ChatGPT and Dot receiving, continuous service-to-host routing, restart/reconnect behavior of an unattended router and delivery capacity have not been tested. Fixture tests exercise checkpoint recovery and evidence interpretation without claiming those live properties.
+## Actual ChatGPT conversation bridge
+
+A third, separately authorized test addressed the exact ChatGPT conversation ID obtained from the user's chat link and verified through native host history. The native tool confirmed that ID. The receiver produced the acknowledgment without an event hook, an inbox read or another user prompt in the receiving conversation.
+
+| Stage | Observed evidence |
+| --- | --- |
+| Before submission | Actual ChatGPT conversation idle; its prior turn IDs recorded |
+| Native submission | Confirmed exact ChatGPT destination once |
+| Early history read | Old turns only; no resend attempted |
+| ChatGPT turn | Started at 10:32:27.791 UTC, completed at 10:32:46.232 UTC |
+| Final verification | Exact planned input and acknowledgment with the unique reference in the same new completed `chatgpt` turn |
+| Bridge checker | `chatgpt_response_verified`, `new_turn: true`, `exact_response: true` |
+
+The matching response also appeared in the Codex execution thread, but that was not sufficient for this acceptance check. The actual ChatGPT history initially appeared unchanged and later returned the new turn. These observations do not establish when every client refreshed its cache or rendered the message.
+
+Direct browser inspection was blocked by a human-verification page. The test establishes a recorded acknowledgment in the actual ChatGPT conversation; live browser rendering and notification latency were not measured. No installed Messenger binding was changed to run this native host diagnostic.
+
+Broader ChatGPT and Dot receiving, continuous service-to-host routing, restart/reconnect behavior of an unattended router and delivery capacity have not been tested. Fixture tests exercise checkpoint recovery and evidence interpretation without claiming those live properties.

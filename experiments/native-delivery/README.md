@@ -4,14 +4,14 @@ An inbox write alone does not demonstrate that an idle chat starts a turn. This 
 
 The executing host must expose `mcp__codex_app__send_message_to_thread` and `mcp__codex_app__read_thread`. A remote Messenger service cannot invoke those desktop tools by itself. This is a test harness for a user-authorized, selected recipient, not an autonomous background router. The [live results](LIVE-RESULT.md) verify one idle cloud receiver backed by Codex.
 
-Those replies were observed in Codex native thread history. The intended visible ChatGPT conversation has a different ID and did not show those test messages. A Codex response alone cannot establish delivery into a ChatGPT chat box. Verify the exact user-facing destination separately before making that claim.
+The initial replies were observed only in Codex native thread history. A subsequent probe used the actual ChatGPT conversation ID and verified a new input and acknowledgment in that conversation's history. A Codex response alone cannot establish delivery into a ChatGPT chat box. Verify the exact user-facing destination separately before making that claim.
 
 ## Run the fixture tests
 
 From the repository root, with Node.js 24 or newer:
 
 ```sh
-node --test experiments/native-delivery/probe.test.mjs
+node --test experiments/native-delivery/probe.test.mjs experiments/native-delivery/chatgpt-bridge.test.mjs
 ```
 
 CI runs these tests on Windows and macOS. Fixtures use invented routes and no model calls. They cover real-history correlation, misleading copied markers, old turns, wrong destinations, submission uncertainty, duplicate turns and response mismatch. Passing fixtures does not establish a live host's delivery capability.
@@ -20,7 +20,7 @@ CI runs these tests on Windows and macOS. Fixtures use invented routes and no mo
 
 Get the human's authorization to send a short test to the exact selected recipient. Resolve sender and recipient through Messenger on the same board. Use the current host's `CODEX_THREAD_ID`, the verified service origin for `deployment`, and the exact native recipient route from host discovery. Never infer the thread or host from a title or directory.
 
-Read the recipient immediately before preparing. The helper currently accepts only parsed schema-v1 `read_thread` results with `thread.kind === 'codex'`, an idle status, and matching thread/host IDs. Busy recipients must wait for a fresh idle read; the probe must not interrupt them. Other native history shapes require a separately verified adapter.
+Read the recipient immediately before preparing. The Codex probe helper accepts only parsed schema-v1 `read_thread` results with `thread.kind === 'codex'`, an idle status, and matching thread/host IDs. Busy recipients must wait for a fresh idle read; the probe must not interrupt them. Use the separate ChatGPT bridge check below for a ChatGPT conversation.
 
 ```js
 import { prepareNativeProbe, evaluateNativeProbe } from './experiments/native-delivery/probe.mjs';
@@ -88,8 +88,35 @@ Verification is read-only. An exact response can prove delivery even if the call
 
 The CLI exposes the same helpers as `node experiments/native-delivery/probe.mjs prepare|verify`, taking JSON on stdin. `prepare` accepts the resolved route plus parsed `history` and optional stable `request_id`. `verify` accepts `{ probe, history, state_root? }` and reads the checkpoint from `.paprika` by default. The CLI never calls a host tool. Keep raw history in memory; do not save it or credentials to fixtures. Reports include recipient routing metadata and belong in ignored local evidence; redact those IDs before sharing publicly.
 
+## Verify a ChatGPT bridge
+
+A ChatGPT Work conversation can have a Codex execution thread with a different ID. Obtain the actual conversation ID from the user's chat link and verify it through `read_thread` with `thread.kind === 'chatgpt'`. The execution thread's `CODEX_THREAD_ID` is insufficient to establish the visible ChatGPT destination. Do not replace an existing Messenger binding or register a duplicate to evade a conflicting route.
+
+For this independent host diagnostic, retain the exact native `args: { threadId, prompt }` and planned `expected_response`, containing a unique test reference. Before making the one authorized native call, durably record a metadata-only checkpoint:
+
+```js
+{
+  schema_version: 1, native_kind: 'chatgpt', request_id,
+  recipient_thread_id: args.threadId, payload_digest: digest(args),
+  prepared_at, baseline_turn_ids, state: 'submitting'
+}
+```
+
+Use the existing exported `digest` helper; `baseline_turn_ids` comes from the actual idle ChatGPT history and `prepared_at` is captured before submission. Confirm the native tool's exact destination before changing state to `submitted`. Explicit rejection is `failed`; interrupted or ambiguous results remain `unknown`. An existing uncertain checkpoint requires reconciliation instead of another call. This diagnostic creates no board message and does not alter the registered Messenger receiver. It tests direct host delivery to the human-selected visible conversation.
+
+After submission, use the parsed history from that exact ChatGPT conversation:
+
+```js
+import { evaluateChatGptBridge } from './experiments/native-delivery/chatgpt-bridge.mjs';
+const report = evaluateChatGptBridge({ checkpoint, args, expected_response, history: after });
+```
+
+The CLI is `node experiments/native-delivery/chatgpt-bridge.mjs` with that object on JSON stdin. The checker is read-only and returns metadata. It rejects Codex runtime history, changed routes/payloads, copied references, old turns, duplicate turns and acknowledgments in unrelated turns. It accepts the schema-v1 ChatGPT assistant message without a `phase` field only in the matching completed turn; explicit commentary remains insufficient.
+
+`chatgpt_response_verified` means the exact input and final response are recorded in the actual ChatGPT conversation. `awaiting_chatgpt_turn` is inconclusive: an early read can be stale, so wait briefly and read again without resending. The live bridge probe initially returned old history and later verified successfully. Persisted conversation history is separate from observing a browser's live render or notification; inspect those separately before making display-latency claims.
+
 ## Scope of this result
 
-An observed native turn proves this host can wake that particular native receiver at that time. It does not establish continuous monitoring, an unattended remote bridge, arbitrary ChatGPT/Dot support or unlimited native-delivery capacity. A central router still needs a supported way to stay running and invoke the receiver's native route. Event-hook limits are avoided for this direct probe, while normal model and host usage limits still apply.
+An observed native turn proves this host can wake that particular native receiver at that time. The ChatGPT check additionally establishes an acknowledgment recorded in one actual ChatGPT conversation. Neither establishes continuous monitoring, an unattended remote bridge, arbitrary ChatGPT/Dot support or unlimited native-delivery capacity. A central router still needs a supported way to stay running and invoke the receiver's native route. Event-hook limits are avoided for these direct probes, while normal model and host usage limits still apply.
 
 The helper validates the consistency of caller-supplied data, not its authenticity. Obtain evidence from the real host and Messenger service. See [Codex app-server](https://learn.chatgpt.com/docs/app-server) for separately owned sessions and [MCP events](https://developers.openai.com/plugins/build/mcp-events) for subscribed event delivery.
