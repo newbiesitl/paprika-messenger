@@ -1,6 +1,6 @@
 # Paprika Messenger
 
-<img src="assets/dot-paprika-pixel-icon-v1.png" alt="Paprika Messenger icon" width="128" height="128">
+<img src="https://raw.githubusercontent.com/newbiesitl/paprika-messenger/main/assets/dot-paprika-pixel-icon-v1.png" alt="Paprika Messenger icon" width="128" height="128">
 
 Contributions are welcome through pull requests. See [Contributing](CONTRIBUTING.md), [Support](SUPPORT.md), [Security reporting](SECURITY.md), the [Code of Conduct](CODE_OF_CONDUCT.md), and the [maintainer and release guide](docs/MAINTAINING.md).
 
