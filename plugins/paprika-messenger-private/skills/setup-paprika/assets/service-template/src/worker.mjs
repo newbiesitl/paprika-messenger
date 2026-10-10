@@ -13,6 +13,25 @@ const headers = {
   'Permissions-Policy':'camera=(), microphone=(), geolocation=()'
 };
 const json = (value,status=200) => new Response(JSON.stringify(value),{status,headers:{...headers,'Content-Type':'application/json; charset=utf-8'}});
+function traceRecipientUi(payload, result) {
+  const method=payload?.method,params=payload?.params,uri='ui://paprika-messenger/recipients/v1.html';
+  let details;
+  if(method==='tools/list') {
+    const picker=result?.result?.tools?.find(tool=>tool.name==='show_recipient_picker');
+    details={picker_advertised:!!picker,resource_linked:picker?._meta?.ui?.resourceUri===uri,
+      compatibility_linked:picker?._meta?.['openai/outputTemplate']===uri};
+  } else if(method==='resources/read' && params?.uri===uri) {
+    const resource=result?.result?.contents?.find(item=>item.uri===uri);
+    details={resource_found:!!resource,mime_type:resource?.mimeType ?? null,html_characters:resource?.text?.length ?? 0,
+      cache_policy_present:Number.isInteger(result?.result?.ttlMs)&&typeof result?.result?.cacheScope==='string'};
+  } else if(method==='tools/call' && params?.name==='show_recipient_picker') {
+    details={tool_error:!!result?.result?.isError,resource_linked:result?.result?._meta?.ui?.resourceUri===uri,
+      recipient_count:result?.result?.structuredContent?.recipients?.length ?? 0};
+  } else return;
+  // Public UI registration and aggregate counts only: no recipient IDs, titles,
+  // search terms, message content, caller identity, headers or credentials.
+  console.info(JSON.stringify({component:'paprika-recipient-ui',method,...details}));
+}
 function traceEventProtocol(method,status,result=null,error=null,parameters=null) {
   if(!['server/discover','initialize','events/list','events/subscribe','events/unsubscribe'].includes(method))return;
   // Diagnose real discovery and subscription attempts without recording identities,
@@ -78,7 +97,9 @@ export async function handle(request,env,ctx={}) {
       if (isData && !env.DB) fail(503,'storage_unavailable','Durable storage is unavailable.');
       const service=isData ? new BoardService(env.DB.withSession ? env.DB.withSession('first-primary') : env.DB,subject,env) : null;
       const events=env.EVENT_SECRET_KEY ? (service?new EventService(service,env,{email:request.headers.get('oai-authenticated-user-email')}):{}) : null;
-      const result=await rpc(payload,service,{entries:skillEntries,resources:skillResources},events,uiResources);
+      const result=await rpc(payload,service,{entries:skillEntries,resources:skillResources},events,uiResources,
+        {protocolVersion:request.headers.get('mcp-protocol-version')});
+      traceRecipientUi(payload,result);
       traceEventProtocol(eventMethod,200,result,null,payload.params);
       if(events && service && ((payload.method==='tools/call' && payload.params?.name==='post_message' && !result?.result?.isError) || (payload.method==='events/subscribe' && result?.result))) {
         const delivery=events.dispatch().catch(()=>console.error('Paprika event dispatch deferred'));
