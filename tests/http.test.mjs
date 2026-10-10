@@ -6,6 +6,7 @@ import { loadMigrations } from './migrations.mjs';
 import { createHash } from 'node:crypto';
 import { BoardService } from '../src/service.mjs';
 import { maintenanceTokenDigest } from '../src/webhooks.mjs';
+import { prepareRecipientSelector, resolveRecipientChoice } from '../skills/paprika-messenger/scripts/prepare-recipient-selector.mjs';
 // Load the Worker after the awaited build, not while resolving static imports of
 // the previous generated file. HTTP checks must exercise this source revision.
 const { handle }=await import('../dist/_worker.js');
@@ -13,6 +14,50 @@ const db=new SqliteD1();db.connection.exec(await loadMigrations());
 await new BoardService(db,'owner').create_board({board:'vex',label:'Legacy project'});
 const env={DB:db,OWNER_USER_ID:'owner',COORDINATOR_USER_ID:'coordinator',SITE_ORIGIN:'https://board.test'};
 const request=(path,body,subject='owner',extra={})=>new Request(`https://board.test${path}`,{method:body===undefined?'GET':'POST',headers:{'oai-authenticated-user-id':subject,'Content-Type':'application/json',...extra},...(body===undefined?{}:{body:JSON.stringify(body)})});
+
+test('modern resource responses satisfy the per-request cache contract while legacy clients keep their wire shape',async()=>{
+  const uiUri='ui://paprika-messenger/recipients/v1.html';
+  const modernMeta={'io.modelcontextprotocol/protocolVersion':'2026-07-28',
+    'io.modelcontextprotocol/clientInfo':{name:'host-fixture',version:'1.0.0'},'io.modelcontextprotocol/clientCapabilities':{}};
+  const invoke=async(method,params={},extra={})=>(await (await handle(request('/mcp',{jsonrpc:'2.0',id:1,method,params},'',extra),env)).json()).result;
+  for(const [method,params] of [['server/discover',{}],['tools/list',{}],['resources/list',{}],['resources/templates/list',{}],['resources/read',{uri:uiUri}]]) {
+    const result=await invoke(method,{...params,_meta:modernMeta});
+    assert.equal(result.resultType,'complete');assert.equal(result.ttlMs,0);assert.equal(result.cacheScope,'private');
+    if(method==='resources/read'){assert.equal(result.contents[0].mimeType,'text/html;profile=mcp-app');assert.match(result.contents[0].text,/createRecipientHost/);}
+  }
+  const header=await invoke('resources/read',{uri:uiUri},{'MCP-Protocol-Version':'2026-07-28'});
+  assert.equal(header.ttlMs,0);assert.equal(header.cacheScope,'private');
+  const initialized=await invoke('initialize',{protocolVersion:'2025-06-18'});
+  assert.match(initialized.instructions,/prefer an available routine host user-choice panel/);
+  for(const params of [{uri:uiUri},{uri:uiUri,_meta:{'io.modelcontextprotocol/protocolVersion':'2025-06-18'}}]) {
+    const legacy=await invoke('resources/read',params,{'MCP-Protocol-Version':'2025-06-18'});
+    assert.deepEqual(Object.keys(legacy),['contents']);assert.equal(legacy.contents[0].uri,uiUri);
+  }
+});
+
+test('authenticated recipient pages feed native selection without a widget or outbound writes',async()=>{
+  const pickerDb=new SqliteD1();pickerDb.connection.exec(await loadMigrations());const pickerEnv={...env,DB:pickerDb};
+  const service=new BoardService(pickerDb,'owner');
+  await service.register_participant({board:'main',participant_id:'native-fixture',label:'Registered name',kind:'thread',thread_id:'native-host-fixture'});
+  await service.update_recipient_metadata({board:'main',entries:[{participant_id:'native-fixture',thread_id:'native-host-fixture',title:'Observed title',
+    project_status:'assigned',project_id:'native-project',project_name:'Project name',source:'chatgpt',execution_mode:'cloud'}]});
+  const invoke=async(method,params)=>(await (await handle(request('/mcp',{jsonrpc:'2.0',id:1,method,
+    params:{...params,_meta:{'io.modelcontextprotocol/protocolVersion':'2026-07-28'}}}),pickerEnv)).json()).result;
+  try {
+    const result=await invoke('tools/call',{name:'list_recipients',arguments:{board:'main'}});
+    assert.equal(result._meta,undefined);
+    const selector=prepareRecipientSelector({page:result.structuredContent});
+    const choice=selector.options.find(o=>o.participant_id==='native-fixture');assert.match(choice.label,/Project name → Observed title · Thread ID: native-host-fixture/);
+    const selected=resolveRecipientChoice(selector,choice.label);
+    const verified=await invoke('tools/call',{name:'get_recipient',arguments:{board:selected.board,participant_id:selected.receiver_id}});
+    assert.equal(verified.structuredContent.recipient.thread_id,selected.receiver_thread_id);
+    const privateResource=await invoke('resources/read',{uri:'paprika://recipient/main/native-fixture'});
+    assert.equal(privateResource.cacheScope,'private');assert.equal(privateResource.ttlMs,0);
+    const helpers=await invoke('resources/read',{uri:'skill://dot-agent-board/paprika-messenger/scripts/prepare-recipient-selector.mjs'});
+    assert.match(helpers.contents[0].text,/prepareRecipientSelector/);
+    for(const table of ['messages','acknowledgments','event_subscriptions'])assert.equal(pickerDb.connection.prepare('SELECT COUNT(*) n FROM '+table).get().n,0);
+  }finally{pickerDb.close();}
+});
 
 test('recipient picker resources are packaged, owner-gated and usable through MCP and the browser API',async()=>{
   const pickerDb=new SqliteD1();pickerDb.connection.exec(await loadMigrations());const pickerEnv={...env,DB:pickerDb};

@@ -98,7 +98,7 @@ export function createRecipientHost({window,document,mount=mountRecipientPicker}
       if(currentSelection&&(state===null||(contextId&&state?.updateId!==contextId))){currentSelection=null;contextId=null;picker.setSelected(null);element('feedback').textContent='Recipient attachment removed. Choose a recipient again.';}
     }
   });
-  if(window.parent!==window)request('ui/initialize',{protocolVersion:'2026-01-26',appInfo:{name:'Paprika Messenger recipient picker',version:'1.4.0-rc.1'},appCapabilities:{availableDisplayModes:['inline']}})
+  if(window.parent!==window)request('ui/initialize',{protocolVersion:'2026-01-26',appInfo:{name:'Paprika Messenger recipient picker',version:'1.4.0-rc.2'},appCapabilities:{availableDisplayModes:['inline']}})
     .then(result=>{if(result?.protocolVersion!=='2026-01-26')throw Error('Unsupported host bridge.');bridgeReady=true;window.parent.postMessage({jsonrpc:'2.0',method:'ui/notifications/initialized'},'*');controls();reportSize();if(typeof ResizeObserver==='function')new ResizeObserver(reportSize).observe(document.body);})
     .catch(()=>{element('feedback').textContent='Ask Paprika Messenger to list recipient names and IDs in this chat.';});
   return {render};
