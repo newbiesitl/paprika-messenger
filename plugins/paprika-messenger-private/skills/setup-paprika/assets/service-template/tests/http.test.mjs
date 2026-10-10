@@ -15,6 +15,26 @@ await new BoardService(db,'owner').create_board({board:'vex',label:'Legacy proje
 const env={DB:db,OWNER_USER_ID:'owner',COORDINATOR_USER_ID:'coordinator',SITE_ORIGIN:'https://board.test'};
 const request=(path,body,subject='owner',extra={})=>new Request(`https://board.test${path}`,{method:body===undefined?'GET':'POST',headers:{'oai-authenticated-user-id':subject,'Content-Type':'application/json',...extra},...(body===undefined?{}:{body:JSON.stringify(body)})});
 
+test('HTTP and MCP confirmed sends return the native recipient link and serve the shared helper',async()=>{
+  const linkDb=new SqliteD1();linkDb.connection.exec(await loadMigrations());const linkEnv={...env,DB:linkDb};
+  try {
+    const service=new BoardService(linkDb,'owner');
+    await service.register_participant({board:'main',participant_id:'sender-fixture',label:'Sender fixture',kind:'thread',thread_id:'sender-native-fixture'});
+    await service.register_participant({board:'main',participant_id:'link-fixture',label:'Link fixture',kind:'thread',thread_id:'link-native-fixture'});
+    await service.update_recipient_metadata({board:'main',entries:[{participant_id:'link-fixture',thread_id:'link-native-fixture',source:'codex',execution_mode:'local',host_id:'local'}]});
+    const args={board:'main',sender_id:'sender-fixture',sender_label:'Sender fixture',receiver_id:'link-fixture',topic:'Fixture topic',body:'Fixture content',idempotency_key:'fixture-link-post'};
+    const http=await (await handle(request('/api/post_message',args,'owner',{Origin:'https://board.test','X-Dot-Board':'1'}),linkEnv)).json();
+    assert.equal(http.error,undefined,JSON.stringify(http));
+    assert.equal(http.recipient_conversation_link.url,'codex://threads/link-native-fixture');
+    const rpc=await (await handle(request('/mcp',{jsonrpc:'2.0',id:1,method:'tools/call',params:{name:'post_message',arguments:args}}),linkEnv)).json();
+    assert.equal(rpc.result.structuredContent.message.id,http.message.id);
+    assert.deepEqual(rpc.result.structuredContent.recipient_conversation_link,http.recipient_conversation_link);
+    assert.equal(linkDb.connection.prepare('SELECT COUNT(*) AS n FROM messages').get().n,1);
+    const helper=await handle(request('/conversation-link.js'),linkEnv);
+    assert.match(await helper.text(),/export function conversationLink/);
+  } finally { linkDb.close(); }
+});
+
 test('modern resource responses satisfy the per-request cache contract while legacy clients keep their wire shape',async()=>{
   const uiUri='ui://paprika-messenger/recipients/v1.html';
   const modernMeta={'io.modelcontextprotocol/protocolVersion':'2026-07-28',

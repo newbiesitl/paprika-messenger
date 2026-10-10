@@ -1,10 +1,12 @@
+import { conversationLink } from './conversation-link.js';
+
 export function recipientLabel(recipient) {
   return recipient.thread_name || recipient.registered_label || recipient.participant_id;
 }
 
 // The website and in-chat card share this component. All displayed metadata is
 // plain text; selection always returns the canonical communication address.
-export function mountRecipientPicker(root,{load,onSelect,onClear=()=>{},onPage=()=>{}}) {
+export function mountRecipientPicker(root,{load,onSelect,onClear=()=>{},onPage=()=>{},onOpen=null}) {
   const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
   const details=node('details',undefined,'recipient-dropdown'),summary=node('summary','Choose recipient'),panel=node('div',undefined,'recipient-panel');
   const searchLabel=node('label','Search by thread name or ID'),search=node('input');
@@ -15,6 +17,20 @@ export function mountRecipientPicker(root,{load,onSelect,onClear=()=>{},onPage=(
   const actions=node('div',undefined,'recipient-actions');actions.append(more,refresh);panel.append(searchLabel,status,results,actions);details.append(summary,panel);
   const chosen=node('p','','recipient-chosen');chosen.hidden=true;clear.hidden=true;root.replaceChildren(details,chosen,clear);root.classList.add('recipient-picker');
   let rows=[],nextCursor=null,query='',selected=null,generation=0,loading=false,busy=false,disabled=false,searchTimer=null,loaded=false;
+  function openLink(recipient) {
+    const link=conversationLink(recipient);if(!link)return null;
+    const anchor=node('a',link.label,'recipient-open');anchor.href=link.url;anchor.target='_blank';anchor.rel='noopener noreferrer';
+    anchor.title=link.hint;anchor.setAttribute('aria-label','Open conversation: '+recipientLabel(recipient));
+    if(onOpen)anchor.onclick=async event=>{event.preventDefault();event.stopPropagation();
+      try{await onOpen(link,recipient);}
+      catch{status.textContent='This host could not open the conversation. Copy this link: '+link.url;}};
+    return anchor;
+  }
+  function showSelected() {
+    chosen.replaceChildren();chosen.textContent=selected?(selected.thread_id||selected.participant_id):'';
+    const link=selected&&openLink(selected);if(link)chosen.append(link);
+    chosen.hidden=!selected;clear.hidden=!selected;
+  }
   function buttons(){for(const button of results.querySelectorAll('button'))button.disabled=busy||disabled;more.disabled=loading||busy||disabled;refresh.disabled=loading||busy||disabled;clear.disabled=busy||disabled;search.disabled=busy||disabled;}
   function draw() {
     const groups=new Map();
@@ -31,7 +47,8 @@ export function mountRecipientPicker(root,{load,onSelect,onClear=()=>{},onPage=(
           r.project_status==='unknown'?'Project unavailable':null,r.metadata_stale||r.project_metadata_stale?'Cached metadata':null,
           !r.thread_id?'Communication ID':null].filter(Boolean);
         if(annotations.length)button.append(node('small',annotations.join(' · ')));
-        button.onclick=()=>select(r);section.append(button);
+        button.onclick=()=>select(r);const row=node('div',undefined,'recipient-row');row.append(button);
+        const link=openLink(r);if(link)row.append(link);section.append(row);
       }
       sections.push(section);
     }
@@ -43,7 +60,7 @@ export function mountRecipientPicker(root,{load,onSelect,onClear=()=>{},onPage=(
     try {
       const verified=await onSelect(recipient);
       if(current!==generation)return;
-      selected=verified || recipient;summary.textContent=recipientLabel(selected);chosen.textContent=(selected.thread_id||selected.participant_id);chosen.hidden=false;clear.hidden=false;details.open=false;
+      selected=verified || recipient;summary.textContent=recipientLabel(selected);showSelected();details.open=false;
       status.textContent='Recipient selected';draw();
     }catch(error){status.textContent=error.message||'Unable to select this recipient.';}
     finally{busy=false;buttons();}
@@ -67,7 +84,7 @@ export function mountRecipientPicker(root,{load,onSelect,onClear=()=>{},onPage=(
   return {
     refresh:()=>fetchPage(),
     setPage(page){generation++;loading=false;rows=page.recipients;nextCursor=page.next_cursor;search.value=page.query||'';query=search.value;loaded=true;draw();onPage(page);status.textContent=rows.length?`${rows.length} conversations${nextCursor?' · more available':''}`:'No registered recipients match.';},
-    setSelected(recipient){selected=recipient;summary.textContent=recipient?recipientLabel(recipient):'Choose recipient';chosen.textContent=recipient?(recipient.thread_id||recipient.participant_id):'';chosen.hidden=!recipient;clear.hidden=!recipient;draw();},
+    setSelected(recipient){selected=recipient;summary.textContent=recipient?recipientLabel(recipient):'Choose recipient';showSelected();draw();},
     setDisabled(value){disabled=value;buttons();},
     open(){details.open=true;},
     reset(){generation++;clearTimeout(searchTimer);loading=false;loaded=false;rows=[];nextCursor=null;query='';search.value='';selected=null;summary.textContent='Choose recipient';chosen.hidden=true;clear.hidden=true;draw();status.textContent='Recent conversations · 50 at a time';},

@@ -1,4 +1,5 @@
 import { fail, id, text, plainText, strict, integer } from './validation.mjs';
+import { conversationLink } from '../skills/paprika-messenger/scripts/conversation-link.mjs';
 
 const rdStmt = (db, sql, ...values) => db.prepare(sql).bind(...values);
 const rdAll = async (db, sql, ...values) => (await rdStmt(db, sql, ...values).all()).results;
@@ -12,7 +13,7 @@ const recipientJoins = `FROM participants p LEFT JOIN recipient_metadata m ON m.
   LEFT JOIN recipient_activity a ON a.board=p.board AND a.participant_id=p.id`;
 function recipientSnapshot(row) {
   const fresh = value => value && Date.now()-Date.parse(value) < recipientMetadataTtlSeconds*1000;
-  return {participant_id:row.participant_id,thread_id:row.thread_id,thread_name:row.title ?? row.registered_label,
+  const recipient={participant_id:row.participant_id,thread_id:row.thread_id,thread_name:row.title ?? row.registered_label,
     title_source:row.title === null ? 'registered_label' : 'host_reported',registered_label:row.registered_label,kind:row.kind,
     source:row.source ?? 'unknown',execution_mode:row.execution_mode ?? 'unknown',host_id:row.host_id ?? null,
     workspace_name:row.workspace_name ?? null,project_status:row.project_status ?? 'unknown',
@@ -20,6 +21,7 @@ function recipientSnapshot(row) {
     metadata_observed_at:row.observed_at ?? null,metadata_stale:!fresh(row.observed_at),
     project_metadata_stale:!fresh(row.project_observed_at),last_communicated_at:row.last_communicated_at ?? null,
     recency_at:row.recency_at};
+  return {...recipient,conversation_link:conversationLink(recipient)};
 }
 function recipientCursor(value, board, query) {
   if (value === undefined || value === null) return null;
@@ -140,5 +142,6 @@ export async function readRecipientResource(service,uri) {
   const {recipient}=await getRecipient(service,{board,participant_id:pid});
   return {contents:[{uri,mimeType:'application/json',text:JSON.stringify({board,receiver_id:recipient.participant_id,
     receiver_thread_id:recipient.thread_id,thread_name:recipient.thread_name,project_id:recipient.project_id,
+    conversation_link:recipient.conversation_link,
     purpose:'Recipient selection only. Deliver only the message explicitly requested by the user.'})}]};
 }
