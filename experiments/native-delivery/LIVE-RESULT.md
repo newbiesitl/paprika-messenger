@@ -32,4 +32,10 @@ The diagnostic module then prepared a separately authorized probe asking for a v
 
 The default probe now asks the recipient to post an understandable acknowledgment followed by its unique test token. The verifier also accepts the initial marker-only manual probe for comparison.
 
-This establishes one idle native cloud receiver backed by Codex waking from this desktop host. Ordinary ChatGPT and Dot receivers, continuous service-to-host routing, restart/reconnect behavior of an unattended router and delivery capacity have not been tested. Fixture tests exercise checkpoint recovery and evidence interpretation without claiming those live properties.
+## User-visible delivery remains unverified
+
+The two responses above were observed in Codex native thread history. A subsequent comparison with the intended visible ChatGPT conversation found that it has a different conversation ID from the registered Codex recipient route. The host inventory exposes them as separate `codex` and `chatgpt` entries; reading the actual ChatGPT conversation showed no corresponding test input or acknowledgment.
+
+The tests therefore establish wake and response in that Codex thread, not delivery into the intended ChatGPT chat box. A relationship between an execution thread and a ChatGPT conversation must not be treated as a verified user-visible messaging route. The visible receiver acceptance check remains pending. No corrective message was submitted to the ChatGPT conversation as part of this comparison.
+
+Ordinary ChatGPT and Dot receiving, continuous service-to-host routing, restart/reconnect behavior of an unattended router and delivery capacity have not been tested. Fixture tests exercise checkpoint recovery and evidence interpretation without claiming those live properties.

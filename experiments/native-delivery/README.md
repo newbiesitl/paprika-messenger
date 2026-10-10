@@ -4,6 +4,8 @@ An inbox write alone does not demonstrate that an idle chat starts a turn. This 
 
 The executing host must expose `mcp__codex_app__send_message_to_thread` and `mcp__codex_app__read_thread`. A remote Messenger service cannot invoke those desktop tools by itself. This is a test harness for a user-authorized, selected recipient, not an autonomous background router. The [live results](LIVE-RESULT.md) verify one idle cloud receiver backed by Codex.
 
+Those replies were observed in Codex native thread history. The intended visible ChatGPT conversation has a different ID and did not show those test messages. A Codex response alone cannot establish delivery into a ChatGPT chat box. Verify the exact user-facing destination separately before making that claim.
+
 ## Run the fixture tests
 
 From the repository root, with Node.js 24 or newer:
