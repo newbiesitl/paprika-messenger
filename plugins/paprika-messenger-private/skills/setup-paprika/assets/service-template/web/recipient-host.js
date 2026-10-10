@@ -3,7 +3,8 @@ import { mountRecipientPicker, recipientLabel } from './recipient-picker.js';
 export function createRecipientHost({window,document,mount=mountRecipientPicker}) {
   const element=id=>document.getElementById(id),pending=new Map(),completed=new Set();
   let snapshot=null,metadataPage=null,bridgeReady=false,nextId=1,selecting=false,contextId=null,currentSelection=null;
-  const picker=mount(element('picker'),{load:args=>call('list_recipients',{board:snapshot.board,...args}),onPage:page=>{metadataPage=page;},onSelect:select,onClear:clear});
+  const picker=mount(element('picker'),{load:args=>call('list_recipients',{board:snapshot.board,...args}),onPage:page=>{metadataPage=page;},onSelect:select,onClear:clear,
+    onOpen:async link=>{if(!bridgeReady)throw Error('Host bridge unavailable.');const result=await request('ui/open-link',{url:link.url});if(result?.isError)throw Error('Host refused the conversation link.');}});
   picker.setDisabled(true);
   function controls(){const blocked=!bridgeReady||selecting||completed.has(attemptId());picker.setDisabled(blocked);element('board-filter').disabled=blocked;element('more-boards').disabled=blocked;element('refresh-metadata').disabled=blocked||!snapshot;}
   function reportSize(){if(bridgeReady)window.parent.postMessage({jsonrpc:'2.0',method:'ui/notifications/size-changed',params:{width:document.documentElement.clientWidth,height:document.documentElement.scrollHeight}},'*');}
@@ -98,7 +99,7 @@ export function createRecipientHost({window,document,mount=mountRecipientPicker}
       if(currentSelection&&(state===null||(contextId&&state?.updateId!==contextId))){currentSelection=null;contextId=null;picker.setSelected(null);element('feedback').textContent='Recipient attachment removed. Choose a recipient again.';}
     }
   });
-  if(window.parent!==window)request('ui/initialize',{protocolVersion:'2026-01-26',appInfo:{name:'Paprika Messenger recipient picker',version:'1.4.0-rc.2'},appCapabilities:{availableDisplayModes:['inline']}})
+  if(window.parent!==window)request('ui/initialize',{protocolVersion:'2026-01-26',appInfo:{name:'Paprika Messenger recipient picker',version:'1.4.0-rc.3'},appCapabilities:{availableDisplayModes:['inline']}})
     .then(result=>{if(result?.protocolVersion!=='2026-01-26')throw Error('Unsupported host bridge.');bridgeReady=true;window.parent.postMessage({jsonrpc:'2.0',method:'ui/notifications/initialized'},'*');controls();reportSize();if(typeof ResizeObserver==='function')new ResizeObserver(reportSize).observe(document.body);})
     .catch(()=>{element('feedback').textContent='Ask Paprika Messenger to list recipient names and IDs in this chat.';});
   return {render};

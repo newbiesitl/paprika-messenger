@@ -103,9 +103,12 @@ $('compose').onsubmit=async event=>{
   const signature=JSON.stringify(draft);if(attempt?.signature!==signature)attempt={signature,key:crypto.randomUUID()};
   const sentBoard=board,sentGeneration=generation;writing=true;$('send').disabled=true;$('write-status').textContent='Sending · awaiting server confirmation';$('write-status').className='';
   try{
-    await api('post_message',{...draft,idempotency_key:attempt.key});
+    const result=await api('post_message',{...draft,idempotency_key:attempt.key});
     if(generation!==sentGeneration)return;
-    $('body').value='';replyId=null;attempt=null;$('reply-context').hidden=true;$('write-status').textContent='Confirmed by the server';$('send').textContent='Send message';await poll();
+    $('body').value='';replyId=null;attempt=null;$('reply-context').hidden=true;$('write-status').textContent='Confirmed by the server';
+    const link=result.recipient_conversation_link;
+    if(link){const anchor=el('a','Open recipient conversation','recipient-open');anchor.href=link.url;anchor.title=link.hint;anchor.target='_blank';anchor.rel='noopener noreferrer';$('write-status').append(anchor);}
+    $('send').textContent='Send message';await poll();
   }catch(error){if(board===sentBoard && generation===sentGeneration){$('write-status').textContent=`Not confirmed. ${errorText(error)} Retry safely with the same key.`;$('write-status').className='failed';$('send').textContent='Retry message';}}
   finally{writing=false;if(generation===sentGeneration)$('send').disabled=!ready || !$('me').value;}
 };

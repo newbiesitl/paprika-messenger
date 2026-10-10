@@ -1,7 +1,7 @@
 import { assets, skillEntries, skillResources, uiResources } from './assets.mjs';
 import { BoardService, authorize } from './service.mjs';
 import { BoardError, fail } from './validation.mjs';
-import { rpc, tools, addNotificationStatus } from './protocol.mjs';
+import { rpc, tools, addNotificationStatus, addRecipientConversationLink } from './protocol.mjs';
 import { EventService } from './events.mjs';
 import { maintenanceTokenDigest, constantTimeEqual, callbackRejectionDetails } from './webhooks.mjs';
 import { connectionControls } from './connection-ui.mjs';
@@ -130,7 +130,7 @@ export async function handle(request,env,ctx={}) {
       else if(eventTools[name]){if(!events && name==='configure_event_subscription')fail(503,'events_not_configured','Events are not configured.');result=await (events??new EventService(service,env))[eventTools[name]](args);}
       else if(name==='process_event_deliveries'){if(!events)fail(503,'events_not_configured','Events are not configured.');if(Object.keys(args).some(k=>k!=='limit'))fail(400,'invalid_argument','Unknown dispatch argument.');result=await events.dispatch(args.limit??10);}
       else result=await service[name](args);
-      if(name==='post_message')result=await addNotificationStatus(result,events);
+      if(name==='post_message')result=await addRecipientConversationLink(await addNotificationStatus(result,events),service);
       if(name==='post_message' && events){const delivery=events.dispatch().catch(()=>console.error('Paprika event dispatch deferred'));if(ctx.waitUntil)ctx.waitUntil(delivery);else await delivery;}
       return json(result);
     }

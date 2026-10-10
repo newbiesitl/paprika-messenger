@@ -24,6 +24,8 @@ unknown and verify capabilities directly. See the official
 
 ## Check sending, reading and waking separately
 
+Recipient navigation is a separate capability. Service 0.6.0-rc.3 returns an optional link from verified native source, execution mode, host and thread metadata. Local Codex links open on the computer handling `codex://threads/<thread-id>`; they do not choose a remote computer. ChatGPT links open the native conversation in the signed-in account. Missing metadata, remote Codex and cloud Codex have no guessed link. Custom MCP App links use the host's `ui/open-link` request and respect refusal; a native question panel uses the explicit Open action. Navigation never sends, resumes a task or changes its host. Verify actual mobile/custom-scheme behavior separately.
+
 For each requested surface, retain a non-secret `client_checks` entry with its
 surface key, reported execution mode (or `unknown`), board, canonical receiver
 ID, declared/native address distinction, verification time and these results:
