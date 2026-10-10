@@ -1,7 +1,7 @@
 {
   "format": 1,
   "kind": "paprika-messenger-service-template",
-  "service_version": "0.6.0-rc.4",
+  "service_version": "0.6.0-rc.5",
   "files": [
     {
       "path": ".env.example",
@@ -66,12 +66,12 @@
     {
       "path": "docs/TEST-RESULTS.md",
       "size_bytes": 405,
-      "sha256": "441fdebccc20f76ada90251c266c678ae53ec6f5746de052e201ec5ac1871bff"
+      "sha256": "128d154539d98b1cd80de6f08404cfceb67250f92d47fef12de8c1246313722c"
     },
     {
       "path": "docs/UPGRADING.md",
-      "size_bytes": 27500,
-      "sha256": "57ea2345b48e104c2068c6df4d20c5706d2b4c203785243eb412bc21dee0aae2"
+      "size_bytes": 28427,
+      "sha256": "467714ae9421f3b1da6563782d0d85076f223a92906799b678c0bbfb25659ab3"
     },
     {
       "path": "docs/WINDOWS-SITES-PACKAGING.md",
@@ -166,17 +166,17 @@
     {
       "path": "package-lock.json",
       "size_bytes": 50625,
-      "sha256": "39a64b7d272a0366e51114fb551f5daa735449786b223d900ab1a16bb8843a67"
+      "sha256": "a5d8e6d6069aed432b85944789c51705aa12a57fd480a9b119bb145618f296ce"
     },
     {
       "path": "package.json",
       "size_bytes": 445,
-      "sha256": "c46bdf6cc9a54b0f244b9ffbe4736dd67d38f27dee2fa23254615e843a8f3d4d"
+      "sha256": "913760a1b9e4e72d12835dfa81cba5f52860488e36447a87dbdf320d81a0de33"
     },
     {
       "path": "README.md",
-      "size_bytes": 16585,
-      "sha256": "dbf77e7644a843ec122a0816f16330ed64fc7cbce1098cd7f1442acec901ff4a"
+      "size_bytes": 16634,
+      "sha256": "52db38dd81fc83c94ea3f6fb481317f7866572b680587026561ab559f063c229"
     },
     {
       "path": "scripts/build.mjs",
@@ -301,7 +301,7 @@
     {
       "path": "src/protocol.mjs",
       "size_bytes": 32377,
-      "sha256": "cb6b7704ec1002d54f7ff548d67efb2a79f42d143b17f4dcf358c0e4b487f816"
+      "sha256": "223425d8964a7e4646e63dde72b9e4b326b5ec2272d068594c8afc57219a4bda"
     },
     {
       "path": "src/recipient-conversations.mjs",
@@ -456,7 +456,7 @@
     {
       "path": "web/recipient-host.js",
       "size_bytes": 11399,
-      "sha256": "f099b66757adf6186a50d13a1b628107c5d8a563c7ea1165f0dca1595b9ce2d4"
+      "sha256": "1e5d5ab5efa9117917c547314fa7f4de556e88221718b8f35d8bf01a280acf19"
     },
     {
       "path": "web/recipient-picker.css",

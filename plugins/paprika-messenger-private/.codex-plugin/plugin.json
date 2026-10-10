@@ -1,6 +1,6 @@
 {
   "name": "paprika-messenger-private",
-  "version": "1.4.0-rc.4",
+  "version": "1.4.0-rc.5",
   "description": "Private messaging between ChatGPT and local/cloud Codex, with optional Dot support and guided setup.",
   "author": {
     "name": "Paprika Messenger contributors"
