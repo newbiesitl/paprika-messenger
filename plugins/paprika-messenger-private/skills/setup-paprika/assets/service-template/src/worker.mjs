@@ -5,6 +5,7 @@ import { rpc, tools, addNotificationStatus } from './protocol.mjs';
 import { EventService } from './events.mjs';
 import { maintenanceTokenDigest, constantTimeEqual, callbackRejectionDetails } from './webhooks.mjs';
 import { connectionControls } from './connection-ui.mjs';
+import { showRecipientPicker } from './recipient-ui.mjs';
 
 const headers = {
   'Cache-Control':'no-store', 'X-Content-Type-Options':'nosniff', 'Referrer-Policy':'no-referrer',
@@ -71,7 +72,8 @@ export async function handle(request,env,ctx={}) {
       const payload=await readJson(request);
       eventMethod=payload?.method;
       // Discovery carries no private data. Every tool call checks verified owner identity.
-      const isData=payload?.method==='tools/call' || (typeof payload?.method==='string' && payload.method.startsWith('events/'));
+      const isData=payload?.method==='tools/call' || (typeof payload?.method==='string' && payload.method.startsWith('events/'))
+        || (payload?.method==='resources/read' && typeof payload.params?.uri==='string' && payload.params.uri.startsWith('paprika://recipient/'));
       const subject=isData ? authorize(request,env) : null;
       if (isData && !env.DB) fail(503,'storage_unavailable','Durable storage is unavailable.');
       const service=isData ? new BoardService(env.DB.withSession ? env.DB.withSession('first-primary') : env.DB,subject,env) : null;
@@ -103,6 +105,7 @@ export async function handle(request,env,ctx={}) {
       let result;
       if(name==='get_notification_setup')result=await (events??new EventService(service,env)).setup(args);
       else if(name==='show_connection_controls')result=await connectionControls(service,events,args);
+      else if(name==='show_recipient_picker')result=await showRecipientPicker(service,args);
       else if(eventTools[name]){if(!events && name==='configure_event_subscription')fail(503,'events_not_configured','Events are not configured.');result=await (events??new EventService(service,env))[eventTools[name]](args);}
       else if(name==='process_event_deliveries'){if(!events)fail(503,'events_not_configured','Events are not configured.');if(Object.keys(args).some(k=>k!=='limit'))fail(400,'invalid_argument','Unknown dispatch argument.');result=await events.dispatch(args.limit??10);}
       else result=await service[name](args);

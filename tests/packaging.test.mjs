@@ -11,9 +11,15 @@ import { prepareLocalPlugin } from '../scripts/prepare-local-plugin.mjs';
 import { prepareGithubPlugin } from '../scripts/prepare-github-plugin.mjs';
 import { selectServiceType } from '../plugin-public/skills/setup-paprika/scripts/select-service-type.mjs';
 import { prepareDeploymentArchive } from '../scripts/package.mjs';
-import { mergeServicePlugin, readSiteServiceBinding } from '../plugin-public/skills/setup-paprika/scripts/merge-service-plugin.mjs';
+import { mergeServicePlugin, readSiteServiceBinding, comparePackageVersions } from '../plugin-public/skills/setup-paprika/scripts/merge-service-plugin.mjs';
 
 const repository = fileURLToPath(new URL('../', import.meta.url));
+test('standalone releases compare prereleases numerically and cannot hide a downgrade with build metadata',()=>{
+  const ordered=['1.3.11','1.4.0-alpha','1.4.0-alpha.1','1.4.0-beta','1.4.0-rc.1','1.4.0-rc.2','1.4.0-rc.10','1.4.0','1.4.1'];
+  for(let n=1;n<ordered.length;n++){assert.equal(comparePackageVersions(ordered[n],ordered[n-1]),1);assert.equal(comparePackageVersions(ordered[n-1],ordered[n]),-1);}
+  assert.equal(comparePackageVersions('1.4.0+build.1','1.4.0+build.2'),0);
+  for(const invalid of ['01.4.0','1.4.0-rc.01','1.4.0-','v1.4.0','1.4'])assert.throws(()=>comparePackageVersions(invalid,'1.4.0'));
+});
 test('onboarding selects the service type without assuming Dot entitlements or changing an existing service', () => {
   assert.equal(selectServiceType({}).service_type, 'chatgpt-codex');
   assert.equal(selectServiceType({}).selection_source, 'default_without_dot');

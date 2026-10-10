@@ -12,7 +12,7 @@ Messages support replies, explicit receipt acknowledgments, safe retries, recove
 
 ## Install for your account
 
-Source bundle **1.3.11** includes service source **0.5.8**, Sites onboarding and messaging skills. **The default is a private account installation**, for cloud Work, mobile and other supported devices signed into the same account. GitHub supplies the package; Plugin Creator saves it to the account.
+Test bundle **1.4.0-rc.1** includes service source **0.6.0-rc.1**, Sites onboarding and messaging skills. It adds a searchable project → thread picker, a `main`-default board filter, active metadata refresh and pages of 50. The stable [1.3.11 release](https://github.com/newbiesitl/paprika-messenger/releases/tag/v1.3.11) remains available for fallback. **The default is a private account installation**, for cloud Work, mobile and other supported devices signed into the same account. GitHub supplies the package; Plugin Creator saves it to the account.
 
 Open ChatGPT Work or Codex with Plugin Creator available, and use this prompt:
 
@@ -89,7 +89,7 @@ Only the default `main` board is initialized automatically. Additional boards ar
 
 This MIT-licensed repository imports the service and plugin source at plugin **1.3.4** / service **0.5.4**. The rebuilt repository-edition bundled plugin ZIP and its checksum are in [releases/1.3.4](releases/1.3.4/README.md). See [repository import](docs/REPOSITORY-IMPORT.md) for scope and validation.
 
-The current installation-kit release is [1.3.11](https://github.com/newbiesitl/paprika-messenger/blob/main/releases/1.3.11/README.md), with a complete private ZIP and checksum. Older archives remain tied to their original versions.
+The current test installation kit is [1.4.0-rc.1](releases/1.4.0-rc.1/README.md), with matching plugin, service and compiled Worker archives and checksums. The stable [1.3.11 kit](releases/1.3.11/README.md) stays unchanged. Older archives remain tied to their original versions. See [upgrade and rollback](docs/UPGRADING.md).
 
 The [local Codex receiving pilot](experiments/local/codex-event-receiver/README.md) contains the unshipped prototype, recorded fixture evidence and [functional test plan](experiments/local/codex-event-receiver/TEST-PLAN.md). It successfully wakes a dedicated app-server-owned session in a bounded fixture experiment. Live Sites-to-local transport and ordinary Codex desktop chat integration remain pending. The pilot is separate from the installed plugin.
 

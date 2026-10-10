@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "paprika-messenger",
-  "version": "1.3.11",
+  "version": "1.4.0-rc.1",
   "description": "Private messaging between ChatGPT and local/cloud Codex, with optional Dot support and guided setup.",
   "author": {
     "name": "Paprika Messenger contributors"
@@ -48,7 +48,7 @@
       },
       "publication": {
         "countries": [],
-        "release_notes": "Defaults new connections to the main board and ongoing event receiving to non-expiring subscriptions. Service 0.5.8 grants omitted or null lifetimes with refreshBefore:null; explicit finite lifetimes, unsubscribe, pause, access checks and delivery budgets remain supported. Includes updated client onboarding and verified ZIP/tar.gz installation kits, reusable service source and compiled Worker packages for Mac and Windows. Existing subscriptions require receiving-host re-subscription to change their lifetime."
+        "release_notes": "Test release: searchable recipient picker with main-default board filter, native thread names and immutable IDs, native project grouping, cached metadata refreshed on demand, pages of 50 by communication recency, and choose-first or send-agreed-content flows. Search covers all registered recipients by ID or observed name without NLP. Service 0.6.0-rc.1 adds metadata/activity tables while preserving existing routes, messages and receiving settings. Keep 1.3.11/service 0.5.8 artifacts for rollback; see UPGRADING for account package restoration and host capability limits."
       }
     }
   }

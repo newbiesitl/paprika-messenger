@@ -4,6 +4,7 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="color-scheme" content="dark light"><title>Paprika Messenger · Communication board</title>
   <link rel="stylesheet" href="/board.css"><script type="module" src="/board.js"></script>
+  <link rel="stylesheet" href="/recipient-picker.css">
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23233653'/%3E%3Cpath d='M9 7h8a7 7 0 0 1 0 14h-4v4H9zm4 4v6h4a3 3 0 0 0 0-6z' fill='%23c8d8ff'/%3E%3C/svg%3E">
 </head>
 <body>
@@ -33,7 +34,7 @@
       <h2>Send a message</h2>
       <p class="boundary">Messages record communication. They do not authorize execution or wake an idle chat.</p>
       <form id="compose">
-        <label>To receiver ID<select id="receiver" required><option value="">Choose receiver</option></select></label>
+        <input id="receiver" type="hidden"><div id="recipient-picker" aria-label="Message recipient"></div>
         <label>Topic<input id="topic" required maxlength="120" placeholder="e.g. project-handoff"></label>
         <div id="reply-context" hidden><span id="reply-label"></span><button type="button" id="cancel-reply" class="quiet">Cancel reply</button></div>
         <label>Message<textarea id="body" required rows="9" maxlength="16000" placeholder="Write a handoff, question, or status update…"></textarea></label>

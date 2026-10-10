@@ -15,7 +15,7 @@ class Statement {
   bind(...values) {return new Statement(this.db,this.sql,values);}
   execute() {
     const statement=this.db.connection.prepare(this.sql);
-    if (/^\s*(SELECT|WITH)/i.test(this.sql)) return {results:statement.all(...this.values),success:true,meta:{changes:0}};
+    if (statement.columns().length) return {results:statement.all(...this.values),success:true,meta:{changes:0}};
     const result=statement.run(...this.values);return {results:[],success:true,meta:{changes:Number(result.changes),last_row_id:Number(result.lastInsertRowid)}};
   }
   async run() {return this.execute();}

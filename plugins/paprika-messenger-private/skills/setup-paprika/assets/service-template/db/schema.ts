@@ -17,6 +17,19 @@ export const messages=sqliteTable('messages',{
   foreignKey({columns:[t.board,t.reply_to_id],foreignColumns:[messages.board,messages.id]}),
   index('message_inbox').on(t.board,t.receiver_id,t.deleted_at),index('message_replies').on(t.board,t.reply_to_id),
   check('message_sender_label_length',sql`length(${t.sender_label}) BETWEEN 1 AND 120`),check('message_topic_length',sql`length(${t.topic}) BETWEEN 1 AND 120`),check('message_body_length',sql`length(${t.body}) BETWEEN 1 AND 16000`),check('message_idempotency_length',sql`length(${t.idempotency_key}) BETWEEN 1 AND 128`)]);
+export const recipientMetadata=sqliteTable('recipient_metadata',{
+  board:text('board').notNull(),participant_id:text('participant_id').notNull(),title:text('title'),search_name:text('search_name').notNull().default(''),
+  source:text('source').notNull().default('unknown'),execution_mode:text('execution_mode').notNull().default('unknown'),
+  host_id:text('host_id'),workspace_name:text('workspace_name'),project_status:text('project_status').notNull().default('unknown'),
+  project_id:text('project_id'),project_name:text('project_name'),project_observed_at:text('project_observed_at'),observed_at:text('observed_at').notNull()
+},t=>[primaryKey({columns:[t.board,t.participant_id]}),foreignKey({columns:[t.board,t.participant_id],foreignColumns:[participants.board,participants.id]}),
+  check('recipient_source',sql`${t.source} IN ('chatgpt','codex','dot','unknown')`),
+  check('recipient_execution_mode',sql`${t.execution_mode} IN ('local','cloud','unknown')`),
+  check('recipient_project_status',sql`${t.project_status} IN ('assigned','unassigned','unknown')`)]);
+export const recipientActivity=sqliteTable('recipient_activity',{
+  board:text('board').notNull(),participant_id:text('participant_id').notNull(),activity_sequence:integer('activity_sequence').notNull(),last_communicated_at:text('last_communicated_at').notNull()
+},t=>[primaryKey({columns:[t.board,t.participant_id]}),foreignKey({columns:[t.board,t.participant_id],foreignColumns:[participants.board,participants.id]}),
+  index('recipient_recent').on(t.board,t.last_communicated_at,t.participant_id)]);
 export const acknowledgments=sqliteTable('acknowledgments',{
   board:text('board').notNull(),message_id:text('message_id').notNull(),participant_id:text('participant_id').notNull(),acknowledged_by:text('acknowledged_by').notNull(),acknowledged_at:text('acknowledged_at').notNull().default(now)
 },t=>[primaryKey({columns:[t.board,t.message_id,t.participant_id]}),foreignKey({columns:[t.board,t.message_id],foreignColumns:[messages.board,messages.id]}),foreignKey({columns:[t.board,t.participant_id],foreignColumns:[participants.board,participants.id]})]);

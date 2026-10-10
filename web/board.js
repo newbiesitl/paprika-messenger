@@ -1,4 +1,5 @@
 import {createState,applyEvents,inbox} from './state.js';
+import {mountRecipientPicker} from './recipient-picker.js';
 const $=id=>document.getElementById(id);
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 let state=createState(),cursor=null,board='main',generation=0,polling=false,ready=false,replyId=null,attempt=null,canCoordinate=false,alerts=false,writing=false;
@@ -11,12 +12,17 @@ async function api(name,args){
   const response=await fetch(`/api/${name}`,{method:'POST',headers:{'Content-Type':'application/json','X-Dot-Board':'1'},body:JSON.stringify(args),signal:AbortSignal.timeout(15000)});
   const result=await response.json();if(!response.ok)throw Error(result.message || result.error || 'Request failed');return result;
 }
+const recipientPicker=mountRecipientPicker($('recipient-picker'),{
+  load:args=>api('list_recipients',{board,...args}),
+  onSelect:async candidate=>{const current=generation,data=await api('get_recipient',{board,participant_id:candidate.participant_id});if(current!==generation)throw Error('Board changed. Choose a recipient again.');$('receiver').value=data.recipient.participant_id;attempt=null;return data.recipient;},
+  onClear:()=>{$('receiver').value='';attempt=null;}
+});
 function connection(text,kind=''){const n=$('connection');n.textContent=text;n.className=`connection ${kind}`;}
 function issue(text){$('problem').hidden=!text;$('problem').textContent=text || '';}
 function options(node,blank,selected){node.replaceChildren(new Option(blank,''));for(const p of state.participants.values())node.add(new Option(`${p.label} · ${p.id}`,p.id));if(state.participants.has(selected))node.value=selected;}
 function renderParticipants(){
-  const chosen=$('me').value,receiver=$('receiver').value,filter=$('filter-receiver').value;
-  options($('me'),'Choose participant',chosen);options($('receiver'),'Choose receiver',receiver);options($('filter-receiver'),'All receivers',filter);
+  const chosen=$('me').value,filter=$('filter-receiver').value;
+  options($('me'),'Choose participant',chosen);options($('filter-receiver'),'All receivers',filter);
   if(!chosen && requestedReceiver && state.participants.has(requestedReceiver))$('me').value=requestedReceiver;
   const rows=[...state.participants.values()].map(p=>{const n=el('div',p.label,'participant-row');n.append(el('code',p.id));
     if(p.thread_id)n.append(el('code',p.thread_id));
@@ -38,7 +44,7 @@ async function loadBoards(){
   $('board').value=board;
 }
 function action(label,callback){const b=el('button',label,'quiet');b.type='button';b.onclick=async()=>{b.disabled=true;try{await callback();await poll();}catch(error){issue(`${label} was not confirmed. ${errorText(error)}`);}finally{b.disabled=false;}};return b;}
-function beginReply(m){replyId=m.id;$('receiver').value=m.sender_id;$('topic').value=m.topic;$('reply-context').hidden=false;$('reply-label').textContent=`Replying to ${m.sender_label} · ${m.id}`;$('body').focus();attempt=null;}
+async function beginReply(m){const current=generation;const data=await api('get_recipient',{board,participant_id:m.sender_id});if(current!==generation)return;replyId=m.id;$('receiver').value=m.sender_id;recipientPicker.setSelected(data.recipient);$('topic').value=m.topic;$('reply-context').hidden=false;$('reply-label').textContent=`Replying to ${m.sender_label} · ${m.id}`;$('body').focus();attempt=null;}
 function renderFeed(){
   const receiver=$('filter-receiver').value,topic=$('filter-topic').value.trim(),deleted=$('show-deleted').checked;
   const messages=[...state.messages.values()].filter(m=>(!receiver || m.receiver_id===receiver)&&(!topic || m.topic===topic)&&(deleted || !m.deleted_at)).sort((a,b)=>a.created_sequence-b.created_sequence);
@@ -77,12 +83,12 @@ async function poll(){
   finally{polling=false;}
 }
 async function openBoard(){
-  generation++;state=createState();cursor=null;ready=false;replyId=null;attempt=null;$('reply-context').hidden=true;connection('Connecting…');render();
+  generation++;state=createState();cursor=null;ready=false;replyId=null;attempt=null;$('receiver').value='';recipientPicker.reset();$('reply-context').hidden=true;connection('Connecting…');render();
   const current=generation;
   try{const session=await fetch('/api/session',{signal:AbortSignal.timeout(15000)});const data=await session.json();if(!session.ok)throw Error(data.message || 'Sign in to continue.');if(current!==generation)return;canCoordinate=data.can_coordinate;
     await loadBoards();if(current!==generation)return;
     const note=await api('get_coordination_note',{board});if(current!==generation)return;state.note=note.note;
-    await poll();
+    await poll();if(current===generation)await recipientPicker.refresh();
   }catch(error){if(current===generation){connection('Connection failed','failed');issue(errorText(error));}}
 }
 $('board').onchange=()=>{board=$('board').value;openBoard();};
@@ -91,7 +97,7 @@ for(const name of ['filter-receiver','filter-topic','show-deleted'])$(name).addE
 $('me').onchange=()=>{attempt=null;render();};
 $('cancel-reply').onclick=()=>{replyId=null;$('reply-context').hidden=true;attempt=null;};
 $('compose').onsubmit=async event=>{
-  event.preventDefault();if(!ready || !$('me').value || !$('receiver').value)return;
+  event.preventDefault();if(!ready || !$('me').value)return;if(!$('receiver').value){issue('Choose a recipient before sending.');recipientPicker.open();return;}
   const participant=state.participants.get($('me').value);
   const draft={board,sender_id:participant.id,sender_label:participant.label,receiver_id:$('receiver').value,topic:$('topic').value,body:$('body').value,reply_to_id:replyId};
   const signature=JSON.stringify(draft);if(attempt?.signature!==signature)attempt={signature,key:crypto.randomUUID()};

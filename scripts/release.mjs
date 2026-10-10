@@ -75,7 +75,8 @@ if (!['build', 'verify'].includes(action) || (options.length &&
   throw new Error('Usage: node scripts/release.mjs build|verify [plugin-version] [--output staging-directory]');
 const plugin = JSON.parse(await readFile(resolve(repository, 'plugin-public/plugin.json'), 'utf8'));
 const version = suppliedVersion ?? plugin.version;
-if (!/^\d+\.\d+\.\d+$/.test(version)) throw new Error('Expected a release version');
+const releaseVersion=/^\d+\.\d+\.\d+(?:-[0-9A-Za-z]+(?:[.-][0-9A-Za-z]+)*)?$/;
+if (!releaseVersion.test(version)) throw new Error('Expected a release version');
 const release = options.length ? resolve(repository, options[1]) : resolve(repository, 'releases', version);
 await mkdir(resolve(repository, 'artifacts'), { recursive: true });
 const staging = await mkdtemp(resolve(repository, 'artifacts/release-'));
@@ -121,7 +122,7 @@ if (action === 'build') {
   run(process.execPath, ['scripts/build.mjs']);
   let verified = 0;
   for (const entry of await readdir(resolve(repository, 'releases'), { withFileTypes: true }))
-    if (entry.isDirectory() && /^\d+\.\d+\.\d+$/.test(entry.name)) verified += await checksums(resolve(repository, 'releases', entry.name));
+    if (entry.isDirectory() && releaseVersion.test(entry.name)) verified += await checksums(resolve(repository, 'releases', entry.name));
   for (const entry of await readdir(resolve(repository, 'deployments'), { withFileTypes: true }))
     if (entry.isDirectory()) verified += await checksums(resolve(repository, 'deployments', entry.name));
   const manifest = await verifyRelease(release, staging);
