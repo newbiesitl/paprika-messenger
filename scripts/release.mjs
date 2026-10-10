@@ -11,8 +11,8 @@ import { writePluginZip } from '../plugin-public/skills/setup-paprika/scripts/me
 
 const repository = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
-function run(command, args) {
-  const result = spawnSync(command, args, { cwd: repository, encoding: 'utf8', windowsHide: true });
+function run(command, args, cwd = repository) {
+  const result = spawnSync(command, args, { cwd, encoding: 'utf8', windowsHide: true });
   if (result.status !== 0) throw new Error(result.error?.message || result.stderr || `${command} failed`);
   return result.stdout.trim();
 }
@@ -41,11 +41,12 @@ async function inspectArchive(archive, expectedRoot, staging) {
   const root = resolve(destination, expectedRoot);
   return { root, files: await inspectReusableFiles(root) };
 }
-async function verifyRelease(directory, staging) {
+async function verifyRelease(directory, staging, { currentSource = false } = {}) {
   const manifest = JSON.parse(await readFile(resolve(directory, 'artifacts.json'), 'utf8'));
-  if (sha256(await readFile(resolve(repository, 'dist/_worker.js'))) !== manifest.worker_sha256)
+  if (currentSource && sha256(await readFile(resolve(repository, 'dist/_worker.js'))) !== manifest.worker_sha256)
     throw new Error('Release Worker differs from the current source build');
   const groups = new Map();
+  let archivedBuild, archivedWorker;
   for (const artifact of manifest.artifacts) {
     const archive = resolve(directory, safeName(artifact.file));
     if (sha256(await readFile(archive)) !== artifact.sha256) throw new Error('Artifact digest mismatch');
@@ -57,15 +58,30 @@ async function verifyRelease(directory, staging) {
     } else if (artifact.kind === 'service') {
       if ((await verifyTemplate(extracted.root)).service_version !== manifest.service_version)
         throw new Error('Service version mismatch');
+      // Feature branches legitimately differ from immutable published releases.
+      // Verify the compiled artifact against its own checked source archive;
+      // building a new release additionally requires the current source match.
+      if (!groups.has('service')) {
+        run(process.execPath, ['scripts/build.mjs'], extracted.root);
+        archivedBuild = await readFile(resolve(extracted.root, 'dist/_worker.js'), 'utf8');
+      }
     } else if (artifact.kind === 'worker') {
-      if (sha256(await readFile(resolve(extracted.root, 'worker.mjs'))) !== manifest.worker_sha256)
+      const worker = await readFile(resolve(extracted.root, 'worker.mjs'));
+      if (sha256(worker) !== manifest.worker_sha256)
         throw new Error('Compiled Worker mismatch');
+      archivedWorker = worker.toString('utf8');
     } else throw new Error('Unknown artifact kind');
     if (groups.has(artifact.kind) && !isDeepStrictEqual(groups.get(artifact.kind), extracted.files))
       throw new Error('ZIP and tar.gz contents differ: ' + artifact.kind);
     groups.set(artifact.kind, extracted.files);
   }
   if (groups.size !== 3 || manifest.artifacts.length !== 6) throw new Error('Expected plugin, service and Worker in ZIP and tar.gz');
+  // Portable source archives normalize CRLF; older compiled Workers retain it
+  // both in source text and JSON-encoded text assets. Raw archive/Worker digests
+  // above remain exact. Only this reconstructed-source comparison normalizes it.
+  const portableWorker = value => value.replace(/\r\n/g, '\n').replace(/\\r\\n/g, '\\n');
+  if (portableWorker(archivedBuild) !== portableWorker(archivedWorker))
+    throw new Error('Release Worker differs from its archived service source');
   await checksums(directory);
   return manifest;
 }
@@ -113,7 +129,7 @@ if (action === 'build') {
     source_commit: sourceCommit, worker_sha256: sha256(worker), platforms: ['macOS', 'Windows'], artifacts };
   await writeFile(resolve(output, 'artifacts.json'), JSON.stringify(report, null, 2) + '\n');
   await writeFile(resolve(output, 'SHA256SUMS'), artifacts.map(a => `${a.sha256}  ${a.file}`).join('\n') + '\n');
-  await verifyRelease(output, staging);
+  await verifyRelease(output, staging, { currentSource: true });
   await mkdir(release, { recursive: true });
   for (const file of [...artifacts.map(a => a.file), 'artifacts.json', 'SHA256SUMS'])
     await copyFile(resolve(output, file), resolve(release, file), constants.COPYFILE_EXCL);

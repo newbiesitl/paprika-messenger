@@ -34,6 +34,8 @@ jobs:
         run: node scripts/prepare-github-plugin.mjs --check
       - name: Automated receiver pilot tests
         run: node --test experiments/local/codex-event-receiver/receiver.test.mjs experiments/local/codex-event-receiver/session-context.test.mjs
+      - name: Native delivery probe tests
+        run: node --test experiments/native-delivery/probe.test.mjs experiments/native-delivery/chatgpt-bridge.test.mjs
       - name: Verify all release checksums and archive contents
         run: node scripts/release.mjs verify
 
@@ -54,5 +56,7 @@ jobs:
         run: npm run build
       - name: Verify GitHub install package matches source
         run: node scripts/prepare-github-plugin.mjs --check
+      - name: Native delivery probe tests on macOS
+        run: node --test experiments/native-delivery/probe.test.mjs experiments/native-delivery/chatgpt-bridge.test.mjs
       - name: Verify all release checksums and Mac archive extraction
         run: node scripts/release.mjs verify

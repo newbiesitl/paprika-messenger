@@ -12,7 +12,32 @@ export function normalizeConversationUrl(value) {
 // Navigation uses observed native metadata, never a communication ID or label.
 // A desktop URL opens on the computer handling it; it does not select a remote
 // host. Unknown, remote Codex and Dot routes need a host-supported open action.
+export function parseChatGptConversation(value) {
+  if (typeof value !== 'string' || value.length > 2048) throw Error('Require an actual ChatGPT conversation ID or /c/ link.');
+  let conversation_id = value;
+  if (value.startsWith('https://')) {
+    const normalized = normalizeConversationUrl(value);
+    if (!normalized)
+      throw Error('Use the original ChatGPT /c/ conversation link, never a /share/ link or Dot URL.');
+    conversation_id = normalized.split('/').at(-1);
+  }
+  if (!/^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$/.test(conversation_id))
+    throw Error('Require an actual ChatGPT conversation ID or /c/ link.');
+  conversation_id = conversation_id.toLowerCase();
+  return {conversation_id, conversation_url: 'https://chatgpt.com/c/' + conversation_id};
+}
+
 export function conversationLink(recipient) {
+  if (recipient?.chatgpt_destination != null) {
+    const mapping = recipient.chatgpt_destination;
+    try {
+      if (mapping.registered_thread_id !== recipient.thread_id) return null;
+      const parsed = parseChatGptConversation(mapping.conversation_id);
+      return {url: parsed.conversation_url, label: 'Open conversation', kind: 'chatgpt', host_id: null,
+        conversation_id: parsed.conversation_id,
+        hint: 'Open in your signed-in ChatGPT client; app or browser handling depends on the client'};
+    } catch { return null; } // Never fall back to a runtime link after a mapping conflict.
+  }
   const verifiedUrl=normalizeConversationUrl(recipient?.conversation_url);
   if (verifiedUrl) return {url:verifiedUrl,label:'Open conversation',kind:'chatgpt',
     conversation_id:verifiedUrl.split('/').at(-1),host_id:null,

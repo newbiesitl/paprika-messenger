@@ -43,6 +43,13 @@
       "when": 1791636067609,
       "tag": "0005_conversation-url",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1791638350091,
+      "tag": "0006_recipient-conversations",
+      "breakpoints": true
     }
   ]
 }

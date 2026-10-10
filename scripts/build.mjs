@@ -1,6 +1,6 @@
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
-const files=['../skills/paprika-messenger/scripts/conversation-link','validation','service-config','recipient-directory','service','webhooks','events','connection-ui','recipient-ui','protocol','worker'];
+const files=['../skills/paprika-messenger/scripts/conversation-link','validation','service-config','recipient-conversations','recipient-directory','service','webhooks','events','connection-ui','recipient-ui','protocol','worker'];
 const assets={};
 for (const [path,file,type] of [['/','web/index.html','text/html; charset=utf-8'],['/board.js','web/board.js','text/javascript; charset=utf-8'],['/state.js','web/state.js','text/javascript; charset=utf-8'],['/board.css','web/board.css','text/css; charset=utf-8'],['/conversation-link.js','skills/paprika-messenger/scripts/conversation-link.mjs','text/javascript; charset=utf-8'],['/recipient-picker.js','web/recipient-picker.js','text/javascript; charset=utf-8'],['/recipient-picker.css','web/recipient-picker.css','text/css; charset=utf-8']])
   assets[path]={body:await readFile(file,'utf8'),type};
@@ -8,7 +8,7 @@ const sources=await Promise.all(files.map(f=>readFile(`src/${f}.mjs`,'utf8')));
 const skillText=await readFile('skills/paprika-messenger/SKILL.md','utf8');
 const frontmatter=Object.fromEntries(skillText.split('---')[1].trim().split('\n').map(line=>{const colon=line.indexOf(':');return [line.slice(0,colon).trim(),line.slice(colon+1).trim()];}));
 const skillResources={};
-for (const file of ['SKILL.md','agents/openai.yaml','assets/dot-icon.png','references/connect.md','references/connection-ui.md','references/recipient-picker.md','references/direct.md','references/notifications.md','scripts/parse-cadence.mjs','scripts/get-thread-id.mjs','scripts/prepare-notification.mjs','scripts/prepare-delivery.mjs','scripts/notification-state.mjs','scripts/prepare-recipient-selector.mjs','scripts/conversation-link.mjs','scripts/prepare-conversation-link.mjs']) {
+for (const file of ['SKILL.md','agents/openai.yaml','assets/dot-icon.png','references/connect.md','references/connection-ui.md','references/recipient-picker.md','references/direct.md','references/native-bridge.md','references/notifications.md','scripts/parse-cadence.mjs','scripts/get-thread-id.mjs','scripts/prepare-notification.mjs','scripts/prepare-delivery.mjs','scripts/prepare-bridge.mjs','scripts/notification-state.mjs','scripts/prepare-recipient-selector.mjs','scripts/conversation-link.mjs','scripts/prepare-conversation-link.mjs']) {
   const uri=`skill://dot-agent-board/paprika-messenger/${file}`;
   const bytes=await readFile(`skills/paprika-messenger/${file}`);
   skillResources[uri]=file.endsWith('.png')
