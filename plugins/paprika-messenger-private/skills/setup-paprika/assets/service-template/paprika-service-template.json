@@ -145,8 +145,8 @@
     },
     {
       "path": "README.md",
-      "size_bytes": 14957,
-      "sha256": "ae0a776cc4645dba067ad117fd7bd9fa7ad5dac227e43ac706b134f1641f18f8"
+      "size_bytes": 15061,
+      "sha256": "a769e5de46376f7636583c9170a823faeb7eafeadf1f5bf9530b58fd39552eee"
     },
     {
       "path": "scripts/build.mjs",
