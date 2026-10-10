@@ -1,6 +1,6 @@
 # Private Sites deployment and resume
 
-Use the installed Sites building, hosting and MCP skills and native tool schemas for current registration, source synchronization, packaging and publication. Discover actual tools before using them; names in this reference describe the native operations, not permission to invent an unavailable tool. The bundled service version is **0.5.8**. The package version is independent and appears in the plugin manifest.
+Use the installed Sites building, hosting and MCP skills and native tool schemas for current registration, source synchronization, packaging and publication. Discover actual tools before using them; names in this reference describe the native operations, not permission to invent an unavailable tool. The bundled service version is **0.6.0-rc.1**. The package version is independent and appears in the plugin manifest.
 
 ## Select before creating
 
@@ -22,9 +22,9 @@ Also retain the verified account setup package's backend plugin ID, actual USER/
 {
   "schema_version": 1,
   "package_version": null,
-  "bundled_service_version": "0.5.8",
+  "bundled_service_version": "0.6.0-rc.1",
   "deployed_service_version": null,
-  "service_version": "0.5.8",
+  "service_version": "0.6.0-rc.1",
   "service_type": "chatgpt-codex",
   "selection_source": "default_without_dot",
   "dot_available": null,

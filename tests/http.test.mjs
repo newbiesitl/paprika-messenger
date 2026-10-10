@@ -14,6 +14,22 @@ await new BoardService(db,'owner').create_board({board:'vex',label:'Legacy proje
 const env={DB:db,OWNER_USER_ID:'owner',COORDINATOR_USER_ID:'coordinator',SITE_ORIGIN:'https://board.test'};
 const request=(path,body,subject='owner',extra={})=>new Request(`https://board.test${path}`,{method:body===undefined?'GET':'POST',headers:{'oai-authenticated-user-id':subject,'Content-Type':'application/json',...extra},...(body===undefined?{}:{body:JSON.stringify(body)})});
 
+test('recipient picker resources are packaged, owner-gated and usable through MCP and the browser API',async()=>{
+  const pickerDb=new SqliteD1();pickerDb.connection.exec(await loadMigrations());const pickerEnv={...env,DB:pickerDb};
+  const service=new BoardService(pickerDb,'owner');await service.register_participant({board:'main',participant_id:'fixture-recipient',label:'Example',kind:'thread',thread_id:'fixture-native'});
+  const call=(name,args,subject='owner')=>request('/mcp',{jsonrpc:'2.0',id:1,method:'tools/call',params:{name,arguments:args}},subject);
+  try {
+    assert.equal((await handle(call('show_recipient_picker',{},''),pickerEnv)).status,401);assert.equal((await handle(call('list_recipients',{board:'main'},'other'),pickerEnv)).status,403);
+    const card=(await (await handle(call('show_recipient_picker',{}),pickerEnv)).json()).result;assert.equal(card.isError,false);assert.equal(card.structuredContent.board,'main');assert.equal(card._meta.ui.resourceUri,'ui://paprika-messenger/recipients/v1.html');
+    const template={jsonrpc:'2.0',id:2,method:'resources/read',params:{uri:card._meta.ui.resourceUri}};const ui=(await (await handle(request('/mcp',template,''),pickerEnv)).json()).result.contents[0];assert.match(ui.text,/createRecipientHost/);assert.match(ui.text,/id="board-filter"/);assert.doesNotMatch(ui.text,/RECIPIENT_SCRIPT|RECIPIENT_CSS/);
+    const privateRead={...template,params:{uri:'paprika://recipient/main/fixture-recipient'}};assert.equal((await handle(request('/mcp',privateRead,''),pickerEnv)).status,401);assert.equal((await handle(request('/mcp',privateRead,'other'),pickerEnv)).status,403);
+    const address=(await (await handle(request('/mcp',privateRead),pickerEnv)).json()).result.contents[0];assert.equal(JSON.parse(address.text).receiver_thread_id,'fixture-native');
+    const browser=await handle(request('/api/list_recipients',{board:'main'},'owner',{Origin:'https://board.test','X-Dot-Board':'1'}),pickerEnv);assert.equal(browser.status,200);assert.equal((await browser.json()).recipients[0].thread_id,'fixture-native');
+    assert.equal((await handle(request('/recipient-picker.js'),pickerEnv)).status,200);assert.equal((await handle(request('/recipient-picker.css',undefined,'other'),pickerEnv)).status,403);
+    assert.equal(pickerDb.connection.prepare('SELECT COUNT(*) n FROM messages').get().n,0);
+  }finally{pickerDb.close();}
+});
+
 test('service type stays authenticated and consistent across MCP, browser controls and event configuration',async()=>{
   const profileDb=new SqliteD1();profileDb.connection.exec(await loadMigrations());
   const profileEnv={DB:profileDb,OWNER_USER_ID:'owner',SITE_ORIGIN:'https://board.test',PAPRIKA_SERVICE_TYPE:'chatgpt-codex'};

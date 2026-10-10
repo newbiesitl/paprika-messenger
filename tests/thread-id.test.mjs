@@ -11,7 +11,7 @@ import { createState, applyEvents } from '../web/state.js';
 
 test('current ID comes from host metadata and missing/invalid metadata never guesses another chat',()=>{
   assert.deepEqual(getCurrentThreadId({CODEX_THREAD_ID:'current-chat',CODEX_SESSION_ID:'other-session'}),{thread_id:'current-chat',source:'CODEX_THREAD_ID'});
-  assert.deepEqual(getCurrentThreadId({CODEX_SESSION_ID:'legacy-chat'}),{thread_id:'legacy-chat',source:'CODEX_SESSION_ID'});
+  assert.throws(()=>getCurrentThreadId({CODEX_SESSION_ID:'shared-fork-root'}),/unavailable/);
   assert.throws(()=>getCurrentThreadId({PWD:'/chat-folder',THREAD_ID:'unverified'}),/unavailable/);
   for(const value of [' other-chat','../other','bad\nchat','a'.repeat(161)]) assert.throws(()=>getCurrentThreadId({CODEX_THREAD_ID:value,CODEX_SESSION_ID:'fallback'}),/invalid/);
   const script=new URL('../skills/paprika-messenger/scripts/get-thread-id.mjs',import.meta.url);

@@ -125,6 +125,26 @@ export async function writePluginZip(archive, pluginRoot, name, files) {
   await writeFile(archive, Buffer.concat([...local, directory, end]));
 }
 
+function packageVersion(value) {
+  const match=typeof value==='string' && /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?$/.exec(value);
+  if(!match)throw Error('Provide a semantic package version.');
+  const prerelease=match[4]?.split('.') || [];
+  if(prerelease.some(part=>/^\d+$/.test(part)&&part.length>1&&part[0]==='0'))throw Error('Provide a semantic package version.');
+  return {core:match.slice(1,4).map(BigInt),prerelease};
+}
+export function comparePackageVersions(left,right) {
+  const a=packageVersion(left),b=packageVersion(right);
+  for(let n=0;n<3;n++)if(a.core[n]!==b.core[n])return a.core[n]<b.core[n]?-1:1;
+  if(!a.prerelease.length||!b.prerelease.length)return !a.prerelease.length?(!b.prerelease.length?0:1):-1;
+  for(let n=0;n<Math.max(a.prerelease.length,b.prerelease.length);n++) {
+    const x=a.prerelease[n],y=b.prerelease[n];if(x===y)continue;if(x===undefined)return -1;if(y===undefined)return 1;
+    const numericX=/^\d+$/.test(x),numericY=/^\d+$/.test(y);
+    if(numericX!==numericY)return numericX?-1:1;
+    if(numericX)return BigInt(x)<BigInt(y)?-1:1;
+    return x<y?-1:1;
+  }
+  return 0;
+}
 export async function mergeServicePlugin({ pluginRoot, servicePluginRoot, siteConnection, outputRoot, version } = {}) {
   if (typeof pluginRoot !== 'string') throw new Error('Provide the complete base plugin directory.');
   pluginRoot = resolve(pluginRoot);
@@ -132,15 +152,11 @@ export async function mergeServicePlugin({ pluginRoot, servicePluginRoot, siteCo
   const utilities = await import(pathToFileURL(resolve(pluginRoot, templatePath, 'scripts/bundle.mjs')).href);
   const base = await json(resolve(pluginRoot, 'plugin.json'));
   const oldBundle = await json(resolve(pluginRoot, 'paprika-bundle.json'));
-  if (!/^[a-z][a-z0-9-]{0,63}$/.test(base.name) || !/^\d+\.\d+\.\d+$/.test(base.version)
+  if (!/^[a-z][a-z0-9-]{0,63}$/.test(base.name)
       || oldBundle.plugin_name !== base.name || oldBundle.plugin_version !== base.version)
     throw new Error('Invalid base package identity or version.');
-  if (version !== undefined) {
-    if (!/^\d+\.\d+\.\d+$/.test(version)) throw new Error('Provide a strict standalone package version.');
-    const old = base.version.split('.').map(Number), next = version.split('.').map(Number);
-    const first = next.findIndex((part, i) => part !== old[i]);
-    if (first >= 0 && next[first] < old[first]) throw new Error('Standalone package must not downgrade the base version.');
-  }
+  packageVersion(base.version);
+  if (version !== undefined && comparePackageVersions(version,base.version)<0) throw new Error('Standalone package must not downgrade the base version.');
   if (base.extensions?.['com.openai']?.apps != null || oldBundle.distribution === 'standalone')
     throw new Error('Package already has an App binding; preserve it and reconcile the existing standalone release.');
   await utilities.inspectReusableFiles(pluginRoot);
