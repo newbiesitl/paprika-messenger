@@ -1,5 +1,6 @@
 import { existsSync, realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { conversationLink } from './conversation-link.mjs';
 
 const object = value => value && typeof value === 'object' && !Array.isArray(value);
 function string(value, name, maximum = 512) {
@@ -10,7 +11,8 @@ function string(value, name, maximum = 512) {
 const display = value => String(value).replace(/[\u0000-\u001f\u007f]/g, ' ').trim();
 const actions = [
   ['search', 'Search by name or ID'], ['board', 'Change board'],
-  ['refresh', 'Refresh thread details'], ['clear', 'Clear recipient'], ['cancel', 'Cancel'],
+  ['refresh', 'Refresh thread details'], ['open', 'Open a conversation'],
+  ['clear', 'Clear recipient'], ['cancel', 'Cancel'],
 ];
 function freezeMessage(mode, value) {
   if (!['choose', 'send_agreed'].includes(mode)) throw Error('Unknown recipient selection mode.');
@@ -29,7 +31,8 @@ function freezeMessage(mode, value) {
 
 // The host owns the native question panel. This helper prepares data; it never
 // opens UI, calls a remote tool, changes routing, or sends a message.
-export function prepareRecipientSelector({ page, cursor = null, mode = 'choose', agreed_message = null } = {}) {
+export function prepareRecipientSelector({ page, cursor = null, mode = 'choose', agreed_message = null, intent = 'select' } = {}) {
+  if (!['select', 'open'].includes(intent)) throw Error('Unknown picker intent.');
   if (!object(page) || !Array.isArray(page.recipients) || page.recipients.length > 50)
     throw Error('Require one confirmed recipient page of at most 50.');
   const board = string(page.board, 'board', 64), query = page.query ?? '';
@@ -55,18 +58,21 @@ export function prepareRecipientSelector({ page, cursor = null, mode = 'choose',
     const extra = thread_id && participant_id !== thread_id ? ' · Communication ID: ' + display(participant_id) : '';
     const label = (assigned ? display(recipient.project_name) + ' → ' : '') + display(name) + ' · ' + address + extra
       + (annotations.length ? ' (' + annotations.join(' · ') + ')' : '');
-    const choice = { id: 'recipient:' + participant_id, label, participant_id, thread_id, thread_name: name };
+    const choice = { id: 'recipient:' + participant_id, label, participant_id, thread_id, thread_name: name,
+      conversation_link: conversationLink(recipient) };
+    if (intent === 'open' && !choice.conversation_link) continue;
     if (!groups.has(group)) groups.set(group, []);
     groups.get(group).push(choice);
   }
   const choices = [...groups.values()].flat();
-  const controls = actions.map(([action, label]) => ({ id: 'action:' + action, action, label }));
+  const controls = actions.filter(([action]) => intent !== 'open' || action !== 'open')
+    .map(([action, label]) => ({ id: 'action:' + action, action, label }));
   if (page.has_more) controls.splice(3, 0, { id: 'action:more', action: 'more', label: 'More conversations' });
   const options = [...choices, ...controls];
-  return { board, query, mode, agreed_message: frozen, selection_sends: mode === 'send_agreed',
+  return { board, query, mode, intent, agreed_message: frozen, selection_sends: intent === 'select' && mode === 'send_agreed',
     list_arguments: { board, query, limit: 50, ...(cursor != null ? { cursor } : {}) },
     next_cursor: page.has_more ? page.next_cursor : null, options,
-    question: { title: (mode === 'send_agreed' ? 'Choose a recipient for the agreed message' : 'Choose a recipient; selection alone sends nothing')
+    question: { title: (intent === 'open' ? 'Choose a conversation to open; no message will be sent' : mode === 'send_agreed' ? 'Choose a recipient for the agreed message' : 'Choose a recipient; selection alone sends nothing')
       + ' · Board: ' + display(board) + (query ? ' · Search: ' + display(query) : ''), options: options.map(option => option.label) },
     metadata_bindings: page.recipients.filter(r => r.thread_id).map(r => ({ participant_id: r.participant_id, thread_id: r.thread_id,
       ...(r.source ? { source: r.source } : {}), ...(r.host_id ? { host_id: r.host_id } : {}) })) };
@@ -88,8 +94,12 @@ export function resolveRecipientChoice(selector, answer) {
   const choice = matches[0];
   if (choice.action) return { action: choice.action,
     ...(choice.action === 'more' ? { arguments: { board: selector.board, query: selector.query, cursor: selector.next_cursor, limit: 50 } } : {}) };
+  if (selector.intent === 'open') return { action: 'open_conversation', board: selector.board,
+    participant_id: choice.participant_id, thread_id: choice.thread_id, thread_name: choice.thread_name,
+    conversation_link: choice.conversation_link, selection_sends: false };
   return { action: 'selected', board: selector.board, receiver_id: choice.participant_id,
     receiver_thread_id: choice.thread_id, thread_name: choice.thread_name, mode: selector.mode,
+    conversation_link: choice.conversation_link,
     selection_sends: selector.selection_sends, ...(selector.agreed_message ? { agreed_message: structuredClone(selector.agreed_message) } : {}) };
 }
 

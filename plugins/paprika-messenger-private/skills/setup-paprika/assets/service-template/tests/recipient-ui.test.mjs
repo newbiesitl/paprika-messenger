@@ -4,7 +4,8 @@ import { readFile } from 'node:fs/promises';
 import { runInNewContext } from 'node:vm';
 
 const hostSource=(await readFile('web/recipient-host.js','utf8')).replace(/^import .*?;\r?\n/gm,'').replace(/^export /gm,'');
-const pickerSource=(await readFile('web/recipient-picker.js','utf8')).replace(/^export /gm,'');
+const pickerSource=(await readFile('skills/paprika-messenger/scripts/conversation-link.mjs','utf8')).replace(/^export /gm,'')+'\n'
+  +(await readFile('web/recipient-picker.js','utf8')).replace(/^import .*?;\r?\n/gm,'').replace(/^export /gm,'');
 const flush=async()=>{for(let n=0;n<12;n++)await Promise.resolve();};
 class Element {
   constructor(tag='div'){this.tagName=tag;this.children=[];this.listeners={};this.attributes={};this.value='';this.textContent='';this.hidden=false;this.disabled=false;this.open=false;this.classList={add(){}};}
@@ -16,7 +17,7 @@ class Element {
   querySelector(tag){return this.querySelectorAll(tag)[0];}
   focus(){this.focused=true;}
 }
-const recipient={participant_id:'fixture-recipient',thread_id:'native-recipient',thread_name:'Native <script> title',source:'codex',execution_mode:'local',project_status:'assigned',project_id:'fixture-project',project_name:'Fixture project',metadata_stale:false,project_metadata_stale:false};
+const recipient={participant_id:'fixture-recipient',thread_id:'native-recipient',thread_name:'Native <script> title',source:'codex',execution_mode:'local',host_id:'local',project_status:'assigned',project_id:'fixture-project',project_name:'Fixture project',metadata_stale:false,project_metadata_stale:false};
 const page=(extra={})=>({board:'main',mode:'choose',recipients:[recipient],query:'',next_cursor:null,has_more:false,board_options:[{id:'main',label:'General'},{id:'other',label:'Other'}],...extra});
 const agreed={sender_id:'fixture-sender',sender_label:'Sender',topic:'Agreed topic',body:'Agreed "body"\n会話 & <script> text',idempotency_key:'fixture-key'};
 function harness() {
@@ -92,4 +93,27 @@ test('shared picker groups native projects, displays text safely, ignores stale 
   search.value='new';search.listeners.input();[...timers.values()].at(-1)();requests[1].resolve(page({recipients:[{...recipient,thread_name:'Newest',project_status:'unassigned'}],next_cursor:'fixture-cursor'}));await flush();requests[0].resolve(page());await flush();assert.equal(root.querySelector('strong').textContent,'Newest');assert.equal(root.querySelectorAll('h3').length,0);
   const more=root.querySelectorAll('button').find(b=>b.textContent==='Load more');const loading=more.onclick();assert.equal(requests[2].args.cursor,'fixture-cursor');requests[2].resolve(page({recipients:[{...recipient,participant_id:'another',thread_id:'another-native',thread_name:'Another',project_status:'unassigned'}]}));await loading;assert.equal(root.querySelectorAll('strong').length,2);
   picker.reset();assert.equal(root.querySelectorAll('strong').length,0);assert.equal(search.value,'');
+});
+
+test('opening a conversation uses the host navigation bridge without selecting or submitting an agreed message',async()=>{
+  const h=harness();await h.initialize();h.show(page({mode:'send_agreed',agreed_message:agreed}));
+  const opening=h.callbacks.onOpen({url:'codex://threads/native-recipient'});
+  const request=h.sent.at(-1);assert.equal(request.method,'ui/open-link');assert.equal(request.params.url,'codex://threads/native-recipient');
+  h.reply(request,{});await opening;
+  assert.equal(h.sent.some(m=>m.method==='ui/message'||m.method==='ui/update-model-context'||m.params?.name==='post_message'),false);
+  assert.equal(h.picker.selected,null);assert.equal(h.picker.disabled,false);
+  const rejected=h.callbacks.onOpen({url:'codex://threads/native-recipient'});h.reply(h.sent.at(-1),{isError:true});await assert.rejects(rejected,/refused/);
+});
+
+test('dropdown links are separate from recipient buttons and remain copyable when the host refuses navigation',async()=>{
+  const root=new Element(),document={createElement:tag=>new Element(tag)};let selections=0,opens=0;
+  const context={document,setTimeout,clearTimeout};runInNewContext(pickerSource+'\nglobalThis.mount=mountRecipientPicker;',context);
+  const picker=context.mount(root,{load:async()=>page(),onSelect:async r=>{selections++;return r;},onOpen:async()=>{opens++;throw Error('Unsupported');}});
+  picker.setPage(page());const anchor=root.querySelector('a'),button=root.querySelectorAll('button').find(b=>b.className==='recipient-option');
+  assert.equal(anchor.href,'codex://threads/native-recipient');assert.equal(anchor.rel,'noopener noreferrer');
+  assert.equal(button.querySelector('a'),undefined);assert.equal(root.querySelectorAll('script').length,0);
+  let prevented=false;await anchor.onclick({preventDefault(){prevented=true;},stopPropagation(){}});
+  assert.equal(prevented,true);assert.equal(opens,1);assert.equal(selections,0);assert.match(root.querySelectorAll('p').find(p=>p.className==='recipient-status').textContent,/Copy this link: codex:\/\/threads\/native-recipient/);
+  picker.setSelected(recipient);assert.equal(root.querySelectorAll('a').length,2);
+  picker.setPage(page({recipients:[{...recipient,source:'unknown'}]}));assert.equal(root.querySelectorAll('a').filter(a=>a.href?.startsWith('javascript:')).length,0);
 });
