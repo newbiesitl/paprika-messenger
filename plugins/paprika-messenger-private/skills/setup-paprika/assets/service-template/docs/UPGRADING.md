@@ -1,5 +1,9 @@
 # Upgrade an existing Paprika Messenger instance
 
+Plugin 1.4.0-rc.4 / service 0.6.0-rc.4 caches a verified owning ChatGPT `conversation_url` separately from the immutable routing thread ID. The recipient menu, opening action and confirmed-send link share the same URL helper and client-side opening path. The additive `0005_conversation-url.sql` migration adds one nullable metadata column; it preserves registrations, messages, subscriptions and earlier migrations. Missing URL observations retain a cached link; explicit null clears it. Ordinary refresh remains bounded to 50 and does not read conversation histories.
+
+Keep the 1.4.0-rc.3 archives, source tag and previous Site version for rollback. The previous service ignores the additive column, so restore its saved deployment without reversing the database migration. Account plugin rollback requires repackaging the previous known-good contents under a new higher semantic version; do not move an existing tag or replace a published archive. The mobile Cloud-chat URL pilot succeeded; remote-local rendering is deferred.
+
 ## Recipient picker test release and rollback
 
 Bundle **1.4.0-rc.3** includes service **0.6.0-rc.3**. Custom recipient rows and the selected recipient show a separate **Open conversation** link. The built-in question panel offers **Open a conversation**, followed by a link or supported native navigation; opening does not select a send recipient or deliver pending content. Confirmed sends include the exact recipient's navigation link when available. Local Codex links use the native thread ID and open on the computer handling the link; ChatGPT links use the native conversation ID in the signed-in account. Unknown, cloud Codex and remote host routes do not receive invented URLs. No new database migration or stored navigation URL is added. Preserve rc.2 packages and its saved private Site version for fallback.

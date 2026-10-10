@@ -1,5 +1,5 @@
 import { fail, id, text, plainText, strict, integer } from './validation.mjs';
-import { conversationLink } from '../skills/paprika-messenger/scripts/conversation-link.mjs';
+import { conversationLink, normalizeConversationUrl } from '../skills/paprika-messenger/scripts/conversation-link.mjs';
 
 const rdStmt = (db, sql, ...values) => db.prepare(sql).bind(...values);
 const rdAll = async (db, sql, ...values) => (await rdStmt(db, sql, ...values).all()).results;
@@ -7,7 +7,7 @@ export const recipientMetadataTtlSeconds = 300;
 export const normalizeRecipientSearch = value => value.normalize('NFKC').toLowerCase();
 const recipientColumns = `p.id AS participant_id,p.thread_id,p.label AS registered_label,p.kind,
   m.title,m.source,m.execution_mode,m.host_id,m.workspace_name,m.project_status,m.project_id,m.project_name,
-  m.observed_at,m.project_observed_at,a.last_communicated_at,
+  m.observed_at,m.project_observed_at,m.conversation_url,a.last_communicated_at,
   COALESCE(a.last_communicated_at,p.created_at) AS recency_at`;
 const recipientJoins = `FROM participants p LEFT JOIN recipient_metadata m ON m.board=p.board AND m.participant_id=p.id
   LEFT JOIN recipient_activity a ON a.board=p.board AND a.participant_id=p.id`;
@@ -17,7 +17,7 @@ function recipientSnapshot(row) {
     title_source:row.title === null ? 'registered_label' : 'host_reported',registered_label:row.registered_label,kind:row.kind,
     source:row.source ?? 'unknown',execution_mode:row.execution_mode ?? 'unknown',host_id:row.host_id ?? null,
     workspace_name:row.workspace_name ?? null,project_status:row.project_status ?? 'unknown',
-    project_id:row.project_id ?? null,project_name:row.project_name ?? null,
+    project_id:row.project_id ?? null,project_name:row.project_name ?? null,conversation_url:row.conversation_url ?? null,
     metadata_observed_at:row.observed_at ?? null,metadata_stale:!fresh(row.observed_at),
     project_metadata_stale:!fresh(row.project_observed_at),last_communicated_at:row.last_communicated_at ?? null,
     recency_at:row.recency_at};
@@ -60,7 +60,7 @@ export async function getRecipient(service,args) {
   return {board,recipient:recipientSnapshot(rows[0]),identity_kind:'declared_routing_metadata'};
 }
 const recipientMetadataFields=['participant_id','thread_id','title','source','execution_mode','host_id','workspace_name',
-  'project_status','project_id','project_name','observed_at'];
+  'project_status','project_id','project_name','observed_at','conversation_url'];
 export async function updateRecipientMetadata(service,args) {
   strict(args,['board','entries']);
   const board=await service.board(args.board);
@@ -77,7 +77,11 @@ export async function updateRecipientMetadata(service,args) {
     if(typeof observed!=='string' || !Number.isFinite(Date.parse(observed)) || new Date(observed).toISOString()!==observed
       || Date.parse(observed)>Date.now()+60000)fail(400,'invalid_argument','observed_at must be a canonical ISO timestamp without a future clock jump.');
     const metadata={title:null,search_name:normalizeRecipientSearch(participant.label),source:'unknown',execution_mode:'unknown',
-      host_id:null,workspace_name:null,project_status:'unknown',project_id:null,project_name:null,project_observed_at:null};
+      host_id:null,workspace_name:null,project_status:'unknown',project_id:null,project_name:null,project_observed_at:null,conversation_url:null};
+    if(Object.hasOwn(entry,'conversation_url') && entry.conversation_url!==null) {
+      metadata.conversation_url=normalizeConversationUrl(entry.conversation_url);
+      if(!metadata.conversation_url)fail(400,'invalid_argument','conversation_url must be a verified https://chatgpt.com conversation URL with a UUID.');
+    }
     for(const field of ['title','host_id','workspace_name'])if(Object.hasOwn(entry,field))metadata[field]=entry[field]===null?null:text(entry[field],field,field==='title'?512:160);
     if(Object.hasOwn(entry,'title'))metadata.search_name=normalizeRecipientSearch(metadata.title ?? participant.label);
     for(const [field,allowed] of [['source',['chatgpt','codex','dot','unknown']],['execution_mode',['local','cloud','unknown']]]) {
@@ -97,19 +101,20 @@ export async function updateRecipientMetadata(service,args) {
       if(entry.project_id!=null || entry.project_name!=null)fail(400,'invalid_argument','An unassigned project cannot include a project ID or name.');
       metadata.project_id=null;metadata.project_name=null;metadata.project_status=project;metadata.project_observed_at=observed;
     }
-    const mask=(Object.hasOwn(entry,'title')?1:0)|(Object.hasOwn(entry,'host_id')?2:0)|(Object.hasOwn(entry,'workspace_name')?4:0);
+    const mask=(Object.hasOwn(entry,'title')?1:0)|(Object.hasOwn(entry,'host_id')?2:0)|(Object.hasOwn(entry,'workspace_name')?4:0)|(Object.hasOwn(entry,'conversation_url')?8:0);
     rows.push([board,pid,metadata.title,metadata.search_name,metadata.source,
       metadata.execution_mode,metadata.host_id,metadata.workspace_name,metadata.project_status,metadata.project_id,metadata.project_name,
-      metadata.project_observed_at,observed,mask]);
+      metadata.project_observed_at,observed,metadata.conversation_url,mask]);
   }
-  // Seven 14-field observations fit D1's 100-bound-parameter limit. Two reads
-  // plus at most eight writes and default-board initialization fit the free budget.
+  // Seven 14-field observations fit D1's 100-bound-parameter limit. The field
+  // mask is a locally computed integer literal, not interpolated user input.
+  // At most eight writes keep a 50-entry refresh within the existing query budget.
   // Preserve unspecified fields at write time, including concurrent host reads.
-  const columns='board,participant_id,title,search_name,source,execution_mode,host_id,workspace_name,project_status,project_id,project_name,project_observed_at,observed_at';
+  const columns='board,participant_id,title,search_name,source,execution_mode,host_id,workspace_name,project_status,project_id,project_name,project_observed_at,observed_at,conversation_url';
   const fieldMask='(SELECT field_mask FROM incoming WHERE incoming.participant_id=excluded.participant_id)';
   for(let offset=0;offset<rows.length;offset+=7) {
     const chunk=rows.slice(offset,offset+7);
-    statements.push(rdStmt(service.db,`WITH incoming(${columns},field_mask) AS (VALUES ${chunk.map(()=>'(?,?,?,?,?,?,?,?,?,?,?,?,?,?)').join(',')})
+    statements.push(rdStmt(service.db,`WITH incoming(${columns},field_mask) AS (VALUES ${chunk.map(row=>'(?,?,?,?,?,?,?,?,?,?,?,?,?,?,'+row[14]+')').join(',')})
       INSERT INTO recipient_metadata(${columns}) SELECT ${columns} FROM incoming WHERE 1
       ON CONFLICT(board,participant_id) DO UPDATE SET
         title=CASE WHEN ${fieldMask}&1 THEN excluded.title ELSE recipient_metadata.title END,
@@ -118,11 +123,12 @@ export async function updateRecipientMetadata(service,args) {
         execution_mode=CASE WHEN excluded.execution_mode<>'unknown' THEN excluded.execution_mode ELSE recipient_metadata.execution_mode END,
         host_id=CASE WHEN ${fieldMask}&2 THEN excluded.host_id ELSE recipient_metadata.host_id END,
         workspace_name=CASE WHEN ${fieldMask}&4 THEN excluded.workspace_name ELSE recipient_metadata.workspace_name END,
+        conversation_url=CASE WHEN ${fieldMask}&8 THEN excluded.conversation_url ELSE recipient_metadata.conversation_url END,
         project_status=CASE WHEN excluded.project_status<>'unknown' THEN excluded.project_status ELSE recipient_metadata.project_status END,
         project_id=CASE WHEN excluded.project_status<>'unknown' THEN excluded.project_id ELSE recipient_metadata.project_id END,
         project_name=CASE WHEN excluded.project_status<>'unknown' THEN excluded.project_name ELSE recipient_metadata.project_name END,
         project_observed_at=CASE WHEN excluded.project_status<>'unknown' THEN excluded.project_observed_at ELSE recipient_metadata.project_observed_at END,
-        observed_at=excluded.observed_at WHERE excluded.observed_at>=recipient_metadata.observed_at`,...chunk.flat()));
+        observed_at=excluded.observed_at WHERE excluded.observed_at>=recipient_metadata.observed_at`,...chunk.flatMap(row=>row.slice(0,14))));
   }
   await service.db.batch(statements);
   return {board,processed:rows.length,identity_kind:'host_reported_metadata',routes_changed:false};
