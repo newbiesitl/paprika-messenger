@@ -2,6 +2,8 @@
 
 ## Native bridge source update
 
+Plugin **1.4.0-rc.6** / service **0.6.0-rc.6** is a prerelease of the Codex native bridge and explicit recipient-to-ChatGPT conversation mapping. It retains the rc.5 navigation behavior and existing Codex-to-Codex route. Preserve the previous installed account archive, release ID and saved Site version before rollout. Roll back the service with its previous saved version without removing the additive mapping table; account-package rollback requires a new higher version. This candidate is not a stable release.
+
 The native bridge adds the append-only `0006_recipient-conversations` migration and `set_recipient_conversation` tool. Deploy the updated source and migration to the same service, then update the client package through the existing release process. A client-only update cannot add the server tool. No released archive or running installation is changed by a source PR.
 
 Existing participants, immutable runtime bindings, inboxes, history and subscriptions remain intact. Mapping starts empty: do not backfill ChatGPT IDs from runtime IDs, titles or share links. Save each selected association from the original `/c/` link or an explicit supported host association, and verify the actual destination is kind `chatgpt`. An identical request is idempotent; corrections require the current mapping revision. Both dropdown links and bridge preparation use this same saved destination. Keep an uncertain delivery's original plan/key after any correction; reconcile it instead of resending to a new target.
