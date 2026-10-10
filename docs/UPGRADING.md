@@ -2,11 +2,15 @@
 
 ## Native bridge source update
 
-The native bridge adds the append-only `0005_recipient-conversations` migration and `set_recipient_conversation` tool. Deploy the updated source and migration to the same service, then update the client package through the existing release process. A client-only update cannot add the server tool. No released archive or running installation is changed by a source PR.
+The native bridge adds the append-only `0006_recipient-conversations` migration and `set_recipient_conversation` tool. Deploy the updated source and migration to the same service, then update the client package through the existing release process. A client-only update cannot add the server tool. No released archive or running installation is changed by a source PR.
 
 Existing participants, immutable runtime bindings, inboxes, history and subscriptions remain intact. Mapping starts empty: do not backfill ChatGPT IDs from runtime IDs, titles or share links. Save each selected association from the original `/c/` link or an explicit supported host association, and verify the actual destination is kind `chatgpt`. An identical request is idempotent; corrections require the current mapping revision. Both dropdown links and bridge preparation use this same saved destination. Keep an uncertain delivery's original plan/key after any correction; reconcile it instead of resending to a new target.
 
 This source feature supports authorized native sends from a Codex host exposing the built-in thread tools. It does not implement a background relay, a Dot destination conversion, or cloud-to-cloud sending. Preserve all existing receiving methods unless separately requested.
+
+Plugin 1.4.0-rc.4 / service 0.6.0-rc.4 caches a verified owning ChatGPT `conversation_url` separately from the immutable routing thread ID. The recipient menu, opening action and confirmed-send link share the same URL helper and client-side opening path. The additive `0005_conversation-url.sql` migration adds one nullable metadata column; it preserves registrations, messages, subscriptions and earlier migrations. Missing URL observations retain a cached link; explicit null clears it. Ordinary refresh remains bounded to 50 and does not read conversation histories.
+
+Keep the 1.4.0-rc.3 archives, source tag and previous Site version for rollback. The previous service ignores the additive column, so restore its saved deployment without reversing the database migration. Account plugin rollback requires repackaging the previous known-good contents under a new higher semantic version; do not move an existing tag or replace a published archive. The mobile Cloud-chat URL pilot succeeded; remote-local rendering is deferred.
 
 ## Recipient picker test release and rollback
 

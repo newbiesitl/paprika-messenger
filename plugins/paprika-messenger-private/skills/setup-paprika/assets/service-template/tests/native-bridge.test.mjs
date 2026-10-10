@@ -126,6 +126,22 @@ test('bridge refuses wrong selection, board, native kind, missing mapping, busy 
   assert.equal(conversationLink(corrupted),null);
 });
 
+test('existing verified URL supplies mapping input and later navigation refresh cannot redirect delivery',async t=>{
+  const {service}=await setup(t);
+  await service.update_recipient_metadata({board:'main',entries:[{participant_id:'cloud',thread_id:'cloud-runtime',
+    conversation_url:`https://chatgpt.com/c/${conversation}`,observed_at:'2026-01-01T00:00:00.000Z'}]});
+  const cached=await service.get_recipient({board:'main',participant_id:'cloud'});
+  assert.equal(cached.recipient.chatgpt_destination,null);
+  await service.set_recipient_conversation(mappingArgs({conversation:cached.recipient.conversation_url}));
+  await service.update_recipient_metadata({board:'main',entries:[{participant_id:'cloud',thread_id:'cloud-runtime',
+    conversation_url:`https://chatgpt.com/c/${otherConversation}`} ]});
+  const record=await service.get_recipient({board:'main',participant_id:'cloud'});
+  const plan=prepareBridgeDelivery(prepareInput(record),env);
+  assert.equal(plan.host_args.threadId,conversation);
+  assert.equal(record.recipient.conversation_url,plan.conversation_link.url);
+  assert.equal(record.recipient.conversation_link.conversation_id,conversation);
+});
+
 test('Codex to Codex retains native thread and host; direct ChatGPT registrations also work',async t=>{
   const {service}=await setup(t);
   const record=await service.get_recipient({board:'main',participant_id:'codex'});

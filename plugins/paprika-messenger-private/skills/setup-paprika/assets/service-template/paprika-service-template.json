@@ -1,7 +1,7 @@
 {
   "format": 1,
   "kind": "paprika-messenger-service-template",
-  "service_version": "0.6.0-rc.3",
+  "service_version": "0.6.0-rc.4",
   "files": [
     {
       "path": ".env.example",
@@ -25,13 +25,13 @@
     },
     {
       "path": "db/schema.ts",
-      "size_bytes": 8971,
-      "sha256": "5b6d94d52b79b445acc1c6d2d8ea065e60fa77a7c7e7e8e6c5a1dc487112bd0b"
+      "size_bytes": 9016,
+      "sha256": "f07e709584773a337b2fbde61e14802de57b0f9541cfc34d569134793281aa4b"
     },
     {
       "path": "docs/CLIENT-CAPABILITIES.md",
-      "size_bytes": 12332,
-      "sha256": "4f34a0065e6db81f293107cfaab75137dc55cc14301f4f99268277afbf4f8139"
+      "size_bytes": 12746,
+      "sha256": "d443a2e8e5d2214341ee1cfe51b62a6c2fa903b995523e72c9a18fad22fcdb77"
     },
     {
       "path": "docs/LOCAL-PLUGIN.md",
@@ -66,12 +66,12 @@
     {
       "path": "docs/TEST-RESULTS.md",
       "size_bytes": 405,
-      "sha256": "423de843ffa8513535e9a9979cd3bc3add72166e9ef8aef646071e8ccea84eae"
+      "sha256": "441fdebccc20f76ada90251c266c678ae53ec6f5746de052e201ec5ac1871bff"
     },
     {
       "path": "docs/UPGRADING.md",
-      "size_bytes": 26469,
-      "sha256": "4c6674f2e62459f1d330c9824e01673f274be69744a79f9155b2ff0ccb978847"
+      "size_bytes": 27500,
+      "sha256": "57ea2345b48e104c2068c6df4d20c5706d2b4c203785243eb412bc21dee0aae2"
     },
     {
       "path": "docs/WINDOWS-SITES-PACKAGING.md",
@@ -109,14 +109,19 @@
       "sha256": "e209aa10e09095e306715fff4f394d69c9510e3bc9485dc2383d128f0becfd8b"
     },
     {
-      "path": "drizzle/0005_recipient-conversations.sql",
+      "path": "drizzle/0005_conversation-url.sql",
+      "size_bytes": 61,
+      "sha256": "3187d74a6334d5414bae2f29b4eb39e61b7d15760ea80f143ac92f3d997c719d"
+    },
+    {
+      "path": "drizzle/0006_recipient-conversations.sql",
       "size_bytes": 625,
       "sha256": "c26604cb7943b45767299ba9dd8741d5f00b8802bf875c355083c1b06e951859"
     },
     {
       "path": "drizzle/meta/_journal.json",
-      "size_bytes": 919,
-      "sha256": "71dc483f4d4fc09e285825ba3e8136ab30fccf988f9b34c295a59bdce4cf83e4"
+      "size_bytes": 1063,
+      "sha256": "bccd1f0d439fdc6280b6178f7a9eb17994c25f149bb516fb8e16c625cc38b98c"
     },
     {
       "path": "drizzle/meta/0000_snapshot.json",
@@ -145,8 +150,13 @@
     },
     {
       "path": "drizzle/meta/0005_snapshot.json",
-      "size_bytes": 36861,
-      "sha256": "b30727364037374464a5ee8807a1e71883c61b475b2c22440a1d348eb3eeaf9d"
+      "size_bytes": 34524,
+      "sha256": "b7072d460186d9656570a6445d99102ee824386df314e9dcf838576debbebad5"
+    },
+    {
+      "path": "drizzle/meta/0006_snapshot.json",
+      "size_bytes": 37058,
+      "sha256": "02cd9660b5bac91b980ebbe4195294fa9a7dac8064c397d1de0e70d7a9ba51a7"
     },
     {
       "path": "LICENSE",
@@ -156,17 +166,17 @@
     {
       "path": "package-lock.json",
       "size_bytes": 50625,
-      "sha256": "2a7114adcafeaf9a4f4e42fab819f1768b29171136bb5066aa2244266045e033"
+      "sha256": "39a64b7d272a0366e51114fb551f5daa735449786b223d900ab1a16bb8843a67"
     },
     {
       "path": "package.json",
       "size_bytes": 445,
-      "sha256": "5427fe507a7cbcd91c60cd61d52bf12a16c11f81b6ca7fb3ebcde04c3cce659d"
+      "sha256": "c46bdf6cc9a54b0f244b9ffbe4736dd67d38f27dee2fa23254615e843a8f3d4d"
     },
     {
       "path": "README.md",
-      "size_bytes": 16536,
-      "sha256": "c75b43cdae5442198eb3f531b57a8abbfe73462ab05f4a3127a538f9596b29f2"
+      "size_bytes": 16585,
+      "sha256": "dbf77e7644a843ec122a0816f16330ed64fc7cbce1098cd7f1442acec901ff4a"
     },
     {
       "path": "scripts/build.mjs",
@@ -200,8 +210,8 @@
     },
     {
       "path": "skills/paprika-messenger/references/connect.md",
-      "size_bytes": 26821,
-      "sha256": "88d7f3556fedfedc390cb399eef4de6d99ac7d3426d2f093aa6a62b11938177b"
+      "size_bytes": 27508,
+      "sha256": "3c1f2af53e21e94bc55cc6f5f8d7dd58e942c97408117676a32f4b6f121fd10b"
     },
     {
       "path": "skills/paprika-messenger/references/connection-ui.md",
@@ -210,13 +220,13 @@
     },
     {
       "path": "skills/paprika-messenger/references/direct.md",
-      "size_bytes": 16539,
-      "sha256": "ad6c1c04bc381e44bd0163ee8a0ebd015e4c4a4c58aa074ed6341912a2db0c6d"
+      "size_bytes": 16813,
+      "sha256": "d14003695c5313a35bb25a1f903411d65ecfc65ed79297531173854af74f2450"
     },
     {
       "path": "skills/paprika-messenger/references/native-bridge.md",
-      "size_bytes": 5259,
-      "sha256": "00a1b2b80a82909d273ee2edaded728f196911734bd44736d758a59429862126"
+      "size_bytes": 5493,
+      "sha256": "2638018eb34ff8488db64b4dc27640a12712b5a30604a0d6def26637aa88d0da"
     },
     {
       "path": "skills/paprika-messenger/references/notifications.md",
@@ -225,13 +235,13 @@
     },
     {
       "path": "skills/paprika-messenger/references/recipient-picker.md",
-      "size_bytes": 16748,
-      "sha256": "f068d27c47e32930d90cedd20d688b8e00fbdb4b4d1248d05e11544fc056abcc"
+      "size_bytes": 17869,
+      "sha256": "0c67e0dd61709b1a9a681da42bb2cd8afc9915a9b6207e1749762636192a649d"
     },
     {
       "path": "skills/paprika-messenger/scripts/conversation-link.mjs",
-      "size_bytes": 2757,
-      "sha256": "95e87634bc611841e90faa656cf4d5bdfbf5135a43f355213cc3aa4521f7849f"
+      "size_bytes": 3807,
+      "sha256": "0e6702c1f4a544b639ce5c1734be578fe19b7d0efa3500f7d8e6c6d4a51c1e96"
     },
     {
       "path": "skills/paprika-messenger/scripts/get-thread-id.mjs",
@@ -275,8 +285,8 @@
     },
     {
       "path": "skills/paprika-messenger/SKILL.md",
-      "size_bytes": 16477,
-      "sha256": "ec1f4f43ac63ca937997319c3f8a1e3b965669ae593568fd5e9d958ff73ef6c1"
+      "size_bytes": 16819,
+      "sha256": "66da3ce1563cea86a7de3555a89c02c812d7f30a9478ef6fc266068fa8109764"
     },
     {
       "path": "src/connection-ui.mjs",
@@ -290,8 +300,8 @@
     },
     {
       "path": "src/protocol.mjs",
-      "size_bytes": 31648,
-      "sha256": "dbdb4ad07251ebf4a97ed8295e14d6ede3a293a5eba033dc474d7b7091122ff9"
+      "size_bytes": 32377,
+      "sha256": "cb6b7704ec1002d54f7ff548d67efb2a79f42d143b17f4dcf358c0e4b487f816"
     },
     {
       "path": "src/recipient-conversations.mjs",
@@ -300,8 +310,8 @@
     },
     {
       "path": "src/recipient-directory.mjs",
-      "size_bytes": 13407,
-      "sha256": "69a997d4b7fa16b2517531f7cb7f6bdeadec69a7174fb8186ceece7245663549"
+      "size_bytes": 14347,
+      "sha256": "baa940a5b6e29d4b81986aabb931a599618f94f53002ee0c76cb1bdcccf99b6d"
     },
     {
       "path": "src/recipient-ui.mjs",
@@ -349,6 +359,11 @@
       "sha256": "ff4761ae6dac0305e78ee61205a9b8d2a2afdf9b1a443071e08211b78e71f305"
     },
     {
+      "path": "tests/cloud-conversation-links.test.mjs",
+      "size_bytes": 6573,
+      "sha256": "e3478cb2c03fca637804489008e3b96d1b52e1a05ec54820cdb1eefa4b7b53b3"
+    },
+    {
       "path": "tests/connection-ui.test.mjs",
       "size_bytes": 9779,
       "sha256": "aa59c499599679bb61887ec75c69ba8821950df76a377d82484f658664cfa0b5"
@@ -385,8 +400,8 @@
     },
     {
       "path": "tests/native-bridge.test.mjs",
-      "size_bytes": 14132,
-      "sha256": "a172814bcc3ae8333c1d403c5d949fa128938496c1a73c1e8621ec74856ccad5"
+      "size_bytes": 15304,
+      "sha256": "df7fb7fd7c6cd1e960539ea88cba471a79bf82bade42de0df0e87fac9fc14a0c"
     },
     {
       "path": "tests/native-delivery.test.mjs",
@@ -400,8 +415,8 @@
     },
     {
       "path": "tests/recipient-ui.test.mjs",
-      "size_bytes": 14112,
-      "sha256": "c5374c3b636837ead7909a5de3cece8311a2901ad52458afe2245e989018f3ae"
+      "size_bytes": 15627,
+      "sha256": "dc2f82105b9d85c79f759f38689586f76d965a12eb7a168258853efb09af090e"
     },
     {
       "path": "tests/recipients.test.mjs",
@@ -440,8 +455,8 @@
     },
     {
       "path": "web/recipient-host.js",
-      "size_bytes": 11193,
-      "sha256": "8b1e67926c59af8b117f50a579bcf722809f15edefc2e26e2fc92326cc407d08"
+      "size_bytes": 11399,
+      "sha256": "f099b66757adf6186a50d13a1b628107c5d8a563c7ea1165f0dca1595b9ce2d4"
     },
     {
       "path": "web/recipient-picker.css",

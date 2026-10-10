@@ -105,6 +105,26 @@ test('opening a conversation uses the host navigation bridge without selecting o
   const rejected=h.callbacks.onOpen({url:'codex://threads/native-recipient'});h.reply(h.sent.at(-1),{isError:true});await assert.rejects(rejected,/refused/);
 });
 
+test('cloud ChatGPT links open on the client without an assistant message or a desktop navigation command',async()=>{
+  const h=harness();await h.initialize();h.show(page({mode:'send_agreed',agreed_message:agreed}));
+  const url='https://chatgpt.com/c/11111111-2222-4333-8444-555555555555';
+  const opening=h.callbacks.onOpen({url,kind:'chatgpt'});
+  const request=h.sent.at(-1);assert.equal(request.method,'ui/open-link');assert.equal(request.params.url,url);
+  h.reply(request,{});await opening;
+  assert.equal(h.sent.some(m=>m.method==='ui/message'||m.method==='ui/update-model-context'||m.params?.name==='post_message'||m.params?.name==='navigate_to_codex_page'),false);
+  assert.equal(h.picker.selected,null);assert.equal(h.picker.disabled,false);
+});
+
+test('a cloud recipient with distinct execution and web IDs displays its verified URL in the dropdown',()=>{
+  const root=new Element(),document={createElement:tag=>new Element(tag)};
+  const context={document,setTimeout,clearTimeout};runInNewContext(pickerSource+'\nglobalThis.mount=mountRecipientPicker;',context);
+  const picker=context.mount(root,{load:async()=>page()});
+  const url='https://chatgpt.com/c/11111111-2222-4333-8444-555555555555';
+  picker.setPage(page({recipients:[{...recipient,source:'codex',execution_mode:'cloud',host_id:'durable',conversation_url:url}]}));
+  assert.equal(root.querySelector('a').href,url);
+  assert.equal(root.querySelectorAll('button').find(b=>b.className==='recipient-option').querySelector('a'),undefined);
+});
+
 test('dropdown links are separate from recipient buttons and remain copyable when the host refuses navigation',async()=>{
   const root=new Element(),document={createElement:tag=>new Element(tag)};let selections=0,opens=0;
   const context={document,setTimeout,clearTimeout};runInNewContext(pickerSource+'\nglobalThis.mount=mountRecipientPicker;',context);

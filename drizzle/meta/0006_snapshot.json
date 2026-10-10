@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "e7ce752c-cb44-4ce3-b2f8-25ba059f7780",
-  "prevId": "b2b8b894-9bff-4757-a5f4-ca7cfaad80f2",
+  "id": "dcd6871e-34b4-47ca-bbc0-729c0fa91ec9",
+  "prevId": "e7ce752c-cb44-4ce3-b2f8-25ba059f7780",
   "tables": {
     "acknowledgments": {
       "name": "acknowledgments",
@@ -1099,6 +1099,96 @@
       },
       "uniqueConstraints": {},
       "checkConstraints": {}
+    },
+    "recipient_conversations": {
+      "name": "recipient_conversations",
+      "columns": {
+        "board": {
+          "name": "board",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "participant_id": {
+          "name": "participant_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "registered_thread_id": {
+          "name": "registered_thread_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "conversation_id": {
+          "name": "conversation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "revision": {
+          "name": "revision",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "observed_at": {
+          "name": "observed_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "recipient_conversation_address": {
+          "name": "recipient_conversation_address",
+          "columns": [
+            "board",
+            "conversation_id"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "recipient_conversations_board_participant_id_participants_board_id_fk": {
+          "name": "recipient_conversations_board_participant_id_participants_board_id_fk",
+          "tableFrom": "recipient_conversations",
+          "tableTo": "participants",
+          "columnsFrom": [
+            "board",
+            "participant_id"
+          ],
+          "columnsTo": [
+            "board",
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "recipient_conversations_board_participant_id_pk": {
+          "columns": [
+            "board",
+            "participant_id"
+          ],
+          "name": "recipient_conversations_board_participant_id_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {
+        "recipient_conversation_revision": {
+          "name": "recipient_conversation_revision",
+          "value": "\"recipient_conversations\".\"revision\" > 0"
+        }
+      }
     },
     "recipient_metadata": {
       "name": "recipient_metadata",

@@ -21,7 +21,8 @@ export const recipientMetadata=sqliteTable('recipient_metadata',{
   board:text('board').notNull(),participant_id:text('participant_id').notNull(),title:text('title'),search_name:text('search_name').notNull().default(''),
   source:text('source').notNull().default('unknown'),execution_mode:text('execution_mode').notNull().default('unknown'),
   host_id:text('host_id'),workspace_name:text('workspace_name'),project_status:text('project_status').notNull().default('unknown'),
-  project_id:text('project_id'),project_name:text('project_name'),project_observed_at:text('project_observed_at'),observed_at:text('observed_at').notNull()
+  project_id:text('project_id'),project_name:text('project_name'),project_observed_at:text('project_observed_at'),observed_at:text('observed_at').notNull(),
+  conversation_url:text('conversation_url')
 },t=>[primaryKey({columns:[t.board,t.participant_id]}),foreignKey({columns:[t.board,t.participant_id],foreignColumns:[participants.board,participants.id]}),
   check('recipient_source',sql`${t.source} IN ('chatgpt','codex','dot','unknown')`),
   check('recipient_execution_mode',sql`${t.execution_mode} IN ('local','cloud','unknown')`),
