@@ -5,7 +5,7 @@ import { recipientWidgetMeta, showRecipientPicker } from './recipient-ui.mjs';
 import { readRecipientResource, getRecipient } from './recipient-directory.mjs';
 import { confirmationConversationLink } from '../skills/paprika-messenger/scripts/conversation-link.mjs';
 const serverInfo = {
-  name:'Paprika Messenger', version:'0.6.0-rc.4',
+  name:'Paprika Messenger', version:'0.6.0-rc.5',
   icons:[{src:'https://raw.githubusercontent.com/newbiesitl/paprika-messenger/main/skills/paprika-messenger/assets/dot-icon.png',mimeType:'image/png',sizes:['1254x1254']}]
 };
 const serverMetadata = {'io.modelcontextprotocol/serverInfo':serverInfo};
