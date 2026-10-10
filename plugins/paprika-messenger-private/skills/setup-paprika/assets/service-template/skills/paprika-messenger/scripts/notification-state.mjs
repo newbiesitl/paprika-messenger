@@ -6,7 +6,8 @@ import { fileURLToPath } from 'node:url';
 import { digest, routingId, readJsonInput } from './prepare-delivery.mjs';
 
 const fields = ['deployment', 'board', 'mode', 'key', 'sender_id', 'sender_thread_id',
-  'recipient_id', 'recipient_thread_id', 'host_id', 'payload_digest', 'reference', 'transport'];
+  'recipient_id', 'recipient_thread_id', 'host_id', 'payload_digest', 'reference', 'transport',
+  'native_kind', 'registered_thread_id', 'mapping_revision'];
 const states = ['submitting', 'submitted', 'failed', 'unknown', 'unavailable'];
 
 function metadata(plan) {
@@ -18,6 +19,10 @@ function metadata(plan) {
   for (const field of ['sender_id', 'recipient_id']) routingId(plan[field], field);
   for (const field of ['sender_thread_id', 'recipient_thread_id']) routingId(plan[field], field, 160);
   if (plan.host_id !== undefined) routingId(plan.host_id, 'host_id', 160);
+  if (plan.native_kind !== undefined && !['codex', 'chatgpt'].includes(plan.native_kind)) throw new Error('Invalid native destination kind.');
+  if (plan.registered_thread_id !== undefined) routingId(plan.registered_thread_id, 'registered_thread_id', 160);
+  if (plan.mapping_revision !== undefined && (!Number.isSafeInteger(plan.mapping_revision) || plan.mapping_revision < 1))
+    throw new Error('Invalid mapping revision.');
   if (!/^[a-f0-9]{64}$/.test(plan.payload_digest)) throw new Error('Require a prepared payload digest.');
   const reference = plan.mode === 'board' ? `New Paprika Messenger message on board ${plan.board}: ${plan.key}.`
     : `Paprika Messenger direct delivery: ${plan.key}.`;

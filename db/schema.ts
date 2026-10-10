@@ -26,6 +26,11 @@ export const recipientMetadata=sqliteTable('recipient_metadata',{
   check('recipient_source',sql`${t.source} IN ('chatgpt','codex','dot','unknown')`),
   check('recipient_execution_mode',sql`${t.execution_mode} IN ('local','cloud','unknown')`),
   check('recipient_project_status',sql`${t.project_status} IN ('assigned','unassigned','unknown')`)]);
+export const recipientConversations=sqliteTable('recipient_conversations',{
+  board:text('board').notNull(),participant_id:text('participant_id').notNull(),registered_thread_id:text('registered_thread_id').notNull(),
+  conversation_id:text('conversation_id').notNull(),revision:integer('revision').notNull(),observed_at:text('observed_at').notNull()
+},t=>[primaryKey({columns:[t.board,t.participant_id]}),foreignKey({columns:[t.board,t.participant_id],foreignColumns:[participants.board,participants.id]}),
+  unique('recipient_conversation_address').on(t.board,t.conversation_id),check('recipient_conversation_revision',sql`${t.revision} > 0`)]);
 export const recipientActivity=sqliteTable('recipient_activity',{
   board:text('board').notNull(),participant_id:text('participant_id').notNull(),activity_sequence:integer('activity_sequence').notNull(),last_communicated_at:text('last_communicated_at').notNull()
 },t=>[primaryKey({columns:[t.board,t.participant_id]}),foreignKey({columns:[t.board,t.participant_id],foreignColumns:[participants.board,participants.id]}),

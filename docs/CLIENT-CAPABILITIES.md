@@ -24,6 +24,8 @@ unknown and verify capabilities directly. See the official
 
 ## Check sending, reading and waking separately
 
+For Codex native bridge sends, verify `send_message_to_thread` on the executing host and read the exact destination before sending. Codex-to-Codex retains the verified native thread/host. Codex-to-ChatGPT uses the actual conversation ID, with `chatgpt_destination` on the recipient directory when the registered runtime differs. `set_recipient_conversation` saves that explicit association; it does not discover it from a label or authenticate the caller's host observations. Direct sends carry the message without a board post or event task. Stored-message sends continue to select only one notification transport. A successful Codex sender does not prove a cloud sender or Dot exposes the same destination namespace. See [Native bridge](../skills/paprika-messenger/references/native-bridge.md).
+
 Recipient navigation is a separate capability. Service 0.6.0-rc.3 returns an optional link from verified native source, execution mode, host and thread metadata. Local Codex links open on the computer handling `codex://threads/<thread-id>`; they do not choose a remote computer. ChatGPT links open the native conversation in the signed-in account. Missing metadata, remote Codex and cloud Codex have no guessed link. Custom MCP App links use the host's `ui/open-link` request and respect refusal; a native question panel uses the explicit Open action. Navigation never sends, resumes a task or changes its host. Verify actual mobile/custom-scheme behavior separately.
 
 For each requested surface, retain a non-secret `client_checks` entry with its

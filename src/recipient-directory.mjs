@@ -8,9 +8,11 @@ export const normalizeRecipientSearch = value => value.normalize('NFKC').toLower
 const recipientColumns = `p.id AS participant_id,p.thread_id,p.label AS registered_label,p.kind,
   m.title,m.source,m.execution_mode,m.host_id,m.workspace_name,m.project_status,m.project_id,m.project_name,
   m.observed_at,m.project_observed_at,a.last_communicated_at,
+  c.conversation_id,c.registered_thread_id,c.revision AS mapping_revision,c.observed_at AS mapping_observed_at,
   COALESCE(a.last_communicated_at,p.created_at) AS recency_at`;
 const recipientJoins = `FROM participants p LEFT JOIN recipient_metadata m ON m.board=p.board AND m.participant_id=p.id
-  LEFT JOIN recipient_activity a ON a.board=p.board AND a.participant_id=p.id`;
+  LEFT JOIN recipient_activity a ON a.board=p.board AND a.participant_id=p.id
+  LEFT JOIN recipient_conversations c ON c.board=p.board AND c.participant_id=p.id`;
 function recipientSnapshot(row) {
   const fresh = value => value && Date.now()-Date.parse(value) < recipientMetadataTtlSeconds*1000;
   const recipient={participant_id:row.participant_id,thread_id:row.thread_id,thread_name:row.title ?? row.registered_label,
@@ -20,7 +22,10 @@ function recipientSnapshot(row) {
     project_id:row.project_id ?? null,project_name:row.project_name ?? null,
     metadata_observed_at:row.observed_at ?? null,metadata_stale:!fresh(row.observed_at),
     project_metadata_stale:!fresh(row.project_observed_at),last_communicated_at:row.last_communicated_at ?? null,
-    recency_at:row.recency_at};
+    recency_at:row.recency_at,chatgpt_destination:row.conversation_id ? {
+      registered_thread_id:row.registered_thread_id,conversation_id:row.conversation_id,
+      conversation_url:'https://chatgpt.com/c/'+row.conversation_id,revision:row.mapping_revision,observed_at:row.mapping_observed_at
+    } : null};
   return {...recipient,conversation_link:conversationLink(recipient)};
 }
 function recipientCursor(value, board, query) {
@@ -39,7 +44,7 @@ export async function listRecipients(service, args) {
   const cursor=recipientCursor(args.cursor,board,query),values=[board];
   let where='p.board=?';
   if(query){where+=` AND (instr(lower(p.id),?)>0 OR instr(lower(COALESCE(p.thread_id,'')),?)>0
-    OR instr(COALESCE(m.search_name,lower(p.label)),?)>0)`;values.push(query,query,query);}
+    OR instr(COALESCE(m.search_name,lower(p.label)),?)>0 OR instr(COALESCE(c.conversation_id,''),?)>0)`;values.push(query,query,query,query);}
   if(cursor){where+=` AND (COALESCE(a.last_communicated_at,p.created_at)<? OR
     (COALESCE(a.last_communicated_at,p.created_at)=? AND p.id>?))`;values.push(cursor[3],cursor[3],cursor[4]);}
   values.push(limit+1);
@@ -141,7 +146,8 @@ export async function readRecipientResource(service,uri) {
   let board,pid;try{board=decodeURIComponent(match[1]);pid=decodeURIComponent(match[2]);}catch{fail(400,'invalid_argument','Invalid recipient resource URI.');}
   const {recipient}=await getRecipient(service,{board,participant_id:pid});
   return {contents:[{uri,mimeType:'application/json',text:JSON.stringify({board,receiver_id:recipient.participant_id,
-    receiver_thread_id:recipient.thread_id,thread_name:recipient.thread_name,project_id:recipient.project_id,
+    receiver_thread_id:recipient.thread_id,chatgpt_destination:recipient.chatgpt_destination,
+    thread_name:recipient.thread_name,project_id:recipient.project_id,
     conversation_link:recipient.conversation_link,
     purpose:'Recipient selection only. Deliver only the message explicitly requested by the user.'})}]};
 }

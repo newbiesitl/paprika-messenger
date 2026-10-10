@@ -1,5 +1,7 @@
 # Native delivery wake probe
 
+The reusable [Codex bridge workflow](../../skills/paprika-messenger/references/native-bridge.md) now prepares ordinary native sends from a fresh recipient-directory result and verified host destination. Its separate `chatgpt_destination` mapping preserves the registered runtime/inbox. The diagnostics below remain synthetic tests and do not create an unattended router.
+
 An inbox write alone does not demonstrate that an idle chat starts a turn. This experiment prepares one synthetic direct message, reuses Messenger's durable native-delivery checkpoint, and checks actual recipient history for the exact input and final response in a new turn. It does not consume an event-hook or scheduled-task slot.
 
 The executing host must expose `mcp__codex_app__send_message_to_thread` and `mcp__codex_app__read_thread`. A remote Messenger service cannot invoke those desktop tools by itself. This is a test harness for a user-authorized, selected recipient, not an autonomous background router. The [live results](LIVE-RESULT.md) verify one idle cloud receiver backed by Codex.

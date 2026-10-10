@@ -12,6 +12,8 @@ Messages support replies, explicit receipt acknowledgments, safe retries, recove
 
 ## Install for your account
 
+The source now includes a [Codex native bridge](skills/paprika-messenger/references/native-bridge.md) for requested messages to existing Codex or actual ChatGPT conversations. A separate recipient-to-conversation mapping keeps a ChatGPT conversation ID distinct from its registered execution thread. Direct delivery uses the sender's built-in host tool without creating an event-hook task. It requires that tool on the sending host; it does not implement cloud-to-cloud or Dot relaying. This source change must be deployed and the client package updated before the mapping tool is available in an existing installation.
+
 Candidate bundle **1.4.0-rc.2** includes service source **0.6.0-rc.2**, Sites onboarding and messaging skills. It prefers the host's built-in recipient question panel where available, with project → thread labels, full IDs, literal name/ID search, main-default board selection, active metadata refresh and pages of 50. It also corrects the modern MCP cache fields required when the host reads the embedded UI resource. Mobile end-to-end behavior requires testing after installation. The [1.4.0-rc.1 candidate](https://github.com/newbiesitl/paprika-messenger/releases/tag/v1.4.0-rc.1) and stable [1.3.11 release](https://github.com/newbiesitl/paprika-messenger/releases/tag/v1.3.11) remain available for fallback. **The default is a private account installation**, for supported devices signed into the same account. GitHub supplies the package; Plugin Creator saves it to the account.
 
 Open ChatGPT Work or Codex with Plugin Creator available, and use this prompt:

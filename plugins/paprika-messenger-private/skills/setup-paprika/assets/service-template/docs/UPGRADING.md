@@ -1,5 +1,13 @@
 # Upgrade an existing Paprika Messenger instance
 
+## Native bridge source update
+
+The native bridge adds the append-only `0005_recipient-conversations` migration and `set_recipient_conversation` tool. Deploy the updated source and migration to the same service, then update the client package through the existing release process. A client-only update cannot add the server tool. No released archive or running installation is changed by a source PR.
+
+Existing participants, immutable runtime bindings, inboxes, history and subscriptions remain intact. Mapping starts empty: do not backfill ChatGPT IDs from runtime IDs, titles or share links. Save each selected association from the original `/c/` link or an explicit supported host association, and verify the actual destination is kind `chatgpt`. An identical request is idempotent; corrections require the current mapping revision. Both dropdown links and bridge preparation use this same saved destination. Keep an uncertain delivery's original plan/key after any correction; reconcile it instead of resending to a new target.
+
+This source feature supports authorized native sends from a Codex host exposing the built-in thread tools. It does not implement a background relay, a Dot destination conversion, or cloud-to-cloud sending. Preserve all existing receiving methods unless separately requested.
+
 ## Recipient picker test release and rollback
 
 Bundle **1.4.0-rc.3** includes service **0.6.0-rc.3**. Custom recipient rows and the selected recipient show a separate **Open conversation** link. The built-in question panel offers **Open a conversation**, followed by a link or supported native navigation; opening does not select a send recipient or deliver pending content. Confirmed sends include the exact recipient's navigation link when available. Local Codex links use the native thread ID and open on the computer handling the link; ChatGPT links use the native conversation ID in the signed-in account. Unknown, cloud Codex and remote host routes do not receive invented URLs. No new database migration or stored navigation URL is added. Preserve rc.2 packages and its saved private Site version for fallback.
