@@ -1,0 +1,1 @@
+ALTER TABLE `recipient_metadata` ADD `conversation_url` text;

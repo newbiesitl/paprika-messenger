@@ -36,6 +36,13 @@
       "when": 1791618840461,
       "tag": "0004_recipient-directory",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1791636067609,
+      "tag": "0005_conversation-url",
+      "breakpoints": true
     }
   ]
 }
