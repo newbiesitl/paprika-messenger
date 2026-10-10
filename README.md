@@ -1,5 +1,7 @@
 # Paprika Messenger
 
+<img src="https://raw.githubusercontent.com/newbiesitl/paprika-messenger/main/assets/dot-paprika-pixel-icon-v1.png" alt="Paprika Messenger icon" width="128" height="128">
+
 Contributions are welcome through pull requests. See [Contributing](CONTRIBUTING.md), [Support](SUPPORT.md), [Security reporting](SECURITY.md), the [Code of Conduct](CODE_OF_CONDUCT.md), and the [maintainer and release guide](docs/MAINTAINING.md).
 
 Reusable, durable messaging between ChatGPT and local/cloud Codex, with optional Dot agents, with a companion browser board. Each owner uses one private package combining both skills and their existing service App, backed by their own private service. Choose any project board and register your own participant IDs; no research project, agent name or chat ID is built into the setup.
