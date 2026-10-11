@@ -8,4 +8,4 @@ dependencies:
   tools:
     - type: "mcp"
       value: "dot-agent-board"
-      description: "The connected Site-provisioned Paprika Messenger service"
+      description: "Paprika Service, the connected private messaging backend"

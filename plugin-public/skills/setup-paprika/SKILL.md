@@ -3,13 +3,15 @@ name: setup-paprika
 description: Install Paprika Messenger as a private account plugin by default, verify its scope, then check Sites, reuse or deploy the user's own private service and connect ChatGPT and local/cloud Codex with optional Dot support. Use for installation, onboarding, first-time deployment, connection setup or resuming setup; use paprika-messenger for routine messages and inbox checks.
 ---
 
-Help the user obtain one working private communication service, combine its existing App binding with this current package, save one private account plugin and verify each requested client. The package includes the messaging skill, this onboarding skill and the complete service source, version **0.6.0-rc.2**, under `assets/service-template/`. It has no shared MCP endpoint. Each owner uses their own Site and database. Explicit user instructions take priority; if they request another hosting or identity design, resolve the source's Sites authentication requirement before deploying.
+Help the user obtain one working private communication service, combine its existing App binding with this current package, save one private account plugin and verify each requested client. The package includes the messaging skill, this onboarding skill and the complete service source, version **0.6.0**, under `assets/service-template/`. It has no shared MCP endpoint. Each owner uses their own Site and database. Explicit user instructions take priority; if they request another hosting or identity design, resolve the source's Sites authentication requirement before deploying.
 
 The manifest designates this skill for onboarding. A host may offer or launch it after installation; do not claim that every Install click automatically runs setup or deploys a server. If onboarding has not started, the user can ask to set up Paprika Messenger. Saving the account package, installing it, publishing a Site, displaying an installation card, connecting a client and enabling recipient notifications are separate milestones.
 
 Explain briefly that messages and routing data are stored in the owner's private service and are not sent to the package publisher. The bundled [privacy notice](../../PRIVACY.md) explains storage and deletion. Setup needs no transcripts, private message histories or pasted authentication secrets.
 
 ## Prepare one account package by default
+
+Use **Paprika Messenger** for the main package and **Paprika Service** for its backend connector. Preserve the original red Paprika pixel icon for the package and both skills. ChatGPT owns the `@` picker: use the full **@Paprika Messenger** name to distinguish it from the service, and do not add unsupported visibility flags or disable its required App to conceal it.
 
 The default request means one PRIVATE account plugin for supported cloud, mobile and desktop clients signed into the same account. A local marketplace installation is an explicit device-only choice. Both use the same current package version, skills and Paprika pixel logo/composer icon. Do not require a separate skills plugin alongside the final service-bound package.
 
@@ -37,7 +39,7 @@ For a new deployment or requested source update, verify Node.js 24 or later, npm
 
 ## Default board and receiving lifetime
 
-For a new communication binding, discover boards and use `main` unless the user selected another board or the receiving chat already has an established binding. Register or resolve each receiver on that board; preserve existing project bindings. A request to establish ongoing communication includes non-expiring events on supported receiving hosts. Request `ttlMs: null` when the host exposes it; service 0.6.0-rc.2 also grants omitted lifetime without expiration. Require the verified host task, exact receiver readiness and an actual null expiry before reporting indefinite receiving. Existing finite or expired subscriptions need host re-subscription; installing the package alone cannot convert them.
+For a new communication binding, discover boards and use `main` unless the user selected another board or the receiving chat already has an established binding. Register or resolve each receiver on that board; preserve existing project bindings. A request to establish ongoing communication includes non-expiring events on supported receiving hosts. Request `ttlMs: null` when the host exposes it; service 0.6.0 also grants omitted lifetime without expiration. Require the verified host task, exact receiver readiness and an actual null expiry before reporting indefinite receiving. Existing finite or expired subscriptions need host re-subscription; installing the package alone cannot convert them.
 
 ## Select the service type during onboarding
 
@@ -55,7 +57,7 @@ For `chatgpt-codex`, skip Dot discovery, registration, connection and verificati
 
 Read [deployment details](references/deployment.md), including its resumable checkpoint rules, and apply the currently available Sites building, hosting and MCP workflows. Use the bundled source rather than generating a different board or replacing its authentication.
 
-1. Run `node <this-skill-directory>/scripts/init-service.mjs <absolute-empty-destination>`. The helper resolves its packaged source relative to itself, refuses to overwrite existing files and reports `service_version`; confirm **0.6.0-rc.2**. On a resume, inspect the existing destination and checkpoint instead of copying again. Read the template's [setup guide](assets/service-template/docs/SETUP.md) and [security model](assets/service-template/docs/SECURITY.md).
+1. Run `node <this-skill-directory>/scripts/init-service.mjs <absolute-empty-destination>`. The helper resolves its packaged source relative to itself, refuses to overwrite existing files and reports `service_version`; confirm **0.6.0**. On a resume, inspect the existing destination and checkpoint instead of copying again. Read the template's [setup guide](assets/service-template/docs/SETUP.md) and [security model](assets/service-template/docs/SECURITY.md).
 2. In that destination, run `npm ci` and the required tests/build. Preserve the lockfile, Worker implementation and append-only migrations. Register the Site once through Sites, using logical D1 binding `DB` and capability `mcp`; persist the returned project ID immediately. Registration starts private. This board does not need access to other workspace apps, so do not request that capability or enable sharing.
 3. Configure this owner's verified identity and this Site's exact origin using Sites runtime settings. Publish through the current Sites source/version/private-deployment workflow and confirm successful deployment. Keep credentials in transient session memory and hidden stdin, never in source, checkpoints or chat. Preserve the initial private audience.
 

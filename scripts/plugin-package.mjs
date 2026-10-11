@@ -71,7 +71,7 @@ export async function preparePluginPackage({ repository, kind = 'account', outpu
   const extension = manifest.extensions['com.openai'];
   if (kind === 'account') {
     manifest.name = 'paprika-messenger-private';
-    extension.interface.displayName = 'Paprika Messenger (Private)';
+    extension.interface.displayName = 'Paprika Messenger';
     extension.interface.longDescription = 'Private account edition. ' + extension.interface.longDescription;
     delete extension.publication; delete extension.review;
   }
@@ -100,7 +100,7 @@ export async function preparePluginPackage({ repository, kind = 'account', outpu
     onboarding_skill: extension.onboardingSkill };
   await writeFile(resolve(pluginRoot, bundleMetadataFile), JSON.stringify(bundle, null, 2) + '\n');
   if (kind === 'account')
-    await writeFile(resolve(pluginRoot, 'README.md'), '# Paprika Messenger (Private)\n\nPlugin version ' + manifest.version
+    await writeFile(resolve(pluginRoot, 'README.md'), '# Paprika Messenger\n\nPlugin version ' + manifest.version
       + ', bundled service version ' + service.service_version + '. This owner-neutral installation kit includes setup, messaging skills and complete reusable service source. Bind it to the selected owner’s existing service App using the shipped merge-service-plugin.mjs helper before saving the final standalone ZIP through Plugin Creator\'s hosted account-save workflow, then install the returned private account plugin for supported cloud, mobile and desktop clients. Select Personal account context for personal scope; an active workspace selects workspace scope. A local Codex marketplace install does not complete account installation. See [Account installation](https://github.com/newbiesitl/paprika-messenger/blob/main/docs/ACCOUNT-PLUGIN.md). Open onboarding to verify the account package, check Sites and reuse your service or deploy a new private instance. The final package references the existing service App for authenticated tools; verify each client separately; receiving chats opt in to notifications separately.\n');
   if (kind === 'local')
     await writeFile(resolve(pluginRoot, 'README.md'), '# Paprika Messenger (Local)\n\nPlugin version ' + manifest.version

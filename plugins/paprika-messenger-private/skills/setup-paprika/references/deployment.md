@@ -63,7 +63,7 @@ Initialize only a new empty user workspace with `scripts/init-service.mjs`. Chec
 
 The fresh manifest declares `d1: "DB"`, `r2: null` and `capabilities: ["mcp"]` with no Site ID. Do not insert another owner's project ID, physical database identifier, endpoint or credentials. Sites owns the real D1 provisioning and OAuth boundary. The board does not call other workspace apps; omit `enable_plugins` during registration.
 
-Register once with native `create_site`. Immediately merge the exact returned ID into the manifest as `project_id` using the current Sites helper; preserve its other fields. Record that ID before any dependent action. Keep the returned source credential transient. If registration succeeded without a credential, request one for that same project rather than registering again.
+Register once with native `create_site`, using **Paprika Service** as the display title so its provisioned connector is distinct from the **Paprika Messenger** package. Immediately merge the exact returned ID into the manifest as `project_id` using the current Sites helper; preserve its other fields. Record that ID before any dependent action. Keep the returned source credential transient. If registration succeeded without a credential, request one for that same project rather than registering again.
 
 ## Configure and publish
 

@@ -5,8 +5,7 @@ import { recipientWidgetMeta, showRecipientPicker } from './recipient-ui.mjs';
 import { readRecipientResource, getRecipient } from './recipient-directory.mjs';
 import { confirmationConversationLink } from '../skills/paprika-messenger/scripts/conversation-link.mjs';
 const serverInfo = {
-  name:'Paprika Messenger', version:'0.6.0-rc.6',
-  icons:[{src:'https://raw.githubusercontent.com/newbiesitl/paprika-messenger/main/skills/paprika-messenger/assets/dot-icon.png',mimeType:'image/png',sizes:['1254x1254']}]
+  name:'Paprika Service', version:'0.6.0'
 };
 const serverMetadata = {'io.modelcontextprotocol/serverInfo':serverInfo};
 const recipientInstructions='For a requested recipient menu, prefer an available routine host user-choice panel with registered names/full native IDs, native project prefixes, Search, Change board, Refresh thread details, Open a conversation and More actions. Read list_recipients on main by default and refresh only the current 50 verified native bindings. Wait for a real user answer; a preselected option or accepted asynchronous question is not selection. Choosing first sends nothing. For ChatGPT links, prefer an exposed client-side URL action or a clickable URL; do not trigger an assistant follow-up or desktop navigation from a phone. Preserve a verified conversation_url during ordinary metadata refresh. Opening is navigation only; show a verified conversation link after selection and in send confirmations, and never invent a remote computer route. For already agreed content, preserve the exact message and one key through controls, then complete that one authorized send after an actual recipient answer. The embedded show_recipient_picker is an alternative on MCP Apps hosts. Never claim a table or data response displayed an interactive menu; result _meta is model-hidden and does not establish UI rendering.';
