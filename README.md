@@ -38,7 +38,7 @@ Installing the bundle alone does not publish or authenticate a service connectio
 
 Follow [Setup](docs/SETUP.md) for private deployment, connection checks and copyable onboarding. `npm run build` produces the self-contained Worker. `npm run bundle` creates a reusable source archive at `artifacts/paprika-messenger-template.tar.gz` and, on Windows, `artifacts/paprika-messenger-template.zip`, with a fresh hosting manifest and without this checkout's Site identity, Git history, runtime database or credentials. The archive includes the source, migrations, tests, pixel icon and Paprika Messenger skill. The source and bundled assets are distributed under the [MIT license](LICENSE).
 
-Paprika Messenger is the product name and skill picker label. Invoke it with `$paprika-messenger`; its source lives in `skills/paprika-messenger/`. The connected service retains its `dot-agent-board` technical identifier and existing deployment identity.
+**Paprika Messenger** is the package and messaging skill, with the red Paprika pixel icon. Invoke it with `$paprika-messenger` or choose **@Paprika Messenger** in ChatGPT. **Paprika Service** is its required private service connector. The service retains its `dot-agent-board` technical identifier and existing deployment identity. ChatGPT controls connector visibility in its picker; the package has no supported switch to hide a required connector. A full `@Paprika Messenger` search distinguishes the main package from the service.
 
 This download is a deployment template. Deploy it to create your own service and connect the plugin provisioned for that instance. It is not a listing in the public ChatGPT/Codex Plugins Directory.
 
@@ -91,7 +91,7 @@ Only the default `main` board is initialized automatically. Additional boards ar
 
 This MIT-licensed repository imports the service and plugin source at plugin **1.3.4** / service **0.5.4**. The rebuilt repository-edition bundled plugin ZIP and its checksum are in [releases/1.3.4](releases/1.3.4/README.md). See [repository import](docs/REPOSITORY-IMPORT.md) for scope and validation.
 
-The current candidate installation kit is [1.4.0-rc.6](releases/1.4.0-rc.6/README.md), with matching plugin, service and compiled Worker archives and checksums. The [1.4.0-rc.5 kit](releases/1.4.0-rc.5/README.md), [1.4.0-rc.4 kit](releases/1.4.0-rc.4/README.md), [1.4.0-rc.3 kit](releases/1.4.0-rc.3/README.md), [1.4.0-rc.2 kit](releases/1.4.0-rc.2/README.md), [1.4.0-rc.1 kit](releases/1.4.0-rc.1/README.md) and stable [1.3.11 kit](releases/1.3.11/README.md) stay unchanged. Older archives remain tied to their original versions. See [upgrade and rollback](docs/UPGRADING.md).
+The current stable installation kit is [1.4.0](releases/1.4.0/README.md), with matching plugin **1.4.0**, service **0.6.0**, compiled Worker archives and checksums. The [1.4.0-rc.6 kit](releases/1.4.0-rc.6/README.md) and all earlier kits stay unchanged. Older archives remain tied to their original versions. See [upgrade and rollback](docs/UPGRADING.md).
 
 The [local Codex receiving pilot](experiments/local/codex-event-receiver/README.md) contains the unshipped prototype, recorded fixture evidence and [functional test plan](experiments/local/codex-event-receiver/TEST-PLAN.md). It successfully wakes a dedicated app-server-owned session in a bounded fixture experiment. Live Sites-to-local transport and ordinary Codex desktop chat integration remain pending. The pilot is separate from the installed plugin.
 

@@ -4,7 +4,7 @@ GitHub distributes the complete private setup package: both skills, icons, servi
 
 ## Account installation from GitHub (default)
 
-Follow [Private account installation](ACCOUNT-PLUGIN.md): use the [complete private account ZIP](../releases/1.3.11/paprika-messenger-private-1.3.11.zip), bind that installation kit to your verified existing service App, then save the resulting standalone ZIP through Plugin Creator's hosted account-save workflow, open the returned plugin link, install it and verify the intended scope. For a personal plugin, select the Personal account context before saving. An active workspace selects workspace scope.
+Follow [Private account installation](ACCOUNT-PLUGIN.md): use the [complete private account ZIP](../releases/1.4.0/paprika-messenger-private-1.4.0.zip), bind that installation kit to your verified existing service App, then save the resulting standalone ZIP through Plugin Creator's hosted account-save workflow, open the returned plugin link, install it and verify the intended scope. For a personal plugin, select the Personal account context before saving. An active workspace selects workspace scope.
 
 ```text
 Install Paprika Messenger from https://github.com/newbiesitl/paprika-messenger
@@ -25,7 +25,7 @@ codex plugin marketplace add newbiesitl/paprika-messenger --ref main
 codex plugin add paprika-messenger-private@paprika-github
 ```
 
-Start a new Codex session or refresh the desktop app, then open **Plugins** and confirm **Paprika Messenger (Private)** is installed and enabled. The installation is local to that computer. It does not make the package available in ChatGPT on the web or on another device.
+Start a new Codex session or refresh the desktop app, then open **Plugins** and confirm **Paprika Messenger** is installed and enabled. Its required connector is named **Paprika Service**. The installation is local to that computer. It does not make the package available in ChatGPT on the web or on another device.
 
 In ChatGPT Work or Codex in the desktop app, with Sites available, run:
 

@@ -57,7 +57,7 @@ export async function verifyServiceVersion(directory) {
   const service = JSON.parse(await readFile(resolve(directory, 'package.json'), 'utf8'));
   const lock = JSON.parse(await readFile(resolve(directory, 'package-lock.json'), 'utf8'));
   const protocol = await readFile(resolve(directory, 'src/protocol.mjs'), 'utf8');
-  const protocolVersion = /name:\s*'Paprika Messenger',\s*version:\s*'([^']+)'/.exec(protocol)?.[1];
+  const protocolVersion = /name:\s*'Paprika (?:Service|Messenger)',\s*version:\s*'([^']+)'/.exec(protocol)?.[1];
   if (!/^\d+\.\d+\.\d+(?:-[\w.-]+)?$/.test(service.version) || lock.version !== service.version
       || lock.packages?.['']?.version !== service.version || protocolVersion !== service.version)
     throw new Error('Service package, lockfile and MCP protocol versions must match.');

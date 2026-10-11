@@ -1,5 +1,13 @@
 # Upgrade an existing Paprika Messenger instance
 
+## Stable 1.4.0 and distinct connector names
+
+Plugin **1.4.0** bundles service **0.6.0** and promotes the rc.6 feature set to the stable release channel. The main package remains **Paprika Messenger**, with the original red Paprika pixel icon; its backend is **Paprika Service**. Both packaged skills declare that icon. The service's MCP metadata uses its new display name, while technical plugin/App IDs, OAuth, boards, addresses and receiving settings remain unchanged.
+
+For a new private service, onboarding uses **Paprika Service** as the Site title. For an existing deployment, update the display title through Sites metadata and the connected App's **App name** setting when needed, preserving its endpoint and connection. Updating a package alone cannot rename App-owned presentation or deploy the service. ChatGPT currently exposes no package setting to hide a required connector from `@`; choose **@Paprika Messenger** to filter to the main package. Keep the required App connected.
+
+Deploy the updated source to the same private Site only when upgrading its service. Preserve the previous saved Site version and account archive for rollback. Hosts still need their own verified native tools for bridge delivery, and their own supported receiving route for automatic updates. The release's automated checks do not certify every mobile or cloud host.
+
 ## Native bridge source update
 
 Plugin **1.4.0-rc.6** / service **0.6.0-rc.6** is a prerelease of the Codex native bridge and explicit recipient-to-ChatGPT conversation mapping. It retains the rc.5 navigation behavior and existing Codex-to-Codex route. Preserve the previous installed account archive, release ID and saved Site version before rollout. Roll back the service with its previous saved version without removing the additive mapping table; account-package rollback requires a new higher version. This candidate is not a stable release.
