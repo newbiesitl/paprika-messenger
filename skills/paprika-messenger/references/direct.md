@@ -14,6 +14,8 @@ Show a compact, pasteable return address with `board`, `thread_id`, `participant
 
 ## Authorization and route preparation
 
+For a Codex host sending to actual ChatGPT, or an explicit native bridge request, use [Native bridge](native-bridge.md) for destination resolution and preparation. It reads the saved recipient-to-conversation mapping instead of assuming the registered runtime ID is the visible chat. That route reuses the checkpoint and submission rules below. Codex-to-Codex uses the built-in native thread tool with no ChatGPT mapping.
+
 Send-and-notify is the default Messenger workflow. `$paprika-messenger send-and-notify to <recipient> on <board>: <message>` requests storage followed by one notification. `talk <message>` selects the established ChatGPT, Codex or optional Dot peer; `ask <question>` additionally requests retrieving an actual answer when available. `$paprika-messenger direct to <recipient> on <board>: <text>` instead requests native delivery of that text without a board post. Honor an explicit store-only request.
 
 Check `get_service_config` when available and honor its supported service type. In `chatgpt-codex`, never resolve or require a Dot; `talk` and `ask` need a selected ChatGPT/Codex recipient. If none is established, request the recipient rather than guessing. Discover native sending capability in the current host independently of Dot availability; absent native tools leave confirmed board storage usable. Read-only subscription discovery works even without event runtime configuration.

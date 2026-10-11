@@ -1,6 +1,7 @@
 import { fail, id, text, plainText, strict, integer, encodeCursor, decodeCursor } from './validation.mjs';
 import { serviceConfiguration } from './service-config.mjs';
 import { listRecipients, getRecipient, updateRecipientMetadata, recipientMentions } from './recipient-directory.mjs';
+import { setRecipientConversation } from './recipient-conversations.mjs';
 
 // All user identities originate at the Sites hosting boundary. Never trust caller-supplied labels.
 export function authorize(request, env) {
@@ -29,6 +30,7 @@ export class BoardService {
   }
   async list_recipients(a) { return listRecipients(this,a); }
   async get_recipient(a) { return getRecipient(this,a); }
+  async set_recipient_conversation(a) { return setRecipientConversation(this,a); }
   async update_recipient_metadata(a) { return updateRecipientMetadata(this,a); }
   async search_recipient_mentions(a) { return recipientMentions(this,a); }
   async board(value) {

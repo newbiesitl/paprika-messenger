@@ -35,6 +35,28 @@ test('HTTP and MCP confirmed sends return the native recipient link and serve th
   } finally { linkDb.close(); }
 });
 
+test('generated Worker saves mapped destinations through authenticated MCP and returns the same link through HTTP',async()=>{
+  const localDb=new SqliteD1();localDb.connection.exec(await loadMigrations());const localEnv={...env,DB:localDb};
+  try {
+    const service=new BoardService(localDb,'owner');
+    await service.register_participant({board:'main',participant_id:'mapped',label:'Mapped',kind:'thread',thread_id:'execution-thread'});
+    const conversation='11111111-2222-4333-8444-555555555555';
+    const args={board:'main',participant_id:'mapped',registered_thread_id:'execution-thread',
+      conversation:`https://chatgpt.com/g/g-p-fixture/c/${conversation}`,host_observation:{id:conversation,kind:'chatgpt'},expected_revision:0};
+    const body={jsonrpc:'2.0',id:1,method:'tools/call',params:{name:'set_recipient_conversation',arguments:args}};
+    assert.equal((await handle(request('/mcp',body,'other-account'),localEnv)).status,403);
+    const saved=await (await handle(request('/mcp',body),localEnv)).json();
+    assert.equal(saved.result.isError,false,JSON.stringify(saved));
+    const loaded=await (await handle(request('/api/get_recipient',{board:'main',participant_id:'mapped'},'owner',
+      {Origin:'https://board.test','X-Dot-Board':'1'}),localEnv)).json();
+    assert.equal(loaded.recipient.thread_id,'execution-thread');
+    assert.equal(loaded.recipient.chatgpt_destination.conversation_id,conversation);
+    assert.equal(loaded.recipient.conversation_link.url,`https://chatgpt.com/c/${conversation}`);
+    assert.equal((await handle(request('/api/set_recipient_conversation',args,'owner',{Origin:'https://attacker.test','X-Dot-Board':'1'}),localEnv)).status,403);
+    assert.equal(localDb.connection.prepare('SELECT COUNT(*) n FROM messages').get().n,0);
+  } finally {localDb.close();}
+});
+
 test('modern resource responses satisfy the per-request cache contract while legacy clients keep their wire shape',async()=>{
   const uiUri='ui://paprika-messenger/recipients/v1.html';
   const modernMeta={'io.modelcontextprotocol/protocolVersion':'2026-07-28',

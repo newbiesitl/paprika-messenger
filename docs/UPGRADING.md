@@ -1,5 +1,15 @@
 # Upgrade an existing Paprika Messenger instance
 
+## Native bridge source update
+
+Plugin **1.4.0-rc.6** / service **0.6.0-rc.6** is a prerelease of the Codex native bridge and explicit recipient-to-ChatGPT conversation mapping. It retains the rc.5 navigation behavior and existing Codex-to-Codex route. Preserve the previous installed account archive, release ID and saved Site version before rollout. Roll back the service with its previous saved version without removing the additive mapping table; account-package rollback requires a new higher version. This candidate is not a stable release.
+
+The native bridge adds the append-only `0006_recipient-conversations` migration and `set_recipient_conversation` tool. Deploy the updated source and migration to the same service, then update the client package through the existing release process. A client-only update cannot add the server tool. No released archive or running installation is changed by a source PR.
+
+Existing participants, immutable runtime bindings, inboxes, history and subscriptions remain intact. Mapping starts empty: do not backfill ChatGPT IDs from runtime IDs, titles or share links. Save each selected association from the original `/c/` link or an explicit supported host association, and verify the actual destination is kind `chatgpt`. An identical request is idempotent; corrections require the current mapping revision. Both dropdown links and bridge preparation use this same saved destination. Keep an uncertain delivery's original plan/key after any correction; reconcile it instead of resending to a new target.
+
+This source feature supports authorized native sends from a Codex host exposing the built-in thread tools. It does not implement a background relay, a Dot destination conversion, or cloud-to-cloud sending. Preserve all existing receiving methods unless separately requested.
+
 Plugin **1.4.0-rc.5** / service **0.6.0-rc.5** packages the cloud-conversation link fix merged in PR #17 as a new test release. Behavior and database schema are unchanged from rc.4. Existing rc.4 instances need no additional migration or reinitialization. Upgrades from rc.3 or earlier still need the additive `0005_conversation-url.sql` migration described below. Preserve the immutable rc.4 artifacts and the current saved Site version for rollback. Publishing these archives does not update an installed account plugin or deploy its private service.
 
 The user confirmed recipient links appear on the phone, and the earlier Cloud-chat navigation pilot opened a normal conversation in the iPhone app. Desktop rendering remains unverified; remote-local navigation is deferred. Older registrations can obtain missing verified navigation metadata through bounded thread-detail refresh without replacing their communication IDs.
