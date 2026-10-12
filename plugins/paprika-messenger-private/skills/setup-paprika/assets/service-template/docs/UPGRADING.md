@@ -1,5 +1,11 @@
 # Upgrade an existing Paprika Messenger instance
 
+## 1.4.1: open recipient dropdowns without questions
+
+Plugin **1.4.1** / service **0.6.1** opens “show me recipient dropdown” through the embedded `show_recipient_picker` menu, without a preliminary question panel. The menu defaults to `main` or the board already chosen in the chat; search, board selection, pagination, thread-detail refresh and conversation links remain in the menu. A native question panel is now used only on an explicit request. Merely displaying the menu requires no sender registration, receiving setup or message and never sends anything.
+
+Update both the existing private service and the account package: the old preference was present in MCP discovery/initialization instructions as well as the packaged skill. Existing chats may retain earlier instructions until their plugin context refreshes; use a fresh chat to verify the new default. This patch adds no database migration or new routing. Preserve the 1.4.0 package and previous saved Site version for rollback; restoring older account instructions requires a new higher package version.
+
 ## Stable 1.4.0 and distinct connector names
 
 Plugin **1.4.0** bundles service **0.6.0** and promotes the rc.6 feature set to the stable release channel. The main package remains **Paprika Messenger**, with the original red Paprika pixel icon; its backend is **Paprika Service**. Both packaged skills declare that icon. The service's MCP metadata uses its new display name, while technical plugin/App IDs, OAuth, boards, addresses and receiving settings remain unchanged.
