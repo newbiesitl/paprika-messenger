@@ -4,6 +4,9 @@ export function applyEvents(state,events) {
     if (event.sequence<=state.lastSequence) continue;
     const p=event.payload;
     if (event.kind==='participant_registered') state.participants.set(p.id,p);
+    if (['participant_unregistered','participant_registration_restored'].includes(event.kind)&&state.participants.has(p.participant_id)) {
+      state.participants.set(p.participant_id,{...state.participants.get(p.participant_id),unregistered_at:event.kind==='participant_unregistered'?p.unregistered_at:null});
+    }
     if (event.kind==='participant_thread_bound' && state.participants.has(p.participant_id)) {
       state.participants.set(p.participant_id,{...state.participants.get(p.participant_id),thread_id:p.thread_id});
     }

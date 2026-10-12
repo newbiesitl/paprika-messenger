@@ -389,6 +389,39 @@ test('installation discovers events before secrets are provisioned while subscri
   } finally {installDb.close();}
 });
 
+test('thread cleanup is owner-only and CSRF-protected; active menus hide removed threads and preserve their stored inbox',async()=>{
+  const cleanupDb=new SqliteD1();cleanupDb.connection.exec(await loadMigrations());const cleanupEnv={...env,DB:cleanupDb};
+  const call=(name,args,subject='owner',headers={})=>request('/mcp',{jsonrpc:'2.0',id:1,method:'tools/call',params:{name,arguments:args}},subject,headers);
+  const args={board:'main',participant_id:'cleanup-thread'};
+  try {
+    const service=new BoardService(cleanupDb,'owner');
+    for(const participant_id of ['cleanup-sender','cleanup-thread'])await service.register_participant({board:'main',participant_id,label:participant_id,kind:'thread',thread_id:'native-'+participant_id});
+    const saved=await service.post_message({board:'main',sender_id:'cleanup-sender',sender_label:'cleanup-sender',receiver_id:'cleanup-thread',topic:'Saved fixture',body:'Retain this fixture history.'});
+    assert.equal((await handle(call('unregister_thread',args,''),cleanupEnv)).status,401);
+    assert.equal((await handle(call('unregister_thread',args,'intruder'),cleanupEnv)).status,403);
+    assert.equal((await handle(call('unregister_thread',args,'owner',{Origin:'https://evil.test'}),cleanupEnv)).status,403);
+    assert.equal((await handle(request('/api/unregister_thread',args),cleanupEnv)).status,403);
+    assert.equal((await service.get_recipient(args)).recipient.registration_status,'active');
+    const browserHeaders={Origin:'https://board.test','X-Dot-Board':'1'};
+    const removed=await handle(request('/api/unregister_thread',args,'owner',browserHeaders),cleanupEnv);
+    assert.equal(removed.status,200);assert.equal((await removed.json()).registration_status,'unregistered');
+    const active=(await (await handle(call('show_recipient_picker',{board:'main'}),cleanupEnv)).json()).result.structuredContent;
+    assert(!active.recipients.some(r=>r.participant_id===args.participant_id));
+    const search=(await (await handle(call('list_recipients',{board:'main',query:'native-cleanup-thread'}),cleanupEnv)).json()).result.structuredContent;
+    assert.equal(search.recipients.length,0);
+    const archive=(await (await handle(call('show_recipient_picker',{board:'main',registration_status:'unregistered'}),cleanupEnv)).json()).result.structuredContent;
+    assert.equal(archive.recipients[0].participant_id,args.participant_id);assert.equal(archive.selection_sends,false);
+    const inbox=(await (await handle(call('get_inbox',{board:'main',receiver_id:args.participant_id}),cleanupEnv)).json()).result.structuredContent;
+    assert.equal(inbox.messages[0].id,saved.message.id);
+    assert.equal((await handle(call('restore_thread_registration',args,'intruder'),cleanupEnv)).status,403);
+    assert.equal((await handle(request('/api/restore_thread_registration',args),cleanupEnv)).status,403);
+    const restored=(await (await handle(call('restore_thread_registration',args),cleanupEnv)).json()).result.structuredContent;
+    assert.equal(restored.registration_status,'active');assert.equal(restored.notifications_resumed,false);
+    assert.equal((await service.get_recipient(args)).recipient.thread_id,'native-cleanup-thread');
+    assert.equal(cleanupDb.connection.prepare('SELECT COUNT(*) n FROM messages').get().n,1);
+  } finally {cleanupDb.close();}
+});
+
 test('MCP Events discovery and subscription methods enforce owner authentication and maintenance credentials',async()=>{
   const eventEnv={...env,EVENT_SECRET_KEY:btoa('e'.repeat(32)),EVENT_DISPATCH_PRIVATE_GATE:'owner-private',EVENT_DISPATCH_TOKEN_HASH:await maintenanceTokenDigest('maintenance-test-token')};
   const rpcRequest=(method,params={},subject='owner')=>request('/mcp',{jsonrpc:'2.0',id:10,method,params},subject);

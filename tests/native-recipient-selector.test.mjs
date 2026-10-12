@@ -7,6 +7,11 @@ const recipient = (id, extra = {}) => ({ participant_id: id, thread_id: 'native-
 const page = (recipients = [recipient('one')], extra = {}) => ({ board: 'main', query: '', recipients, has_more: false, next_cursor: null, ...extra });
 const message = { sender_id: 'sender', sender_label: 'Sender', topic: 'Agreed topic', body: 'Exact body\n会話 <script> & text', idempotency_key: 'fixed-key' };
 
+test('native selection rejects archived pages and removed recipient records instead of turning them into send choices', () => {
+  for (const input of [page([], {registration_status: 'unregistered'}), page([recipient('removed', {registration_status: 'unregistered'})]), page([recipient('removed', {unregistered_at: '2026-10-12T00:00:00Z'})])])
+    assert.throws(() => prepareRecipientSelector({page: input, mode: 'send_agreed', agreed_message: message}), /Removed threads cannot be selected/);
+});
+
 test('native choices preserve project groups and full native IDs without inferring an unbound native route', () => {
   const project = { project_status: 'assigned', project_id: 'project-one', project_name: 'First project' };
   const selector = prepareRecipientSelector({ page: page([recipient('one', project), recipient('free'), recipient('two', project), recipient('unbound', { thread_id: null, project_status: 'unknown' })]) });
