@@ -1,12 +1,12 @@
 # Upgrade an existing Paprika Messenger instance
 
-## Upcoming: cached dropdowns and change revisions
+## 1.5.0-rc.3: cached dropdowns and change revisions
 
 The source update removes native thread/project enrichment from the menu-opening path. Call `show_recipient_picker` first and display the saved details immediately. The private board's durable metadata is the cloud cache; the client keeps scoped recipient-page copies in browser storage when supported, or memory otherwise. Missing local copies fall back to the private board. **Refresh thread details** remains the explicit bounded native refresh.
 
 Migration `0008_recipient-cache-revisions.sql` adds separate monotonic revisions for each board's directory and the board catalog. Atomic triggers increment them with relevant writes, while readers never consume flags. New boards and registrations, removal/restore, metadata, links and communication recency invalidate the relevant cached views. A consistent page/revision snapshot avoids marking older rows with a newer version. Opening the menu checks versions without hiding its cached rows; changed directories restart from page one, and changed catalogs refresh the board filter. Cached data never bypasses recipient verification or sends a message.
 
-Update the same private service and account package together, applying all migrations through `0008`. Existing recipients, history, owner authorization, receiving tasks and App bindings are preserved. No schedule or background host watcher is introduced. Cache data contains recipient metadata only and is bounded to 16 local pages with one-day eviction; pending messages, credentials and history are excluded. Actual persistent browser storage depends on the client; cloud fallback remains available. Assign a fresh higher release version; preserve all existing archives and previous Site/account versions. Earlier servers ignore the additive revision tables, while the existing cleanup rollback guidance below still applies.
+Update the same private service and account package together, applying all migrations through `0008`. Existing recipients, history, owner authorization, receiving tasks and App bindings are preserved. No schedule or background host watcher is introduced. Cache data contains recipient metadata only and is bounded to 16 local pages with one-day eviction; pending messages, credentials and history are excluded. Actual persistent browser storage depends on the client; cloud fallback remains available. Plugin **1.5.0-rc.3** includes service **0.7.0-rc.3**; preserve all existing archives and previous Site/account versions. Earlier servers ignore the additive revision tables, while the existing cleanup rollback guidance below still applies.
 
 ## 1.5.0-rc.2: explicit native notification relays
 
