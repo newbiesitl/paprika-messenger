@@ -4,6 +4,13 @@ const now = sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`;
 export const boards = sqliteTable('boards', {
   id:text('id').primaryKey(),label:text('label'),description:text('description').notNull().default('')
 },t=>[check('board_id_length',sql`length(${t.id}) BETWEEN 1 AND 64`)]);
+export const recipientDirectoryVersions=sqliteTable('recipient_directory_versions',{
+  board:text('board').primaryKey().references(()=>boards.id),revision:integer('revision').notNull().default(0)
+},t=>[check('recipient_directory_revision',sql`${t.revision} >= 0`)]);
+export const recipientCatalogVersion=sqliteTable('recipient_catalog_version',{
+  singleton:integer('singleton').primaryKey(),revision:integer('revision').notNull().default(0),
+  cache_scope:text('cache_scope').notNull().default(sql`(lower(hex(randomblob(16))))`)
+},t=>[check('recipient_catalog_singleton',sql`${t.singleton} = 1`),check('recipient_catalog_revision',sql`${t.revision} >= 0`)]);
 export const participants=sqliteTable('participants',{
   board:text('board').notNull().references(()=>boards.id),id:text('id').notNull(),label:text('label').notNull(),kind:text('kind').notNull(),
   thread_id:text('thread_id'),registered_by:text('registered_by').notNull(),created_at:text('created_at').notNull().default(now),

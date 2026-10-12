@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { runInNewContext } from 'node:vm';
 
 const hostSource=(await readFile('web/recipient-host.js','utf8')).replace(/^import .*?;\r?\n/gm,'').replace(/^export /gm,'');
+const cacheSource=(await readFile('web/recipient-cache.js','utf8')).replace(/^export /gm,'');
 const pickerSource=(await readFile('skills/paprika-messenger/scripts/conversation-link.mjs','utf8')).replace(/^export /gm,'')+'\n'
   +(await readFile('web/recipient-picker.js','utf8')).replace(/^import .*?;\r?\n/gm,'').replace(/^export /gm,'');
 const flush=async()=>{for(let n=0;n<12;n++)await Promise.resolve();};
@@ -26,10 +27,10 @@ function harness() {
   const parent={postMessage(message){sent.push(message);}};
   const window={parent,addEventListener(name,callback){if(name==='message')listener=callback;}};
   const document={getElementById:id=>elements[id],createElement:tag=>new Element(tag),body:{},documentElement:{clientWidth:400,scrollHeight:600}};
-  const picker={disabled:true,selected:null,page:null,setDisabled(value){this.disabled=value;},reset(){this.selected=null;},setPage(value){this.page=value;},setSelected(value){this.selected=value;},open(){},getQuery(){return '';},getRegistrationStatus(){return this.page?.registration_status||'active';}};
+  const picker={disabled:true,selected:null,page:null,setDisabled(value){this.disabled=value;},reset(){this.selected=null;},setPage(value){this.page=value;callbacks?.onPage(value);},setSelected(value){this.selected=value;},open(){},getQuery(){return '';},getRegistrationStatus(){return this.page?.registration_status||'active';}};
   let host;
   const context={window,document,setTimeout(callback){const id=++timerId;timers.set(id,callback);return id;},clearTimeout(id){timers.delete(id);},mountStub(root,options){callbacks=options;return picker;}};
-  runInNewContext(pickerSource+'\n'+hostSource+'\nglobalThis.host=createRecipientHost({window,document,mount:mountStub});',context);host=context.host;
+  runInNewContext(pickerSource+'\n'+cacheSource+'\n'+hostSource+'\nglobalThis.host=createRecipientHost({window,document,mount:mountStub});',context);host=context.host;
   const emit=(data,source=parent)=>listener({source,data});
   const reply=(request,result={},error)=>emit({jsonrpc:'2.0',id:request.id,...(error?{error}:{result})});
   const initialize=async()=>{reply(sent[0],{protocolVersion:'2026-01-26',hostCapabilities:{updateModelContext:{text:{},structuredContent:{}}}});await flush();};
@@ -254,4 +255,70 @@ test('a removal completed after a board rerender cannot clear a different board 
   assert.equal(otherRequest.params.arguments.board,'other');
   h.reply(otherRequest,{structuredContent:{registration_status:'unregistered'}});await otherRemoval;
   assert.equal(h.sent.filter(m=>m.method==='ui/update-model-context').length,attachments);
+});
+
+const versionedPage=extra=>page({registration_status:'active',directory_revision:1,boards_revision:1,cache_scope:'fixture-cache-scope',page_cursor:null,page_limit:50,...extra});
+
+test('cached rows remain visible and interactive while a lightweight revision check is pending; unchanged data skips a reload',async()=>{
+  let finishCheck,loads=0;
+  const h=cleanupPicker({load:async()=>{loads++;return versionedPage();},onSelect:async r=>r,
+    checkUpdates:()=>new Promise(resolve=>{finishCheck=resolve;}),getBoardsRevision:()=>1});
+  h.picker.setPage(versionedPage());const details=h.root.querySelector('details');details.open=true;details.listeners.toggle();await flush();
+  assert.equal(h.root.querySelector('strong').textContent,recipient.thread_name);
+  assert.equal(h.root.querySelectorAll('button').find(b=>b.className==='recipient-option').disabled,false);
+  assert.equal(loads,0);finishCheck({directory_revision:1,boards_revision:1,cache_scope:'fixture-cache-scope'});await flush();assert.equal(loads,0);
+});
+
+test('changed directory and board flags refresh once without native metadata reads or mixing old cursor pages',async()=>{
+  const calls=[];let boardsRevision=1,boardReloads=0;
+  const h=cleanupPicker({load:async(args,options)=>{calls.push({args,options});return versionedPage({directory_revision:2,boards_revision:2,recipients:[{...recipient,thread_name:'New registration'}]});},onSelect:async r=>r,
+    checkUpdates:async()=>({directory_revision:2,boards_revision:2,cache_scope:'fixture-cache-scope'}),getBoardsRevision:()=>boardsRevision,
+    onBoardsChanged:async()=>{boardsRevision=2;boardReloads++;}});
+  h.picker.setPage(versionedPage({next_cursor:'old-cursor'}));const details=h.root.querySelector('details');details.open=true;details.listeners.toggle();await flush();
+  assert.equal(boardReloads,1);assert.equal(calls.length,1);assert.equal(calls[0].options.bypassCache,true);assert.equal(calls[0].args.cursor,undefined);
+  assert.equal(h.root.querySelector('strong').textContent,'New registration');
+  details.open=false;details.listeners.toggle();details.open=true;details.listeners.toggle();await flush();assert.equal(calls.length,1);
+});
+
+test('a late revision response cannot refresh the wrong board and an unavailable check retains saved rows',async()=>{
+  let finishCheck,loads=0;
+  const h=cleanupPicker({load:async()=>{loads++;return versionedPage();},checkUpdates:()=>new Promise(resolve=>{finishCheck=resolve;}),getBoardsRevision:()=>1});
+  h.picker.setPage(versionedPage());const details=h.root.querySelector('details');details.open=true;details.listeners.toggle();await flush();
+  h.picker.reset();h.picker.setPage(versionedPage({board:'other',recipients:[{...recipient,thread_name:'Other board'}]}));
+  finishCheck({directory_revision:2,boards_revision:1,cache_scope:'old-scope'});await flush();
+  assert.equal(loads,0);assert.equal(h.root.querySelector('strong').textContent,'Other board');
+  const failure=cleanupPicker({load:async()=>versionedPage(),checkUpdates:async()=>{throw Error('Unavailable');}});
+  failure.picker.setPage(versionedPage());const failedDetails=failure.root.querySelector('details');failedDetails.open=true;failedDetails.listeners.toggle();await flush();
+  assert.equal(failure.root.querySelector('strong').textContent,recipient.thread_name);
+  assert.match(failure.root.querySelectorAll('p').find(p=>p.className==='recipient-status').textContent,/could not be verified/);
+});
+
+test('load more restarts from a fresh first page when the directory changed after the old cursor was issued',async()=>{
+  const calls=[];
+  const h=cleanupPicker({load:async(args,options)=>{calls.push({args,options});return versionedPage({directory_revision:2,recipients:[{...recipient,thread_name:args.cursor?'Later row':'Newest row'}]});}});
+  h.picker.setPage(versionedPage({next_cursor:'old-cursor'}));await h.button('Load more').onclick();
+  assert.equal(calls.length,2);assert.equal(calls[0].args.cursor,'old-cursor');assert.equal(calls[1].args.cursor,undefined);assert.equal(calls[1].options.bypassCache,true);
+  assert.equal(h.root.querySelectorAll('strong').length,1);assert.equal(h.root.querySelector('strong').textContent,'Newest row');
+});
+
+test('the host uses local pages when available and the private board on a miss or forced refresh',async()=>{
+  const h=harness();await h.initialize();h.show(versionedPage({mode:'send_agreed',agreed_message:agreed}));
+  const hit=await h.callbacks.load({query:'',limit:50,registration_status:'active'});
+  assert.equal(hit.local_cache_hit,true);assert.equal(hit.agreed_message,undefined);assert.equal(h.sent.some(m=>m.method==='tools/call'),false);
+  const loading=h.callbacks.load({query:'new-name',limit:50,registration_status:'active'}),request=h.sent.at(-1);
+  assert.equal(request.params.name,'list_recipients');assert.equal(request.params.arguments.query,'new-name');
+  h.reply(request,{structuredContent:versionedPage({query:'new-name',directory_revision:2})});await loading;
+  const forced=h.callbacks.load({query:'',limit:50,registration_status:'active'},{bypassCache:true});
+  assert.equal(h.sent.at(-1).params.name,'list_recipients');h.reply(h.sent.at(-1),{structuredContent:versionedPage({directory_revision:2})});await forced;
+  assert.equal(h.elements['draft-body'].textContent,agreed.body);assert.equal(h.sent.some(m=>m.method==='ui/message'),false);
+});
+
+test('a newly created board refreshes the filter without changing a frozen message or requesting a send',async()=>{
+  const h=harness();await h.initialize();h.show(versionedPage({mode:'send_agreed',agreed_message:agreed}));
+  const checking=h.callbacks.checkUpdates();assert.equal(h.sent.at(-1).params.name,'get_recipient_directory_state');
+  h.reply(h.sent.at(-1),{structuredContent:{board:'main',directory_revision:1,boards_revision:2,cache_scope:'fixture-cache-scope'}});await checking;
+  const updating=h.callbacks.onBoardsChanged();assert.equal(h.sent.at(-1).params.name,'list_boards');
+  h.reply(h.sent.at(-1),{structuredContent:{boards:[{id:'main',label:'Main'},{id:'new-board',label:'New board'}],boards_revision:2,has_more:false,next_after_id:null}});await updating;
+  assert(h.elements['board-filter'].children.some(option=>option.value==='new-board'));assert.equal(h.elements['board-filter'].value,'main');
+  assert.equal(h.elements['draft-body'].textContent,agreed.body);assert.equal(h.sent.some(m=>m.method==='ui/message'),false);
 });

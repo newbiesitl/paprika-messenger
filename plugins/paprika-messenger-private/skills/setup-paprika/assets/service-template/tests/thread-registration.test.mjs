@@ -191,6 +191,7 @@ test('the additive migration leaves existing messages, receipts and thread addre
   db.connection.prepare("INSERT INTO messages(id,board,sender_id,sender_label,receiver_id,topic,body,authored_by,fingerprint) VALUES('legacy-message','main','sender','Sender','receiver','Legacy','Saved history','owner','legacy-fingerprint')").run();
   db.connection.prepare("INSERT INTO acknowledgments(board,message_id,participant_id,acknowledged_by) VALUES('main','legacy-message','receiver','owner')").run();
   db.connection.exec(await readFile('drizzle/0007_thread-registration.sql','utf8'));
+  db.connection.exec(await readFile('drizzle/0008_recipient-cache-revisions.sql','utf8'));
   assert.equal((await service.list_recipients({board:'main'})).recipients.length,2);
   assert.equal(db.connection.prepare("SELECT thread_id,unregistered_at FROM participants WHERE id='receiver'").get().thread_id,'native-receiver');
   assert.equal((await service.get_message({board:'main',message_id:'legacy-message'})).acknowledgments.length,1);

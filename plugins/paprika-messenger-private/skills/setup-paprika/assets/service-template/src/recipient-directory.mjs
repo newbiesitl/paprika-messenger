@@ -1,6 +1,7 @@
 import { fail, id, text, plainText, strict, integer } from './validation.mjs';
 import { conversationLink, normalizeConversationUrl } from '../skills/paprika-messenger/scripts/conversation-link.mjs';
 import { registrationStatus, requireActiveRegistration } from './thread-registration.mjs';
+import { directoryVersionStatement, directoryCacheScope } from './recipient-cache-state.mjs';
 
 const rdStmt = (db, sql, ...values) => db.prepare(sql).bind(...values);
 const rdAll = async (db, sql, ...values) => (await rdStmt(db, sql, ...values).all()).results;
@@ -25,7 +26,7 @@ function recipientSnapshot(row) {
     // Explicit delivery mapping is authoritative over a navigation-only cache.
     conversation_url:row.conversation_id ? 'https://chatgpt.com/c/'+row.conversation_id : row.conversation_url ?? null,
     metadata_observed_at:row.observed_at ?? null,metadata_stale:!fresh(row.observed_at),
-    project_metadata_stale:!fresh(row.project_observed_at),last_communicated_at:row.last_communicated_at ?? null,
+    project_metadata_stale:!fresh(row.project_observed_at),project_metadata_observed_at:row.project_observed_at??null,last_communicated_at:row.last_communicated_at ?? null,
     recency_at:row.recency_at,chatgpt_destination:row.conversation_id ? {
       registered_thread_id:row.registered_thread_id,conversation_id:row.conversation_id,
       conversation_url:'https://chatgpt.com/c/'+row.conversation_id,revision:row.mapping_revision,observed_at:row.mapping_observed_at
@@ -53,10 +54,14 @@ export async function listRecipients(service, args) {
   if(cursor){where+=` AND (COALESCE(a.last_communicated_at,p.created_at)<? OR
     (COALESCE(a.last_communicated_at,p.created_at)=? AND p.id>?))`;values.push(cursor[4],cursor[4],cursor[5]);}
   values.push(limit+1);
-  const rows=await rdAll(service.db,`SELECT ${recipientColumns} ${recipientJoins} WHERE ${where}
-    ORDER BY recency_at DESC,p.id ASC LIMIT ?`,...values);
+  // The page and its revision must come from one transaction. Reading the new
+  // revision after an older page could otherwise mark stale rows as current.
+  const result=await service.db.batch([directoryVersionStatement(service.db,board),rdStmt(service.db,`SELECT ${recipientColumns} ${recipientJoins} WHERE ${where}
+    ORDER BY recency_at DESC,p.id ASC LIMIT ?`,...values)]);
+  const state=result[0].results[0],rows=result[1].results;
   const recipients=rows.slice(0,limit).map(recipientSnapshot),last=recipients.at(-1),has_more=rows.length>limit;
   return {board,query,registration_status:status,recipients,has_more,next_cursor:has_more?btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify([2,board,query,status,last.recency_at,last.participant_id])))):null,
+    directory_revision:state.directory_revision,boards_revision:state.boards_revision,cache_scope:directoryCacheScope(service,state.cache_scope),page_cursor:args.cursor??null,page_limit:limit,
     recency_source:'paprika_communication',metadata_ttl_seconds:recipientMetadataTtlSeconds,
     metadata_refresh_candidates:recipients.filter(r=>r.thread_id && r.metadata_stale)
       .map(r=>({participant_id:r.participant_id,thread_id:r.thread_id,source:r.source,host_id:r.host_id})),

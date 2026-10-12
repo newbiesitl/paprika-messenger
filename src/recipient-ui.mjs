@@ -19,8 +19,7 @@ export async function showRecipientPicker(service,args) {
       idempotency_key:text(value.idempotency_key,'idempotency_key',128)};
     if(value.reply_to_id!=null){await service.message(board,id(value.reply_to_id,'reply_to_id'));agreed_message.reply_to_id=value.reply_to_id;}
   } else if(args.agreed_message!==undefined)fail(400,'invalid_argument','An agreed message requires send_agreed mode.');
-  const page=await listRecipients(service,{board:args.board ?? 'main',...Object.fromEntries(['query','cursor','limit','registration_status'].filter(k=>Object.hasOwn(args,k)).map(k=>[k,args[k]]))});
-  const boards=await service.list_boards({limit:200});
-  return {...page,mode,agreed_message,selection_sends:mode==='send_agreed'&&page.registration_status==='active',board_options:boards.boards,
+  const [page,boards]=await Promise.all([listRecipients(service,{board:args.board ?? 'main',...Object.fromEntries(['query','cursor','limit','registration_status'].filter(k=>Object.hasOwn(args,k)).map(k=>[k,args[k]]))}),service.list_boards({limit:200})]);
+  return {...page,boards_revision:boards.boards_revision,mode,agreed_message,selection_sends:mode==='send_agreed'&&page.registration_status==='active',board_options:boards.boards,
     boards_has_more:boards.has_more,boards_next_after_id:boards.next_after_id};
 }

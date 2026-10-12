@@ -3,6 +3,7 @@ import { serviceConfiguration } from './service-config.mjs';
 import { listRecipients, getRecipient, updateRecipientMetadata, recipientMentions } from './recipient-directory.mjs';
 import { setRecipientConversation } from './recipient-conversations.mjs';
 import { registrationStatus, requireActiveRegistration, changeThreadRegistration } from './thread-registration.mjs';
+import { getRecipientDirectoryState, catalogVersionStatement, directoryCacheScope } from './recipient-cache-state.mjs';
 
 // All user identities originate at the Sites hosting boundary. Never trust caller-supplied labels.
 export function authorize(request, env) {
@@ -30,6 +31,7 @@ export class BoardService {
     return serviceConfiguration(this.env);
   }
   async list_recipients(a) { return listRecipients(this,a); }
+  async get_recipient_directory_state(a) { return getRecipientDirectoryState(this,a); }
   async unregister_thread(a) { return changeThreadRegistration(this,a,true); }
   async restore_thread_registration(a) { return changeThreadRegistration(this,a,false); }
   async get_recipient(a) { return getRecipient(this,a); }
@@ -38,15 +40,19 @@ export class BoardService {
   async search_recipient_mentions(a) { return recipientMentions(this,a); }
   async board(value) {
     id(value, 'board', 64);
-    if (value === 'main') await this.ensureDefaultBoard();
+    if (value === 'main') {await this.ensureDefaultBoard();return value;}
     if (!await first(this.db, 'SELECT id FROM boards WHERE id=?', value)) fail(404, 'board_not_found', 'Board not found. Use create_board first.');
     return value;
   }
   async ensureDefaultBoard() {
-    await this.db.batch([
-      stmt(this.db,"INSERT INTO boards(id,label) VALUES('main','General') ON CONFLICT DO NOTHING"),
-      stmt(this.db,"INSERT INTO coordination(board,title,body) VALUES('main','Coordination','') ON CONFLICT DO NOTHING")
-    ]);
+    this.defaultBoardReady ??= (async()=>{
+      if(await first(this.db,"SELECT b.id FROM boards b JOIN coordination n ON n.board=b.id WHERE b.id='main'"))return;
+      await this.db.batch([
+        stmt(this.db,"INSERT INTO boards(id,label) VALUES('main','General') ON CONFLICT DO NOTHING"),
+        stmt(this.db,"INSERT INTO coordination(board,title,body) VALUES('main','Coordination','') ON CONFLICT DO NOTHING")
+      ]);
+    })();
+    try{await this.defaultBoardReady;}catch(error){this.defaultBoardReady=null;throw error;}
   }
   async create_board(a) {
     strict(a,['board','label','description']);
@@ -62,8 +68,10 @@ export class BoardService {
   async list_boards(a) {
     strict(a,['after_id','limit']); await this.ensureDefaultBoard();
     const limit=integer(a.limit,'limit',1,200,100), after=a.after_id===undefined?'':id(a.after_id,'after_id',64);
-    const rows=await all(this.db,'SELECT * FROM boards WHERE id>? ORDER BY id LIMIT ?',after,limit+1);
-    return {boards:rows.slice(0,limit).map(resultBoard),has_more:rows.length>limit,next_after_id:rows.length>limit?rows[limit-1].id:null,default_board:'main'};
+    const result=await this.db.batch([catalogVersionStatement(this.db),stmt(this.db,'SELECT * FROM boards WHERE id>? ORDER BY id LIMIT ?',after,limit+1)]);
+    const state=result[0].results[0],rows=result[1].results;
+    return {boards:rows.slice(0,limit).map(resultBoard),has_more:rows.length>limit,next_after_id:rows.length>limit?rows[limit-1].id:null,default_board:'main',
+      boards_revision:state.boards_revision,cache_scope:directoryCacheScope(this,state.cache_scope)};
   }
   async participant(board, value) {
     id(value, 'participant_id');

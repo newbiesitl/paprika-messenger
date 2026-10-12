@@ -57,6 +57,13 @@
       "when": 1791815703410,
       "tag": "0007_thread-registration",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1791819790908,
+      "tag": "0008_recipient-cache-revisions",
+      "breakpoints": true
     }
   ]
 }

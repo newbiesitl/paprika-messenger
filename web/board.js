@@ -1,8 +1,10 @@
 import {createState,applyEvents,inbox} from './state.js';
 import {mountRecipientPicker} from './recipient-picker.js';
+import {browserRecipientPageCache} from './recipient-cache.js';
 const $=id=>document.getElementById(id);
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
 let state=createState(),cursor=null,board='main',generation=0,polling=false,ready=false,replyId=null,attempt=null,canCoordinate=false,alerts=false,writing=false;
+const recipientPageCache=browserRecipientPageCache(window);let recipientCacheScope=null,boardsRevision=null;
 const deepLink=new URL(location.href).searchParams;
 const requestedBoard=deepLink.get('board'),requestedReceiver=deepLink.get('receiver');
 if(requestedBoard && /^[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,63}$/.test(requestedBoard))board=requestedBoard;
@@ -13,7 +15,12 @@ async function api(name,args){
   const result=await response.json();if(!response.ok)throw Error(result.message || result.error || 'Request failed');return result;
 }
 const recipientPicker=mountRecipientPicker($('recipient-picker'),{
-  load:args=>api('list_recipients',{board,...args}),
+  load:async(args,{bypassCache=false}={})=>{
+    const context={board,cache_scope:recipientCacheScope},saved=!bypassCache&&recipientPageCache.read(context,args);if(saved)return saved;
+    const page=await api('list_recipients',{board:context.board,...args});recipientPageCache.write({board:page.board,cache_scope:page.cache_scope},args,page);return page;
+  },
+  onPage:page=>{if(page.board===board)recipientCacheScope=page.cache_scope;},
+  checkUpdates:()=>api('get_recipient_directory_state',{board}),getBoardsRevision:()=>boardsRevision,onBoardsChanged:()=>loadBoards(),
   onSelect:async candidate=>{const current=generation,data=await api('get_recipient',{board,participant_id:candidate.participant_id});if(current!==generation)throw Error('Board changed. Choose a recipient again.');$('receiver').value=data.recipient.participant_id;attempt=null;return data.recipient;},
   onClear:()=>{$('receiver').value='';attempt=null;},
   onUnregister:recipient=>changeRegistration(recipient,false),onRestore:recipient=>changeRegistration(recipient,true)
@@ -49,8 +56,15 @@ function renderNote(){
   $('revision').textContent=`Revision ${n.revision} · ${stamp(n.last_confirmed_at)}`;$('edit-note').hidden=!canCoordinate;
 }
 async function loadBoards(){
-  const boards=[];let after_id;
-  do{const page=await api('list_boards',{...(after_id?{after_id}:{}),limit:200});boards.push(...page.boards);after_id=page.has_more?page.next_after_id:null;}while(after_id);
+  const current=generation,boards=[];let after_id,version,scope,restarts=0;
+  for(;;){const page=await api('list_boards',{...(after_id?{after_id}:{}),limit:200});
+    if(current!==generation)return;
+    if(version!==undefined&&version!==page.boards_revision){if(++restarts>2)throw Error('The board list is changing. Refresh it again.');after_id=undefined;boards.length=0;version=undefined;continue;}
+    version=page.boards_revision;scope=page.cache_scope;boards.push(...page.boards);if(!page.has_more)break;after_id=page.next_after_id;
+  }
+  if(current!==generation)return;
+  boardsRevision=version;
+  recipientCacheScope=scope;
   $('board').replaceChildren(...boards.map(b=>new Option(`${b.label} · ${b.id}`,b.id)));
   $('board').value=board;
 }
@@ -94,12 +108,12 @@ async function poll(){
   finally{polling=false;}
 }
 async function openBoard(){
-  generation++;state=createState();cursor=null;ready=false;replyId=null;attempt=null;$('receiver').value='';recipientPicker.reset();$('reply-context').hidden=true;connection('Connecting…');render();
+  generation++;state=createState();cursor=null;ready=false;replyId=null;attempt=null;recipientCacheScope=null;$('receiver').value='';recipientPicker.reset();$('reply-context').hidden=true;connection('Connecting…');render();
   const current=generation;
   try{const session=await fetch('/api/session',{signal:AbortSignal.timeout(15000)});const data=await session.json();if(!session.ok)throw Error(data.message || 'Sign in to continue.');if(current!==generation)return;canCoordinate=data.can_coordinate;
     await loadBoards();if(current!==generation)return;
     const note=await api('get_coordination_note',{board});if(current!==generation)return;state.note=note.note;
-    await poll();if(current===generation)await recipientPicker.refresh();
+    await poll();if(current===generation)await recipientPicker.warm();
   }catch(error){if(current===generation){connection('Connection failed','failed');issue(errorText(error));}}
 }
 $('board').onchange=()=>{board=$('board').value;openBoard();};
