@@ -81,6 +81,42 @@ For an existing participant with no thread address, `bind_participant_thread({bo
 
 See [example participant choices](docs/PARTICIPANTS.json), [optional receiver checks](docs/SCHEDULING.md), [security and storage](docs/SECURITY.md), [upgrade compatibility](docs/UPGRADING.md), and [validation results](docs/TEST-RESULTS.md).
 
+## Active notification routes and release progress
+
+Last reviewed: **2026-10-11**. This snapshot covers the implemented event route and the native bridge work tracked in [PR #15](https://github.com/newbiesitl/paprika-messenger/pull/15). **Active notification** means the receiver wakes and processes a message without someone manually prompting it to check its inbox. It does not imply a phone or operating-system push notification.
+
+**Verified** means a real receiver wake and report or acknowledgment were observed in the tested setup. **Conditional** means the method is implemented but depends on the receiving host and still needs a successful live test for that exact sender/receiver pair. These results record past tests; check the current host capabilities and subscription state before sending.
+
+| Sender → Receiver | Active notification method | Event-hook task needed? | What we verified |
+| --- | --- | --- | --- |
+| **Local Codex → Local Codex** | Built-in native `send_message_to_thread` | **No** | **Verified:** receiver woke and confirmed receipt in its own thread. |
+| **Local Codex → Hosted Codex runtime** | Built-in native thread delivery | **No** | **Verified:** runtime responded. This alone did not prove delivery into the associated visible ChatGPT conversation. |
+| **Local Codex → ChatGPT cloud conversation** | Native bridge targeting the actual ChatGPT conversation ID | **No** | **Verified:** message and acknowledgment appeared in the correct ChatGPT conversation, including on mobile. |
+| **Local Codex → Paprika / Dot** | Paprika message → MCP event → Dot wakes and reads it | **Yes—on Dot** | **Verified:** automatic wake/read/report. Direct native delivery to Dot failed in our test. |
+| **ChatGPT cloud → Paprika / Dot** | Paprika message → MCP event → Dot wakes and reads it | **Yes—on Dot** | **Verified:** automatic wake/read/report through the existing event route. |
+| **ChatGPT cloud → ChatGPT cloud** | Paprika message → receiving chat's MCP event hook | **Yes—on receiver** | **Conditional:** this exact pair still needs a successful live test. The hook-free bridge attempt was blocked by missing sender capabilities. |
+| **ChatGPT cloud → Local Codex** | No established automatic wake route in the tested setup | — | Message storage is available; **automatic receiver wake remains unverified**. |
+| **Paprika / Dot → ChatGPT cloud** | Paprika message → receiving chat's MCP event hook | **Yes—on receiver** | **Conditional:** exact pair not verified. Dot's attempted native relay could not resolve the destination. |
+| **Paprika / Dot → Local Codex** | No established automatic wake route in the tested setup | — | Native relay destination lookup failed; **no successful wake verified**. |
+
+### Support boundaries
+
+- **Receiving surface:** ChatGPT event support depends on the receiving host. OpenAI documents MCP Events for supported ChatGPT Work chats and Dots; ordinary ChatGPT conversations must not be assumed to support them. See the [official MCP Events documentation](https://developers.openai.com/plugins/build/mcp-events).
+- **Task quota:** one configured receiving event hook can handle many messages and senders; a new task is not needed per message. It still uses the receiving host's task quota. The successful Dot event tests used the `vex` board, so verify the subscription for the selected board and recipient.
+- **Destination mapping:** the bridge feature implements an explicit Paprika recipient-to-ChatGPT-conversation mapping. The strongest visible ChatGPT delivery proof used the actual conversation ID directly. A fresh **dropdown selection → saved mapping → correct visible acknowledgment** test is still pending. A Paprika runtime/thread ID and a ChatGPT conversation ID are distinct addresses; a `/share/` link is not a delivery address.
+- **Sender capability:** native delivery requires the sending host to expose the native thread tools and resolve the exact destination. The remote Messenger service cannot invoke those host tools itself. Successful local Codex tests do not establish the same capability in ChatGPT cloud or Dot.
+- **Codex Cloud:** Codex Cloud as the sender remains separately untested. The successful native sender tests came from local Codex; reaching a hosted Codex runtime does not verify hosted Codex as a sender.
+- **Local event receiver:** the experimental receiver worked in an isolated session. Waking existing desktop chats through a production event receiver remains unfinished.
+- **Delivery evidence:** stored messages, queued deliveries and accepted webhooks are separate from an observed receiver wake or acknowledgment. Verify the response in the intended conversation. Opening a conversation link does not itself deliver a message or wake its receiver.
+
+### Remaining release validation
+
+- [ ] Verify the dropdown-selected recipient, saved mapping and visible ChatGPT acknowledgment together, with event hooks disabled for that receiver.
+- [ ] Run the exact ChatGPT cloud → ChatGPT cloud and Dot → ChatGPT cloud event tests on supported receiving hosts.
+- [ ] Verify native sender capabilities and successful delivery from Codex Cloud independently.
+- [ ] Establish and test a production wake route from ChatGPT cloud / Dot to an existing local Codex chat.
+- [ ] Resolve and test a hook-free cloud → cloud relay before listing that route as supported.
+
 ## Source map
 
 `src/service.mjs` implements board and messaging operations; `src/worker.mjs` authorizes requests and serves MCP, the browser API and UI. `src/protocol.mjs` defines the tools. `web/` contains the plain text UI and event reducer. `db/schema.ts` and append-only `drizzle/` migrations own production storage. `skills/paprika-messenger/` is the portable chat workflow, also discoverable through the MCP skills extension.
