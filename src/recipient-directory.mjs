@@ -1,11 +1,12 @@
 import { fail, id, text, plainText, strict, integer } from './validation.mjs';
 import { conversationLink, normalizeConversationUrl } from '../skills/paprika-messenger/scripts/conversation-link.mjs';
+import { registrationStatus, requireActiveRegistration } from './thread-registration.mjs';
 
 const rdStmt = (db, sql, ...values) => db.prepare(sql).bind(...values);
 const rdAll = async (db, sql, ...values) => (await rdStmt(db, sql, ...values).all()).results;
 export const recipientMetadataTtlSeconds = 300;
 export const normalizeRecipientSearch = value => value.normalize('NFKC').toLowerCase();
-const recipientColumns = `p.id AS participant_id,p.thread_id,p.label AS registered_label,p.kind,
+const recipientColumns = `p.id AS participant_id,p.thread_id,p.label AS registered_label,p.kind,p.unregistered_at,
   m.title,m.source,m.execution_mode,m.host_id,m.workspace_name,m.project_status,m.project_id,m.project_name,
   m.observed_at,m.project_observed_at,m.conversation_url,a.last_communicated_at,
   c.conversation_id,c.registered_thread_id,c.revision AS mapping_revision,c.observed_at AS mapping_observed_at,
@@ -17,6 +18,7 @@ function recipientSnapshot(row) {
   const fresh = value => value && Date.now()-Date.parse(value) < recipientMetadataTtlSeconds*1000;
   const recipient={participant_id:row.participant_id,thread_id:row.thread_id,thread_name:row.title ?? row.registered_label,
     title_source:row.title === null ? 'registered_label' : 'host_reported',registered_label:row.registered_label,kind:row.kind,
+    registration_status:row.unregistered_at?'unregistered':'active',unregistered_at:row.unregistered_at,
     source:row.source ?? 'unknown',execution_mode:row.execution_mode ?? 'unknown',host_id:row.host_id ?? null,
     workspace_name:row.workspace_name ?? null,project_status:row.project_status ?? 'unknown',
     project_id:row.project_id ?? null,project_name:row.project_name ?? null,
@@ -30,30 +32,31 @@ function recipientSnapshot(row) {
     } : null};
   return {...recipient,conversation_link:conversationLink(recipient)};
 }
-function recipientCursor(value, board, query) {
+function recipientCursor(value, board, query, status) {
   if (value === undefined || value === null) return null;
   try {
     if(typeof value !== 'string' || value.length>2048)throw Error();
-    const data=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(Uint8Array.from(atob(value),character=>character.charCodeAt(0))));
-    if(data.length!==5 || data[0]!==1 || data[1]!==board || data[2]!==query || typeof data[3]!=='string' || !Number.isFinite(Date.parse(data[3])))throw Error();
-    id(data[4],'cursor_participant_id');return data;
+    let data=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(Uint8Array.from(atob(value),character=>character.charCodeAt(0))));
+    if(data.length===5 && data[0]===1 && status==='active')data=[2,data[1],data[2],'active',data[3],data[4]];
+    if(data.length!==6 || data[0]!==2 || data[1]!==board || data[2]!==query || data[3]!==status || typeof data[4]!=='string' || !Number.isFinite(Date.parse(data[4])))throw Error();
+    id(data[5],'cursor_participant_id');return data;
   } catch {fail(400,'invalid_cursor','Recipient cursor is invalid or belongs to another board or search.');}
 }
 export async function listRecipients(service, args) {
-  strict(args,['board','query','cursor','limit']);
+  strict(args,['board','query','cursor','limit','registration_status']);
   const board=await service.board(args.board),limit=integer(args.limit,'limit',1,50,50);
   const query=normalizeRecipientSearch(plainText(args.query ?? '','query',160).trim());
-  const cursor=recipientCursor(args.cursor,board,query),values=[board];
-  let where='p.board=?';
+  const status=registrationStatus(args.registration_status),cursor=recipientCursor(args.cursor,board,query,status),values=[board];
+  let where=`p.board=? AND p.unregistered_at IS ${status==='active'?'NULL':'NOT NULL'}`;
   if(query){where+=` AND (instr(lower(p.id),?)>0 OR instr(lower(COALESCE(p.thread_id,'')),?)>0
     OR instr(COALESCE(m.search_name,lower(p.label)),?)>0 OR instr(COALESCE(c.conversation_id,''),?)>0)`;values.push(query,query,query,query);}
   if(cursor){where+=` AND (COALESCE(a.last_communicated_at,p.created_at)<? OR
-    (COALESCE(a.last_communicated_at,p.created_at)=? AND p.id>?))`;values.push(cursor[3],cursor[3],cursor[4]);}
+    (COALESCE(a.last_communicated_at,p.created_at)=? AND p.id>?))`;values.push(cursor[4],cursor[4],cursor[5]);}
   values.push(limit+1);
   const rows=await rdAll(service.db,`SELECT ${recipientColumns} ${recipientJoins} WHERE ${where}
     ORDER BY recency_at DESC,p.id ASC LIMIT ?`,...values);
   const recipients=rows.slice(0,limit).map(recipientSnapshot),last=recipients.at(-1),has_more=rows.length>limit;
-  return {board,query,recipients,has_more,next_cursor:has_more?btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify([1,board,query,last.recency_at,last.participant_id])))):null,
+  return {board,query,registration_status:status,recipients,has_more,next_cursor:has_more?btoa(String.fromCharCode(...new TextEncoder().encode(JSON.stringify([2,board,query,status,last.recency_at,last.participant_id])))):null,
     recency_source:'paprika_communication',metadata_ttl_seconds:recipientMetadataTtlSeconds,
     metadata_refresh_candidates:recipients.filter(r=>r.thread_id && r.metadata_stale)
       .map(r=>({participant_id:r.participant_id,thread_id:r.thread_id,source:r.source,host_id:r.host_id})),
@@ -64,6 +67,7 @@ export async function getRecipient(service,args) {
   const board=await service.board(args.board),pid=id(args.participant_id,'participant_id');
   const rows=await rdAll(service.db,`SELECT ${recipientColumns} ${recipientJoins} WHERE p.board=? AND p.id=?`,board,pid);
   if(!rows.length)fail(404,'participant_not_found','This recipient is not registered on the selected board.');
+  requireActiveRegistration(rows[0]);
   return {board,recipient:recipientSnapshot(rows[0]),identity_kind:'declared_routing_metadata'};
 }
 const recipientMetadataFields=['participant_id','thread_id','title','source','execution_mode','host_id','workspace_name',

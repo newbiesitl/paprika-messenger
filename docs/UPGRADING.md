@@ -1,5 +1,13 @@
 # Upgrade an existing Paprika Messenger instance
 
+## 1.5.0-rc.1: remove and restore board threads
+
+Plugin **1.5.0-rc.1** / service **0.7.0-rc.1** is a test release of board cleanup. **Remove from board** hides a thread from that board's ordinary recipient dropdown, ID/name search, mentions and active roster. A separate **Removed threads** view provides **Restore to board**, and **Undo removal** restores the last removed thread. Both operations retain immutable IDs, cached names/projects/links, messages, unread inboxes and receipt acknowledgments. Other boards are unaffected. Removed threads cannot send or receive new routed messages, and old picker selections are revalidated before delivery.
+
+Update the existing private service and account package together through the normal owner-approved workflow. Apply append-only migrations through `0007_thread-registration.sql`, including its lifecycle and routing triggers. Existing registrations remain active; deployment itself removes nothing. The service pauses matching board/receiver event subscriptions and cancels pending deliveries when a thread is removed. Restore leaves receiving paused; explicitly resume in its receiving chat when wanted. It does not recall already sent notifications or stop host-owned heartbeat tasks.
+
+Keep the previous account archive, service source and saved Site version for rollback, plus this version's source commit and artifact hashes. Do not reverse the migration or delete retained history. Older service code does not understand removed registrations and may display them even though the retained database triggers still reject new messages to/from them. A forward fix retaining registration support is the safest recovery after cleanup has been used. If reverting to an older service is necessary, explicitly restore only the registrations the owner wants active before the downgrade; paused receiving stays paused until separately resumed. Account-package rollback still needs a new higher version containing the known-good files. Never replace a published archive or move its tag.
+
 ## 1.4.1: open recipient dropdowns without questions
 
 Plugin **1.4.1** / service **0.6.1** opens “show me recipient dropdown” through the embedded `show_recipient_picker` menu, without a preliminary question panel. The menu defaults to `main` or the board already chosen in the chat; search, board selection, pagination, thread-detail refresh and conversation links remain in the menu. A native question panel is now used only on an explicit request. Merely displaying the menu requires no sender registration, receiving setup or message and never sends anything.

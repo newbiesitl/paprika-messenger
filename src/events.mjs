@@ -87,14 +87,14 @@ export class EventService {
     const continuing=old?.active && !expired(old,now);
     const previous=continuing && oldSecret!==secret?old.secret_box:(old?.rotate_until>now?old.previous_secret_box:null);
     const rotateUntil=continuing && oldSecret!==secret?now+300000:(previous?old.rotate_until:0);
-    await this.db.batch([
+    try { await this.db.batch([
       evtStmt(this.db,"UPDATE event_deliveries SET state='cancelled',last_error='subscription_replaced',lease_token=NULL,lease_until=0 WHERE subscription_id=? AND state='pending' AND EXISTS(SELECT 1 FROM event_subscriptions s WHERE s.id=? AND (s.active=0 OR (s.expires_at<>0 AND s.expires_at<=?)))",subscriptionId,subscriptionId,now),
       evtStmt(this.db,`INSERT INTO event_subscriptions(id,board,receiver_id,owner_subject,owner_email,event_name,arguments_json,callback_url,secret_box,previous_secret_box,rotate_until,expires_at,active,paused,notification_mode,wake_limit,window_start,wake_count,verified_at,scanned_sequence,created_at)
         VALUES(?,?,?,?,?,'message.created',?,?,?,?,?,?,1,0,'notify_only',30,?,0,?,?,?)
         ON CONFLICT(id) DO UPDATE SET secret_box=excluded.secret_box,previous_secret_box=excluded.previous_secret_box,rotate_until=excluded.rotate_until,expires_at=excluded.expires_at,active=1,owner_email=excluded.owner_email,verified_at=excluded.verified_at,
           scanned_sequence=CASE WHEN event_subscriptions.active=1 AND (event_subscriptions.expires_at=0 OR event_subscriptions.expires_at>?) THEN event_subscriptions.scanned_sequence ELSE excluded.scanned_sequence END`,
         subscriptionId,board,receiver,this.subject,this.email,args,url,box,previous,rotateUntil,expires,now,now,start,now,now)
-    ]);
+    ]); } catch(error){if(error.message?.includes('participant_unregistered'))fail(409,'participant_unregistered','This thread was removed from the board before receiving could be enabled.');throw error;}
     await this.reconcile();
     return {id:subscriptionId,refreshBefore:refreshBefore(expires),cursor:null,truncated:false};
   }
@@ -114,27 +114,29 @@ export class EventService {
   async setup(a) {
     strict(a,['board',...Object.keys(evtAddress)]);
     const board=await this.boardService.board(a.board);
-    const receiver=(await this.boardService.resolveAddress(board,a,Object.keys(evtAddress))).participant.id;
+    const participant=(await this.boardService.resolveAddress(board,a,Object.keys(evtAddress),{includeUnregistered:true})).participant,receiver=participant.id;
     let runtimeConfigured=true;
     try {await this.key();}catch(error){if(error?.code!=='events_not_configured')throw error;runtimeConfigured=false;}
     const now=this.now(),rows=await evtAll(this.db,'SELECT * FROM event_subscriptions WHERE board=? AND receiver_id=? AND owner_subject=? ORDER BY created_at DESC',board,receiver,this.subject);
     const subscriptions=rows.map(s=>({id:s.id,active:!!s.active && !expired(s,now) && this.ownerAllowed(s),paused:!!s.paused,expired:expired(s,now),limited:s.window_start>now-3600000 && s.wake_count>=s.wake_limit,notification_mode:s.notification_mode,refresh_before:refreshBefore(s.expires_at)}));
     const active=subscriptions.filter(s=>s.active);
-    const state=!runtimeConfigured?'events_not_configured':!active.length?'subscription_required':active.some(s=>!s.paused && !s.limited)?'ready':active.every(s=>s.paused)?'paused':'limited';
+    const state=participant.unregistered_at?'unregistered':!runtimeConfigured?'events_not_configured':!active.length?'subscription_required':active.some(s=>!s.paused && !s.limited)?'ready':active.every(s=>s.paused)?'paused':'limited';
     return {board,receiver_id:receiver,state,runtime_configured:runtimeConfigured,notification_ready:state==='ready',subscriptions,
       event:{name:'message.created',arguments:{board,receiver_id:receiver}},
       ...serviceConfiguration(this.env),
       connection_policy:receivingConnectionPolicy,
-      next_step:state==='subscription_required'?'Check this receiving chat\u2019s execution mode when host metadata exposes it; verify receiving capability through the exact same-chat event task, callback and subscription when mode is unreported. On a supported receiving host, reconcile matching tasks and establish an unscheduled MCP event task for message.created using these exact filters, bound to that conversation. Ongoing receiving defaults to no expiration: request ttlMs:null when lifetime selection is exposed and verify the actual refresh_before:null grant. A finite grant must be reported with its deadline. Local execution defaults to receiving only with on-demand inbox reads, no hook or schedule, and no receiving-method question. A missing event subscription is expected for that route. Explicit Cloud/events requests remain pending until a supported cloud route is verified; preserve that choice. Any new heartbeat requires an explicit inbox-check or interval choice. The host supplies and verifies its callback; events/subscribe is a protocol method, not necessarily a visible tool. Verify the saved host task and re-read this exact receiver setup for ready before confirming incoming delivery. A generic scheduler cannot substitute. If the event source is missing, inspect the existing connection\u2019s discovery status; use Refresh or Rescan only if that connection exposes it.':state==='events_not_configured'?'Configure the event runtime secret on this existing private service only when enabling event receiving. On-demand inbox reads need no event runtime or subscription.':state==='paused'?'Resume the existing receiver subscription when requested.':state==='limited'?'Delivery will wait for the existing hourly attempt budget.':'Verify the saved receiving task\u2019s exact conversation and filters, then test webhook acceptance, wake, fetch, display and acknowledgment separately.'};
+      next_step:state==='unregistered'?'Restore this thread registration before explicitly resuming receiving.':state==='subscription_required'?'Check this receiving chat\u2019s execution mode when host metadata exposes it; verify receiving capability through the exact same-chat event task, callback and subscription when mode is unreported. On a supported receiving host, reconcile matching tasks and establish an unscheduled MCP event task for message.created using these exact filters, bound to that conversation. Ongoing receiving defaults to no expiration: request ttlMs:null when lifetime selection is exposed and verify the actual refresh_before:null grant. A finite grant must be reported with its deadline. Local execution defaults to receiving only with on-demand inbox reads, no hook or schedule, and no receiving-method question. A missing event subscription is expected for that route. Explicit Cloud/events requests remain pending until a supported cloud route is verified; preserve that choice. Any new heartbeat requires an explicit inbox-check or interval choice. The host supplies and verifies its callback; events/subscribe is a protocol method, not necessarily a visible tool. Verify the saved host task and re-read this exact receiver setup for ready before confirming incoming delivery. A generic scheduler cannot substitute. If the event source is missing, inspect the existing connection\u2019s discovery status; use Refresh or Rescan only if that connection exposes it.':state==='events_not_configured'?'Configure the event runtime secret on this existing private service only when enabling event receiving. On-demand inbox reads need no event runtime or subscription.':state==='paused'?'Resume the existing receiver subscription when requested.':state==='limited'?'Delivery will wait for the existing hourly attempt budget.':'Verify the saved receiving task\u2019s exact conversation and filters, then test webhook acceptance, wake, fetch, display and acknowledgment separately.'};
   }
   async configure(a) {
     strict(a,['subscription_id','paused','notification_mode','wake_limit']);id(a.subscription_id,'subscription_id',80);
     const row=await evtFirst(this.db,'SELECT * FROM event_subscriptions WHERE id=? AND owner_subject=?',a.subscription_id,this.subject);
     if(!row)fail(404,'subscription_not_found','Subscription not found for this account.');
     if(a.paused!==undefined && typeof a.paused!=='boolean')fail(400,'invalid_argument','paused must be a boolean.');
+    if(a.paused===false)await this.boardService.activeParticipant(row.board,row.receiver_id);
     if(a.notification_mode!==undefined && !['notify_only','process_inbox'].includes(a.notification_mode))fail(400,'invalid_argument','Unknown notification mode.');
     const budget=integer(a.wake_limit,'wake_limit',1,100,a.wake_limit===undefined?row.wake_limit:undefined);
-    await evtStmt(this.db,'UPDATE event_subscriptions SET paused=?,notification_mode=?,wake_limit=? WHERE id=? AND owner_subject=?',a.paused===undefined?row.paused:Number(a.paused),a.notification_mode??row.notification_mode,budget,row.id,this.subject).run();
+    try { await evtStmt(this.db,'UPDATE event_subscriptions SET paused=?,notification_mode=?,wake_limit=? WHERE id=? AND owner_subject=?',a.paused===undefined?row.paused:Number(a.paused),a.notification_mode??row.notification_mode,budget,row.id,this.subject).run(); }
+    catch(error){if(error.message?.includes('participant_unregistered'))fail(409,'participant_unregistered','This thread was removed from the board before receiving could be resumed.');throw error;}
     return {subscription_id:row.id,paused:a.paused??!!row.paused,notification_mode:a.notification_mode??row.notification_mode,wake_limit:budget};
   }
   async status(a) {
@@ -163,7 +165,8 @@ export class EventService {
         evtStmt(this.db,`INSERT INTO event_deliveries(subscription_id,event_sequence,event_id,state,next_attempt,created_at)
           SELECT ?,e.sequence,'evt_'||e.entity_id||'_'||?||'_'||e.sequence,'pending',?,? FROM events e
           WHERE e.board=? AND e.kind='message_posted' AND e.receiver_id=? AND e.sequence>? AND e.sequence<=?
-            AND EXISTS(SELECT 1 FROM event_subscriptions s WHERE s.id=? AND s.active=1 AND (s.expires_at=0 OR s.expires_at>?))
+            AND EXISTS(SELECT 1 FROM event_subscriptions s JOIN participants p ON p.board=s.board AND p.id=s.receiver_id
+              WHERE s.id=? AND s.active=1 AND p.unregistered_at IS NULL AND (s.expires_at=0 OR s.expires_at>?))
           ON CONFLICT(subscription_id,event_sequence) DO NOTHING`,subscription.id,subscription.id.slice(4,24),now,now,subscription.board,subscription.receiver_id,subscription.scanned_sequence,watermark,subscription.id,now),
         evtStmt(this.db,'UPDATE event_subscriptions SET scanned_sequence=MAX(scanned_sequence,?) WHERE id=?',watermark,subscription.id)
       ]);
