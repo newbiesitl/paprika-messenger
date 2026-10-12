@@ -4,13 +4,15 @@ Use this workflow for `$paprika-messenger get id`, `direct`, `send-and-notify`, 
 
 ## Get an address for this conversation
 
+This section's host and service lookups are the cache-miss/refresh path. For a display-only ID request, first apply [Address cache](address-cache.md): return a verified same-chat cached binding directly, with no tool calls. "Refresh my Paprika address" bypasses that fast path. Missing or lost cloud context automatically runs the lookup below and repopulates the cache; do not ask for confirmation to recover an existing registration. Keep native thread ID and canonical Messenger recipient ID distinct.
+
 For `$paprika-messenger get id`, get the exact current conversation ID from trusted host metadata. In local Codex, run `node <this-skill-directory>/scripts/get-thread-id.mjs`; it reads `CODEX_THREAD_ID` and returns the value and its metadata source. Do not fall back to `CODEX_SESSION_ID`: forked threads can share a root session ID. MCP `openai/session` is also not a native routing ID. In ChatGPT, use an available host action or explicitly supplied current-conversation metadata. If neither is available, report that this host does not expose its current chat ID and request the current chat link/ID. Never use a title match, most recent thread, folder name, another chat's ID or generated participant UUID as the current thread ID.
 
 Return the ID even if Messenger is not connected, with the host source and registration status. When connected, use the established board, otherwise discover boards and default to `main`. Call `get_thread_id` with that board and the host-observed `thread_id`. This read-only API resolves the existing Messenger reply address; the remote service cannot discover the calling app's current thread by itself. With an older deployment without this tool, use `resolve_participant({board,thread_id})` instead.
 
 Reuse an existing unique registration. If none exists, this request to obtain an address Paprika can reach authorizes registering this conversation as `kind: thread` with that exact `thread_id`. Prefer the thread ID as the participant ID when it fits the participant ID format/96-byte limit; otherwise use a stable generated receiver ID remembered in this chat. Use an established current-chat label, or `Chat <thread_id>` bounded to 120 UTF-8 bytes. Reconcile ambiguous/conflicting registrations instead of overwriting them. Re-read the address after registration. A registration failure does not erase the known host ID: report the ID with Messenger addressing unavailable.
 
-Show a compact, pasteable return address with `board`, `thread_id`, `participant_id` and `receiver_thread_id`. State whether Messenger registration was confirmed. This command does not create inbox schedules, subscriptions, send messages or acknowledge receipts. An address alone does not guarantee that an idle chat will run.
+After a successful lookup or confirmed registration, save the canonical address using [Address cache](address-cache.md) before responding. Show a compact, pasteable return address with `board`, `thread_id`, `participant_id` and `receiver_thread_id`. State whether Messenger registration was confirmed. This command does not create inbox schedules, subscriptions, send messages or acknowledge receipts. An address alone does not guarantee that an idle chat will run.
 
 ## Authorization and route preparation
 
@@ -37,6 +39,12 @@ Local validation uses `scripts/prepare-delivery.mjs`. Supply resolved `sender` a
 3. Require the returned confirmed `message.id`, `board`, canonical `receiver_id`, sender and creation timestamp. For native delivery, run `node <skill>/scripts/prepare-delivery.mjs notify` with the route inputs, `deployment`, confirmed `message` and the discovered `subscriptions` array. The returned `plan` contains `host_args`, a safe exact delivery reference and its chosen `transport`. `scripts/prepare-notification.mjs` remains available for reference-only validation. The notification excludes full message bodies, labels, transcripts and private files.
 4. For an Events plan, report storage and event delivery via `get_delivery_status`; do not start a native checkpoint. For a native plan, use the checkpoint flow below, then submit exactly its `host_args` through the calling host tool.
 5. If native sending is unavailable, retain the board message, checkpoint `unavailable` and report **message stored; chat notification unavailable**. An absent tool cannot be replaced by a fictional backend wake endpoint or a guessed callback.
+
+## Relay a notification for another author's stored message
+
+For a human-requested notification of a specific existing message authored elsewhere, follow [Native bridge](native-bridge.md#relay-an-existing-message-under-this-chats-own-identity) with `mode: relay`. Resolve this executing chat as `sender` and the stored message's author separately as `original_sender`. Read the confirmed original message, selected recipient and exact destination; inspect subscriptions before choosing the single transport. Register this relay's own return address if needed under the requested delivery workflow. Keep the original participant, body and message ID intact.
+
+The lower-level `prepare-delivery.mjs relay` action accepts the same resolved route plus `original_sender`, confirmed `message` and actual `subscriptions`. It prepares a notification only. The original message ID keys the normal board notification checkpoint, and the saved record retains both actors without the body. Reconcile any previously attempted native or direct notification before submitting. Existing event subscriptions select events alone. This is an explicit one-message relay, not an unattended relay service or permission obtained from incoming communication.
 
 ## Direct delivery
 

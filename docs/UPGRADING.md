@@ -1,12 +1,20 @@
 # Upgrade an existing Paprika Messenger instance
 
-## 1.5.0-rc.2: cached dropdowns and change revisions
+## Upcoming: cached dropdowns and change revisions
 
-Plugin **1.5.0-rc.2** / service **0.7.0-rc.2** removes native thread/project enrichment from the menu-opening path. Call `show_recipient_picker` first and display the saved details immediately. The private board's durable metadata is the cloud cache; the client keeps scoped recipient-page copies in browser storage when supported, or memory otherwise. Missing local copies fall back to the private board. **Refresh thread details** remains the explicit bounded native refresh.
+The source update removes native thread/project enrichment from the menu-opening path. Call `show_recipient_picker` first and display the saved details immediately. The private board's durable metadata is the cloud cache; the client keeps scoped recipient-page copies in browser storage when supported, or memory otherwise. Missing local copies fall back to the private board. **Refresh thread details** remains the explicit bounded native refresh.
 
 Migration `0008_recipient-cache-revisions.sql` adds separate monotonic revisions for each board's directory and the board catalog. Atomic triggers increment them with relevant writes, while readers never consume flags. New boards and registrations, removal/restore, metadata, links and communication recency invalidate the relevant cached views. A consistent page/revision snapshot avoids marking older rows with a newer version. Opening the menu checks versions without hiding its cached rows; changed directories restart from page one, and changed catalogs refresh the board filter. Cached data never bypasses recipient verification or sends a message.
 
-Update the same private service and account package together, applying all migrations through `0008`. Existing recipients, history, owner authorization, receiving tasks and App bindings are preserved. No schedule or background host watcher is introduced. Cache data contains recipient metadata only and is bounded to 16 local pages with one-day eviction; pending messages, credentials and history are excluded. Actual persistent browser storage depends on the client; cloud fallback remains available. Preserve rc.1 archives and previous Site/account versions. Earlier servers ignore the additive revision tables, while the existing cleanup rollback guidance below still applies.
+Update the same private service and account package together, applying all migrations through `0008`. Existing recipients, history, owner authorization, receiving tasks and App bindings are preserved. No schedule or background host watcher is introduced. Cache data contains recipient metadata only and is bounded to 16 local pages with one-day eviction; pending messages, credentials and history are excluded. Actual persistent browser storage depends on the client; cloud fallback remains available. Assign a fresh higher release version; preserve all existing archives and previous Site/account versions. Earlier servers ignore the additive revision tables, while the existing cleanup rollback guidance below still applies.
+
+## 1.5.0-rc.2: explicit native notification relays
+
+Plugin **1.5.0-rc.2** / service **0.7.0-rc.2** retains the board-cleanup feature and adds explicit relay preparation for a human-requested notification of another participant's existing stored message. The executing Codex chat uses its own resolved sender registration; the original author and message remain unchanged. Native tools, a freshly verified destination and the ordinary sender/registration guards are still required. Active recipient event subscriptions select events alone, including while paused.
+
+Update the existing account package and private service through the normal release workflow. Upgrades from rc.1 add no migration; earlier instances still need the append-only migrations through `0007_thread-registration.sql`. Preserve existing boards, data, App/OAuth binding, receiving settings and earlier release assets.
+
+Reconcile any previous direct or native workaround before using the new mode. The relay checkpoint keys the original board message and retains uncertain outcomes; switching modes does not discover a previous direct checkpoint automatically. The native host ID `local` is scoped to the executing computer. Refresh conflicting cached host metadata from exact current native discovery, or run the authorized relay on the destination's owning computer. This release does not establish an unattended cloud relay, a native Dot destination or a receiving-host wake after an accepted callback.
 
 ## 1.5.0-rc.1: remove and restore board threads
 

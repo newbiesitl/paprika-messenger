@@ -48,7 +48,7 @@
       },
       "publication": {
         "countries": [],
-        "release_notes": "Test release: open recipient dropdowns from cached details immediately without native metadata preflight. Add scoped local recipient-page caching with the private board’s durable metadata as fallback. Monotonic per-board and board-catalog revisions automatically refresh new registrations, new boards and changed metadata; atomic database updates prevent lost increments. Keep explicit thread-detail refresh and revalidate recipients before selection/sending. Preserve board cleanup, Undo/Restore and all existing history. Includes an additive cache-revision migration."
+        "release_notes": "Test release: combine board cleanup with explicitly authorized native relays for existing stored messages. The executing Codex chat retains its own identity, the original author and message remain unchanged, and checkpoints use the original message ID. Preserve event-only selection, removed-registration guards and uncertainty handling. Document current native host discovery and cross-computer routing limits. No unattended cloud relay or receiving-host webhook repair is added."
       }
     }
   }

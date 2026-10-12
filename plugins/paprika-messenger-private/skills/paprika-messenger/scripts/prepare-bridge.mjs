@@ -1,6 +1,6 @@
 import { existsSync, realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { prepareDirectDelivery, prepareStoredDelivery, readJsonInput } from './prepare-delivery.mjs';
+import { prepareDirectDelivery, prepareStoredDelivery, prepareRelayedDelivery, readJsonInput } from './prepare-delivery.mjs';
 import { conversationLink } from './conversation-link.mjs';
 
 // The host supplies a fresh get_recipient result and actual native read_thread
@@ -22,12 +22,13 @@ export function prepareBridgeDelivery(input, env = process.env) {
     throw Error('Missing ChatGPT conversation mapping; do not fall back to its execution thread.');
   if (native.status?.type !== 'idle') throw Error('Wait until the selected recipient is idle before preparing a bridge send.');
   if (native.kind === 'codex' && (!native.hostId || (recipient.host_id && native.hostId !== recipient.host_id)))
-    throw Error('Require the exact Codex host from native discovery.');
+    throw Error('Require the exact Codex host from current native discovery. Refresh stale recipient host metadata and re-read it before preparing. The host ID local is relative to the executing computer, not a global machine address.');
   const destination = {source: 'read_thread', kind: native.kind, thread_id: native.id,
     ...(native.kind === 'codex' ? {host_id: native.hostId} : {})};
   const resolved = {...input, recipient, destination};
-  if (!['direct','board'].includes(mode)) throw Error('Bridge mode must be direct or board.');
-  const plan = (mode === 'direct' ? prepareDirectDelivery : prepareStoredDelivery)(resolved, env);
+  if (!['direct','board','relay'].includes(mode)) throw Error('Bridge mode must be direct, board or relay.');
+  const plan = ({direct: prepareDirectDelivery, board: prepareStoredDelivery,
+    relay: prepareRelayedDelivery})[mode](resolved, env);
   return {...plan, native_kind: native.kind,
     conversation_link: conversationLink({...recipient, source: native.kind,
       ...(native.kind === 'codex' && native.hostId === 'local' ? {host_id: 'local', execution_mode: 'local'} : {})})};
