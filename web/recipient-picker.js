@@ -6,7 +6,8 @@ export function recipientLabel(recipient) {
 
 // The website and in-chat card share this component. All displayed metadata is
 // plain text; selection always returns the canonical communication address.
-export function mountRecipientPicker(root,{load,onSelect,onClear=()=>{},onPage=()=>{},onOpen=null,onUnregister=null,onRestore=null}) {
+export function mountRecipientPicker(root,{load,onSelect,onClear=()=>{},onPage=()=>{},onOpen=null,onUnregister=null,onRestore=null,
+  checkUpdates=null,getBoardsRevision=()=>null,onBoardsChanged=async()=>{}}) {
   const node=(tag,text,cls)=>{const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;};
   const details=node('details',undefined,'recipient-dropdown'),summary=node('summary','Choose recipient'),panel=node('div',undefined,'recipient-panel');
   const searchLabel=node('label','Search by thread name or ID'),search=node('input');
@@ -19,6 +20,7 @@ export function mountRecipientPicker(root,{load,onSelect,onClear=()=>{},onPage=(
   const actions=node('div',undefined,'recipient-actions');actions.append(more,refresh,removed,undo);panel.append(searchLabel,status,results,notice,actions);details.append(summary,panel);
   const chosen=node('p','','recipient-chosen');chosen.hidden=true;clear.hidden=true;root.replaceChildren(details,chosen,clear);root.classList.add('recipient-picker');
   let rows=[],nextCursor=null,query='',selected=null,generation=0,loading=false,busy=false,disabled=false,searchTimer=null,loaded=false,registrationStatus='active',undoTarget=null;
+  let directoryRevision=null,cacheScope=null,checking=null,deferredCheck=false;
   function openLink(recipient) {
     const link=conversationLink(recipient);if(!link)return null;
     const anchor=node('a',link.label,'recipient-open');anchor.href=link.url;anchor.target='_blank';anchor.rel='noopener noreferrer';
@@ -71,16 +73,38 @@ export function mountRecipientPicker(root,{load,onSelect,onClear=()=>{},onPage=(
     }catch(error){status.textContent=error.message||'Unable to select this recipient.';}
     finally{busy=false;buttons();}
   }
-  async function fetchPage(append=false) {
+  async function fetchPage(append=false,{bypassCache=false}={}) {
     if((loading&&append)||busy||disabled)return;
-    const current=++generation,cursor=append?nextCursor:null,currentQuery=search.value.trim();query=currentQuery;loading=true;buttons();status.textContent='Loading recipients…';
+    const current=++generation,cursor=append?nextCursor:null,currentQuery=search.value.trim();let fromLocal=false;query=currentQuery;loading=true;buttons();status.textContent='Loading recipients…';
     try {
-      const page=await load({query:currentQuery,...(cursor?{cursor}:{}),limit:50,registration_status:registrationStatus});if(current!==generation)return;
+      const page=await load({query:currentQuery,...(cursor?{cursor}:{}),limit:50,registration_status:registrationStatus},{bypassCache});if(current!==generation)return;
+      if(append&&directoryRevision!==null&&(directoryRevision!==page.directory_revision||cacheScope!==page.cache_scope)){loading=false;await fetchPage(false,{bypassCache:true});return;}
+      fromLocal=!!page.local_cache_hit;
       rows=append?[...new Map([...rows,...page.recipients].map(r=>[r.participant_id,r])).values()]:page.recipients;
-      nextCursor=page.next_cursor;loaded=true;draw();onPage(page);
+      nextCursor=page.next_cursor;directoryRevision=page.directory_revision??null;cacheScope=page.cache_scope??null;loaded=true;draw();onPage(page);
       status.textContent=rows.length?`${rows.length} ${registrationStatus==='unregistered'?'removed conversation':'conversation'}${rows.length===1?'':'s'}${nextCursor?' · more available':''}`:(currentQuery?'No recipients match this name or ID.':registrationStatus==='unregistered'?'No removed threads on this board.':'No conversations registered on this board yet.');
     }catch(error){if(current===generation){status.textContent=error.message||'Unable to load recipients.';if(!append){rows=[];nextCursor=null;draw();}}}
     finally{if(current===generation){loading=false;buttons();}}
+    if(fromLocal&&current===generation)await checkForUpdates();
+  }
+  async function checkForUpdates(){
+    if(!checkUpdates||!loaded||disabled||busy||loading)return;
+    if(checking){deferredCheck=true;return;}
+    const current=generation,knownRevision=directoryRevision,knownScope=cacheScope;
+    checking=Promise.resolve().then(()=>checkUpdates());
+    try{
+      const state=await checking;if(current!==generation||busy||disabled)return;
+      const scopeChanged=knownScope!==state.cache_scope;
+      if(scopeChanged||getBoardsRevision()!==state.boards_revision)await onBoardsChanged(state);
+      if(current!==generation||busy||disabled)return;
+      if(scopeChanged||knownRevision!==state.directory_revision){
+        checking=null;
+        // Restart a changed result set from page one so a newly registered or
+        // newly recent thread cannot be missed behind an old cursor.
+        await fetchPage(false,{bypassCache:true});
+      }
+    }catch{if(current===generation)status.textContent='Showing saved recipients. Refresh could not be verified.';}
+    finally{checking=null;if(deferredCheck){deferredCheck=false;void checkForUpdates();}}
   }
   async function changeRegistration(recipient,restore) {
     if(busy||disabled||!(restore?onRestore:onUnregister))return;
@@ -95,22 +119,23 @@ export function mountRecipientPicker(root,{load,onSelect,onClear=()=>{},onPage=(
       draw();changed=true;
     }catch(error){if(current===generation)status.textContent=error.message||'Registration change was not confirmed.';}
     finally{busy=false;buttons();}
-    if(changed&&current===generation)await fetchPage();
+    if(changed&&current===generation)await fetchPage(false,{bypassCache:true});
   }
   removed.onclick=()=>{if(busy||disabled||loading)return;registrationStatus=registrationStatus==='active'?'unregistered':'active';removed.textContent=registrationStatus==='active'?'Removed threads':'Back to recipients';showSelected();rows=[];nextCursor=null;draw();return fetchPage();};
   undo.onclick=()=>undoTarget&&changeRegistration(undoTarget,true);
   search.addEventListener('input',()=>{clearTimeout(searchTimer);generation++;loading=false;nextCursor=null;rows=[];draw();status.textContent='Searching…';searchTimer=setTimeout(()=>fetchPage(),250);});
   search.addEventListener('keydown',event=>{if(event.key==='ArrowDown'){event.preventDefault();results.querySelector('button')?.focus();}if(event.key==='Escape')details.open=false;});
-  details.addEventListener('toggle',()=>{if(details.open&&!loaded)fetchPage();});
-  more.onclick=()=>fetchPage(true);refresh.onclick=()=>fetchPage();
+  details.addEventListener('toggle',()=>{if(details.open){if(!loaded)void fetchPage();else void checkForUpdates();}});
+  more.onclick=()=>fetchPage(true);refresh.onclick=()=>fetchPage(false,{bypassCache:true});
   clear.onclick=async()=>{if(busy||disabled)return;try{await onClear();selected=null;showSelected();draw();}catch(error){status.textContent=error.message||'Unable to clear the recipient.';}};
   return {
-    refresh:()=>fetchPage(),
-    setPage(page){generation++;loading=false;registrationStatus=page.registration_status||'active';removed.textContent=registrationStatus==='active'?'Removed threads':'Back to recipients';showSelected();rows=page.recipients;nextCursor=page.next_cursor;search.value=page.query||'';query=search.value;loaded=true;draw();onPage(page);status.textContent=rows.length?`${rows.length} ${registrationStatus==='unregistered'?'removed conversations':'conversations'}${nextCursor?' · more available':''}`:'No recipients match.';},
+    refresh:()=>fetchPage(false,{bypassCache:true}),
+    warm:()=>fetchPage(),
+    setPage(page){generation++;loading=false;directoryRevision=page.directory_revision??null;cacheScope=page.cache_scope??null;registrationStatus=page.registration_status||'active';removed.textContent=registrationStatus==='active'?'Removed threads':'Back to recipients';showSelected();rows=page.recipients;nextCursor=page.next_cursor;search.value=page.query||'';query=search.value;loaded=true;draw();onPage(page);status.textContent=rows.length?`${rows.length} ${registrationStatus==='unregistered'?'removed conversations':'conversations'}${nextCursor?' · more available':''}`:'No recipients match.';},
     setSelected(recipient){selected=recipient;summary.textContent=recipient?recipientLabel(recipient):'Choose recipient';showSelected();draw();},
     setDisabled(value){disabled=value;buttons();},
     open(){details.open=true;},
-    reset(){generation++;clearTimeout(searchTimer);loading=false;loaded=false;rows=[];nextCursor=null;query='';search.value='';selected=null;registrationStatus='active';undoTarget=null;undo.hidden=true;notice.hidden=true;removed.textContent='Removed threads';summary.textContent='Choose recipient';chosen.hidden=true;clear.hidden=true;draw();status.textContent='Recent conversations · 50 at a time';},
+    reset(){generation++;clearTimeout(searchTimer);loading=false;loaded=false;directoryRevision=null;cacheScope=null;rows=[];nextCursor=null;query='';search.value='';selected=null;registrationStatus='active';undoTarget=null;undo.hidden=true;notice.hidden=true;removed.textContent='Removed threads';summary.textContent='Choose recipient';chosen.hidden=true;clear.hidden=true;draw();status.textContent='Recent conversations · 50 at a time';},
     getQuery:()=>query,getRegistrationStatus:()=>registrationStatus
   };
 }

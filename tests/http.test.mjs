@@ -389,6 +389,27 @@ test('installation discovers events before secrets are provisioned while subscri
   } finally {installDb.close();}
 });
 
+test('revision checks are owner-only, non-consuming and consistent with cached directory pages',async()=>{
+  const versionDb=new SqliteD1();versionDb.connection.exec(await loadMigrations());const versionEnv={...env,DB:versionDb};
+  const call=(name,args,subject='owner')=>request('/mcp',{jsonrpc:'2.0',id:1,method:'tools/call',params:{name,arguments:args}},subject);
+  try{
+    assert.equal((await handle(call('get_recipient_directory_state',{board:'main'},''),versionEnv)).status,401);
+    assert.equal((await handle(call('get_recipient_directory_state',{board:'main'},'intruder'),versionEnv)).status,403);
+    assert.equal((await handle(request('/api/get_recipient_directory_state',{board:'main'}),versionEnv)).status,403);
+    const read=async()=>((await (await handle(call('get_recipient_directory_state',{board:'main'}),versionEnv)).json()).result.structuredContent);
+    const before=await read();assert.deepEqual(await read(),before);
+    await new BoardService(versionDb,'owner').register_participant({board:'main',participant_id:'new-fixture',label:'New fixture',kind:'thread',thread_id:'native-new-fixture'});
+    const after=await read();assert(after.directory_revision>before.directory_revision);
+    const result=(await (await handle(call('show_recipient_picker',{}),versionEnv)).json()).result;
+    assert.equal(result.structuredContent.directory_revision,after.directory_revision);assert.equal(result.structuredContent.cache_scope,after.cache_scope);
+    assert.equal(result.structuredContent.recipients[0].participant_id,'new-fixture');assert.equal(result.structuredContent.selection_sends,false);
+    const metadata=(await (await handle(request('/mcp',{jsonrpc:'2.0',id:1,method:'server/discover'}),versionEnv)).json()).result;
+    assert.match(metadata.instructions,/Do not preflight list_recipients/);assert.match(metadata.instructions,/refresh.*explicitly requested/i);
+    assert.match(await (await handle(request('/recipient-cache.js'),versionEnv)).text(),/createRecipientPageCache/);
+    assert.equal(versionDb.connection.prepare('SELECT COUNT(*) n FROM messages').get().n,0);
+  }finally{versionDb.close();}
+});
+
 test('thread cleanup is owner-only and CSRF-protected; active menus hide removed threads and preserve their stored inbox',async()=>{
   const cleanupDb=new SqliteD1();cleanupDb.connection.exec(await loadMigrations());const cleanupEnv={...env,DB:cleanupDb};
   const call=(name,args,subject='owner',headers={})=>request('/mcp',{jsonrpc:'2.0',id:1,method:'tools/call',params:{name,arguments:args}},subject,headers);

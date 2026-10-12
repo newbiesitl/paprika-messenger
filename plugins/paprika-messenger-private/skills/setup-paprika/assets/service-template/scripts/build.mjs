@@ -1,8 +1,8 @@
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
-const files=['../skills/paprika-messenger/scripts/conversation-link','validation','service-config','thread-registration','recipient-conversations','recipient-directory','service','webhooks','events','connection-ui','recipient-ui','protocol','worker'];
+const files=['../skills/paprika-messenger/scripts/conversation-link','validation','service-config','recipient-cache-state','thread-registration','recipient-conversations','recipient-directory','service','webhooks','events','connection-ui','recipient-ui','protocol','worker'];
 const assets={};
-for (const [path,file,type] of [['/','web/index.html','text/html; charset=utf-8'],['/board.js','web/board.js','text/javascript; charset=utf-8'],['/state.js','web/state.js','text/javascript; charset=utf-8'],['/board.css','web/board.css','text/css; charset=utf-8'],['/conversation-link.js','skills/paprika-messenger/scripts/conversation-link.mjs','text/javascript; charset=utf-8'],['/recipient-picker.js','web/recipient-picker.js','text/javascript; charset=utf-8'],['/recipient-picker.css','web/recipient-picker.css','text/css; charset=utf-8']])
+for (const [path,file,type] of [['/','web/index.html','text/html; charset=utf-8'],['/board.js','web/board.js','text/javascript; charset=utf-8'],['/state.js','web/state.js','text/javascript; charset=utf-8'],['/board.css','web/board.css','text/css; charset=utf-8'],['/conversation-link.js','skills/paprika-messenger/scripts/conversation-link.mjs','text/javascript; charset=utf-8'],['/recipient-cache.js','web/recipient-cache.js','text/javascript; charset=utf-8'],['/recipient-picker.js','web/recipient-picker.js','text/javascript; charset=utf-8'],['/recipient-picker.css','web/recipient-picker.css','text/css; charset=utf-8']])
   assets[path]={body:await readFile(file,'utf8'),type};
 const sources=await Promise.all(files.map(f=>readFile(`src/${f}.mjs`,'utf8')));
 const skillText=await readFile('skills/paprika-messenger/SKILL.md','utf8');
@@ -22,7 +22,7 @@ const uiResources={'ui://paprika-messenger/connection/v1.html':{
   _meta:{ui:{prefersBorder:true,csp:{connectDomains:[],resourceDomains:[]}},
     'openai/widgetDescription':'Incoming-message controls for this chat: explicitly enable receiving, optionally record receipts after reading, check status or stop this chat’s verified binding.'}
 }};
-const recipientScript=(await Promise.all(['skills/paprika-messenger/scripts/conversation-link.mjs','web/recipient-picker.js','web/recipient-host.js'].map(file=>readFile(file,'utf8'))))
+const recipientScript=(await Promise.all(['skills/paprika-messenger/scripts/conversation-link.mjs','web/recipient-cache.js','web/recipient-picker.js','web/recipient-host.js'].map(file=>readFile(file,'utf8'))))
   .map(source=>source.replace(/^import .*?;\r?\n/gm,'').replace(/^export /gm,'')).join('\n');
 uiResources['ui://paprika-messenger/recipients/v1.html']={uri:'ui://paprika-messenger/recipients/v1.html',mimeType:'text/html;profile=mcp-app',
   text:(await readFile('web/recipient-controls.html','utf8')).replace('/* RECIPIENT_CSS */',()=>assets['/recipient-picker.css'].body).replace('/* RECIPIENT_SCRIPT */',()=>recipientScript),

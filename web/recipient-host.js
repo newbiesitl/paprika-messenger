@@ -1,12 +1,29 @@
 import { mountRecipientPicker, recipientLabel } from './recipient-picker.js';
+import { browserRecipientPageCache } from './recipient-cache.js';
 
 export function createRecipientHost({window,document,mount=mountRecipientPicker}) {
   const element=id=>document.getElementById(id),pending=new Map(),completed=new Set();
+  const pageCache=browserRecipientPageCache(window);
   let snapshot=null,metadataPage=null,bridgeReady=false,nextId=1,selecting=false,contextId=null,currentSelection=null;
-  const picker=mount(element('picker'),{load:args=>call('list_recipients',{board:snapshot.board,...args}),onPage:page=>{metadataPage=page;renderMode(page.registration_status);},onSelect:select,onClear:clear,
+  const picker=mount(element('picker'),{load:loadPage,onPage:page=>{metadataPage=page;savePage(page);renderMode(page.registration_status);},onSelect:select,onClear:clear,
+    checkUpdates:()=>call('get_recipient_directory_state',{board:snapshot.board}),getBoardsRevision:()=>snapshot?.boards_revision??null,onBoardsChanged:reloadBoards,
     onUnregister:recipient=>changeRegistration(recipient,false),onRestore:recipient=>changeRegistration(recipient,true),
     onOpen:async link=>{if(!bridgeReady)throw Error('Host bridge unavailable.');const result=await request('ui/open-link',{url:link.url});if(result?.isError)throw Error('Host refused the conversation link.');}});
   picker.setDisabled(true);
+  async function loadPage(args,{bypassCache=false}={}){
+    const context={board:snapshot.board,cache_scope:snapshot.cache_scope};
+    const saved=!bypassCache&&pageCache.read(context,args);if(saved)return saved;
+    const page=await call('list_recipients',{board:context.board,...args});pageCache.write({...context,cache_scope:page.cache_scope},args,page);return page;
+  }
+  function savePage(page){
+    if(snapshot?.board===page.board&&page.cache_scope)snapshot.cache_scope=page.cache_scope;
+    if(page.local_cache_hit)return;
+    pageCache.write({board:page.board,cache_scope:page.cache_scope},{query:page.query,registration_status:page.registration_status,cursor:page.page_cursor,limit:page.page_limit||50},page);
+  }
+  async function reloadBoards(){
+    const current=snapshot,data=await call('list_boards',{limit:200});if(snapshot!==current)return;
+    Object.assign(current,{board_options:data.boards,boards_revision:data.boards_revision,boards_has_more:data.has_more,boards_next_after_id:data.next_after_id});renderBoards(current);
+  }
   function renderMode(status){if(snapshot)element('mode').textContent=status==='unregistered'?'Restore a removed thread to choose it as a recipient.':snapshot.mode==='send_agreed'?'Choose a recipient to send this agreed message.':'Choose a recipient, then type your message in chat.';}
   function controls(){const blocked=!bridgeReady||selecting||completed.has(attemptId());picker.setDisabled(blocked);element('board-filter').disabled=blocked;element('more-boards').disabled=blocked;element('refresh-metadata').disabled=blocked||!snapshot;}
   function reportSize(){if(bridgeReady)window.parent.postMessage({jsonrpc:'2.0',method:'ui/notifications/size-changed',params:{width:document.documentElement.clientWidth,height:document.documentElement.scrollHeight}},'*');}
@@ -91,7 +108,10 @@ export function createRecipientHost({window,document,mount=mountRecipientPicker}
   };
   element('more-boards').onclick=async()=>{
     if(!snapshot?.boards_has_more||selecting)return;selecting=true;controls();
-    try{const page=await call('list_boards',{after_id:snapshot.boards_next_after_id,limit:200});snapshot={...snapshot,board_options:[...snapshot.board_options,...page.boards],boards_has_more:page.has_more,boards_next_after_id:page.next_after_id};renderBoards(snapshot);}
+    const current=snapshot;
+    try{const page=await call('list_boards',{after_id:current.boards_next_after_id,limit:200});if(snapshot!==current)return;
+      if(current.boards_revision!==page.boards_revision)await reloadBoards();
+      else{Object.assign(current,{board_options:[...current.board_options,...page.boards],boards_has_more:page.has_more,boards_next_after_id:page.next_after_id});renderBoards(current);}}
     catch(error){element('feedback').textContent=error.message;}
     finally{selecting=false;controls();}
   };
