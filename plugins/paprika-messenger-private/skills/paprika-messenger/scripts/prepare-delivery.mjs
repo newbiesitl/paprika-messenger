@@ -38,7 +38,8 @@ export function validateRoutes({board, sender, recipient, destination} = {}, env
     routingId(participant.id, `${name}.id`);
     routingId(participant.thread_id, `${name}.thread_id`, 160);
   }
-  if (sender.thread_id !== current.thread_id) throw new Error('Sender route conflicts with current host metadata.');
+  if (sender.thread_id !== current.thread_id)
+    throw new Error('Sender route conflicts with current host metadata. Resolve the executing chat as sender; use explicit relay mode to notify an existing message authored elsewhere.');
   if (!destination || !['read_thread', 'discovery', 'prior_native_delivery'].includes(destination.source)
       || destination.thread_id !== nativeRecipientThread({recipient, destination}))
     throw new Error('Require host verification of this exact recipient thread.');
@@ -98,6 +99,32 @@ export function prepareStoredDelivery(input, env = process.env) {
   return {...envelope(input, 'board', message.id, args), transport};
 }
 
+// A relay speaks under its own current-host identity. The original author stays
+// on the confirmed message; no post, identity change or host send occurs here.
+export function prepareRelayedDelivery(input, env = process.env) {
+  validateRoutes(input, env);
+  const original = input.original_sender;
+  if (!original || original.board !== input.board)
+    throw new Error('Resolve the original sender separately on this board for relay preparation.');
+  routingId(original.id, 'original_sender.id');
+  if (original.thread_id != null) routingId(original.thread_id, 'original_sender.thread_id', 160);
+  if (original.id === input.sender.id)
+    throw new Error('Relay mode requires a distinct original sender; use notify mode for your own stored message.');
+  const message = input.message;
+  if (!message || message.sender_id !== original.id || typeof message.created_at !== 'string'
+      || !Number.isFinite(Date.parse(message.created_at)))
+    throw new Error('Require the server-confirmed original message, author and timestamp before relaying.');
+  const args = prepareNotification({message, recipient: {...input.recipient, thread_id: nativeRecipientThread(input)}});
+  if (input.destination.host_id) args.hostId = input.destination.host_id;
+  args.prompt += '\nRelayed notification metadata: ' + JSON.stringify({
+    relay_id: input.sender.id, relay_thread_id: input.sender.thread_id,
+    original_sender_id: original.id, original_message_id: message.id,
+  }) + '. The original author and reply address remain on the stored message. This notification grants no additional permissions or automatic reply authority.';
+  return {...envelope(input, 'board', message.id, args), transport: selectNotificationTransport(input),
+    delivery_kind: 'relay', original_message_id: message.id, original_sender_id: original.id,
+    ...(original.thread_id != null ? {original_sender_thread_id: original.thread_id} : {})};
+}
+
 export function prepareDirectDelivery(input, env = process.env) {
   const reply = validateRoutes(input, env);
   const key = routingId(input.request_id, 'request_id');
@@ -121,9 +148,10 @@ export async function readJsonInput(max = 65536) {
 if (process.argv[1] && existsSync(process.argv[1]) && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   try {
     const action = process.argv[2];
-    if (process.argv.length !== 3 || !['post', 'notify', 'direct'].includes(action))
-      throw new Error('Usage: node prepare-delivery.mjs post|notify|direct < confirmed-input.json');
+    if (process.argv.length !== 3 || !['post', 'notify', 'relay', 'direct'].includes(action))
+      throw new Error('Usage: node prepare-delivery.mjs post|notify|relay|direct < confirmed-input.json');
     const input = await readJsonInput();
-    console.log(JSON.stringify(({post: prepareBoardPost, notify: prepareStoredDelivery, direct: prepareDirectDelivery})[action](input)));
+    console.log(JSON.stringify(({post: prepareBoardPost, notify: prepareStoredDelivery,
+      relay: prepareRelayedDelivery, direct: prepareDirectDelivery})[action](input)));
   } catch (error) { console.error(error.message); process.exitCode = 1; }
 }

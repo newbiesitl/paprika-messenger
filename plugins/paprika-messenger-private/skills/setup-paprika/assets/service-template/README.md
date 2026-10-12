@@ -12,7 +12,7 @@ Messages support replies, explicit receipt acknowledgments, safe retries, recove
 
 ## Install for your account
 
-The source now includes a [Codex native bridge](skills/paprika-messenger/references/native-bridge.md) for requested messages to existing Codex or actual ChatGPT conversations. A separate recipient-to-conversation mapping keeps a ChatGPT conversation ID distinct from its registered execution thread. Direct delivery uses the sender's built-in host tool without creating an event-hook task. It requires that tool on the sending host; it does not implement cloud-to-cloud or Dot relaying. This source change must be deployed and the client package updated before the mapping tool is available in an existing installation.
+The source now includes a [Codex native bridge](skills/paprika-messenger/references/native-bridge.md) for requested messages to existing Codex or actual ChatGPT conversations. A separate recipient-to-conversation mapping keeps a ChatGPT conversation ID distinct from its registered execution thread. Direct delivery uses the sender's built-in host tool without creating an event-hook task. An explicitly requested relay can notify an existing message under the executing Codex chat's own identity while preserving the original author. It requires native tools on that executing host; no background cloud-to-cloud relay or native Dot destination is added. This source change must be deployed and the client package updated before the mapping tool is available in an existing installation.
 
 Bundle **1.4.1** includes service source **0.6.1**, Sites onboarding and messaging skills. Asking for a recipient dropdown opens the embedded menu directly, without a preliminary question. It keeps project → thread labels, full IDs, literal name/ID search, the main-default board filter, thread-detail refresh, conversation links and pages of 50. A native question panel is used only when explicitly requested. Update the account package and the existing private service together. Preserve the stable [1.4.0 release](https://github.com/newbiesitl/paprika-messenger/releases/tag/v1.4.0) and the previous saved Site version for rollback. **The default is a private account installation**, for supported devices signed into the same account. GitHub supplies the package; Plugin Creator saves it to the account.
 
@@ -83,7 +83,7 @@ See [example participant choices](docs/PARTICIPANTS.json), [optional receiver ch
 
 ## Active notification routes and release progress
 
-Last reviewed: **2026-10-11**. This snapshot covers the implemented event route and the native bridge work tracked in [PR #15](https://github.com/newbiesitl/paprika-messenger/pull/15). **Active notification** means the receiver wakes and processes a message without someone manually prompting it to check its inbox. It does not imply a phone or operating-system push notification.
+Last reviewed: **2026-10-13**. This snapshot covers the implemented event route and the native bridge work tracked in [PR #15](https://github.com/newbiesitl/paprika-messenger/pull/15). **Active notification** means the receiver wakes and processes a message without someone manually prompting it to check its inbox. It does not imply a phone or operating-system push notification.
 
 **Verified** means a real receiver wake and report or acknowledgment were observed in the tested setup. **Conditional** means the method is implemented but depends on the receiving host and still needs a successful live test for that exact sender/receiver pair. These results record past tests; check the current host capabilities and subscription state before sending.
 
@@ -98,6 +98,7 @@ Last reviewed: **2026-10-11**. This snapshot covers the implemented event route 
 | **ChatGPT cloud → Local Codex** | No established automatic wake route in the tested setup | — | Message storage is available; **automatic receiver wake remains unverified**. |
 | **Paprika / Dot → ChatGPT cloud** | Paprika message → receiving chat's MCP event hook | **Yes—on receiver** | **Conditional:** exact pair not verified. Dot's attempted native relay could not resolve the destination. |
 | **Paprika / Dot → Local Codex** | No established automatic wake route in the tested setup | — | Native relay destination lookup failed; **no successful wake verified**. |
+| **Existing message → authorized Codex relay → Codex / ChatGPT** | Executing relay's native tool, with the original message and author retained | **No** for a native recipient; existing event subscriptions take priority | **Verified manual workaround:** one Mac relay notified four Codex recipients, which fetched their exact messages. The explicit relay helper and mapped ChatGPT case pass fixture tests; a fresh helper live test remains pending. |
 
 ### Support boundaries
 
@@ -106,6 +107,7 @@ Last reviewed: **2026-10-11**. This snapshot covers the implemented event route 
 - **Destination mapping:** the bridge feature implements an explicit Paprika recipient-to-ChatGPT-conversation mapping. The strongest visible ChatGPT delivery proof used the actual conversation ID directly. A fresh **dropdown selection → saved mapping → correct visible acknowledgment** test is still pending. A Paprika runtime/thread ID and a ChatGPT conversation ID are distinct addresses; a `/share/` link is not a delivery address.
 - **Sender capability:** native delivery requires the sending host to expose the native thread tools and resolve the exact destination. The remote Messenger service cannot invoke those host tools itself. Successful local Codex tests do not establish the same capability in ChatGPT cloud or Dot.
 - **Codex Cloud:** Codex Cloud as the sender remains separately untested. The successful native sender tests came from local Codex; reaching a hosted Codex runtime does not verify hosted Codex as a sender.
+- **Cross-computer routing:** `local` refers to the executing computer. Another client's cached `local` value is not a global machine address. Reverify the exact destination and refresh conflicting metadata; use an actually discovered connected host or an authorized relay on the recipient's owning computer.
 - **Local event receiver:** the experimental receiver worked in an isolated session. Waking existing desktop chats through a production event receiver remains unfinished.
 - **Delivery evidence:** stored messages, queued deliveries and accepted webhooks are separate from an observed receiver wake or acknowledgment. Verify the response in the intended conversation. Opening a conversation link does not itself deliver a message or wake its receiver.
 
@@ -114,6 +116,7 @@ Last reviewed: **2026-10-11**. This snapshot covers the implemented event route 
 - [ ] Verify the dropdown-selected recipient, saved mapping and visible ChatGPT acknowledgment together, with event hooks disabled for that receiver.
 - [ ] Run the exact ChatGPT cloud → ChatGPT cloud and Dot → ChatGPT cloud event tests on supported receiving hosts.
 - [ ] Verify native sender capabilities and successful delivery from Codex Cloud independently.
+- [ ] Verify the explicit own-identity relay helper on the selected client with a fresh authorized test message and visible receipt.
 - [ ] Establish and test a production wake route from ChatGPT cloud / Dot to an existing local Codex chat.
 - [ ] Resolve and test a hook-free cloud → cloud relay before listing that route as supported.
 

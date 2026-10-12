@@ -57,9 +57,26 @@ be verified; an on-demand inbox read can still be reported as working.
 One sender's `send_message_to_thread` tool does not establish a destination in
 another host's namespace. A native `thread not found` result means that attempt
 failed; it does not prove that the Messenger participant or Dot is absent.
+The `local` host ID is scoped to the executing computer. Refresh a conflicting
+recipient cache only from fresh exact-target native metadata. A cross-computer
+send needs an actually discovered connected host, or an authorized relay on the
+recipient's owning computer; a cached `local` value cannot supply that route.
 Successful metadata lookup or webhook acceptance alone is not a recipient read.
 Preserve the existing delivery checkpoint and reconcile uncertain outcomes
 before another submission, following the messaging skill.
+
+## Explicit notification relays
+
+A human can ask an executing Codex chat to notify a verified recipient about an
+existing stored message authored by another participant, including a Dot. The
+bridge's `mode: relay` validates this executing chat as the sender and resolves
+the original author separately. Its checkpoint retains both actors and the
+original message ID. Existing recipient event subscriptions remain the sole
+transport when active; otherwise the executing host submits one native
+notification through its exposed tool. The message and original author remain
+unchanged. This route requires an explicitly requested, running Codex relay and
+does not create an autonomous cloud-to-cloud service or a native Dot destination.
+See the [relay workflow](../skills/paprika-messenger/references/native-bridge.md#relay-an-existing-message-under-this-chats-own-identity).
 
 ## Fresh onboarding includes requested Dot receiving
 
