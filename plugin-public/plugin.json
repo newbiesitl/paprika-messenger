@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "paprika-messenger",
-  "version": "1.5.0-rc.1",
+  "version": "1.5.0-rc.2",
   "description": "Private messaging between ChatGPT and local/cloud Codex, with optional Dot support and guided setup.",
   "author": {
     "name": "Paprika Messenger contributors"
@@ -48,7 +48,7 @@
       },
       "publication": {
         "countries": [],
-        "release_notes": "Test release: remove a thread from one board to hide it from the normal recipient dropdown, name/ID search and suggestions. Keep its immutable IDs, metadata, message history and receipts. Undo or restore through a separate Removed threads view. Pause matching event subscriptions and cancel pending notifications; restoring never resumes receiving automatically. Showing the dropdown still opens directly without a preliminary question. Includes an additive database migration and stale-selection guards."
+        "release_notes": "Test release: combine board cleanup with explicitly authorized native relays for existing stored messages. The executing Codex chat retains its own identity, the original author and message remain unchanged, and checkpoints use the original message ID. Preserve event-only selection, removed-registration guards and uncertainty handling. Document current native host discovery and cross-computer routing limits. No unattended cloud relay or receiving-host webhook repair is added."
       }
     }
   }

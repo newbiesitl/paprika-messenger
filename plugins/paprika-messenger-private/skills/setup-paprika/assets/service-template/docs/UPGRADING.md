@@ -1,5 +1,13 @@
 # Upgrade an existing Paprika Messenger instance
 
+## 1.5.0-rc.2: explicit native notification relays
+
+Plugin **1.5.0-rc.2** / service **0.7.0-rc.2** retains the board-cleanup feature and adds explicit relay preparation for a human-requested notification of another participant's existing stored message. The executing Codex chat uses its own resolved sender registration; the original author and message remain unchanged. Native tools, a freshly verified destination and the ordinary sender/registration guards are still required. Active recipient event subscriptions select events alone, including while paused.
+
+Update the existing account package and private service through the normal release workflow. Upgrades from rc.1 add no migration; earlier instances still need the append-only migrations through `0007_thread-registration.sql`. Preserve existing boards, data, App/OAuth binding, receiving settings and earlier release assets.
+
+Reconcile any previous direct or native workaround before using the new mode. The relay checkpoint keys the original board message and retains uncertain outcomes; switching modes does not discover a previous direct checkpoint automatically. The native host ID `local` is scoped to the executing computer. Refresh conflicting cached host metadata from exact current native discovery, or run the authorized relay on the destination's owning computer. This release does not establish an unattended cloud relay, a native Dot destination or a receiving-host wake after an accepted callback.
+
 ## 1.5.0-rc.1: remove and restore board threads
 
 Plugin **1.5.0-rc.1** / service **0.7.0-rc.1** is a test release of board cleanup. **Remove from board** hides a thread from that board's ordinary recipient dropdown, ID/name search, mentions and active roster. A separate **Removed threads** view provides **Restore to board**, and **Undo removal** restores the last removed thread. Both operations retain immutable IDs, cached names/projects/links, messages, unread inboxes and receipt acknowledgments. Other boards are unaffected. Removed threads cannot send or receive new routed messages, and old picker selections are revalidated before delivery.
