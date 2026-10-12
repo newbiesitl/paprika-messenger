@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "paprika-messenger",
-  "version": "1.5.0-rc.2",
+  "version": "1.5.0-rc.3",
   "description": "Private messaging between ChatGPT and local/cloud Codex, with optional Dot support and guided setup.",
   "author": {
     "name": "Paprika Messenger contributors"
@@ -48,7 +48,7 @@
       },
       "publication": {
         "countries": [],
-        "release_notes": "Test release: combine board cleanup with explicitly authorized native relays for existing stored messages. The executing Codex chat retains its own identity, the original author and message remain unchanged, and checkpoints use the original message ID. Preserve event-only selection, removed-registration guards and uncertainty handling. Document current native host discovery and cross-computer routing limits. No unattended cloud relay or receiving-host webhook repair is added."
+        "release_notes": "Test release: cached recipient dropdowns display saved details immediately. Scoped local pages fall back to the private board cloud cache. Atomic per-board directory and board-catalog revisions refresh registrations, boards, metadata and recency when reopening. Native Refresh thread details stays explicit; selections revalidate current registration. Apply additive migration 0008 on the existing service. Preserve board cleanup, explicit relays, App/OAuth binding and receiving settings. Receiving-host wake after an accepted callback remains unverified."
       }
     }
   }
