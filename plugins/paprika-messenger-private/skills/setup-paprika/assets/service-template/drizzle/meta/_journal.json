@@ -50,6 +50,13 @@
       "when": 1791638350091,
       "tag": "0006_recipient-conversations",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1791815703410,
+      "tag": "0007_thread-registration",
+      "breakpoints": true
     }
   ]
 }

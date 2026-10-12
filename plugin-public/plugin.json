@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "paprika-messenger",
-  "version": "1.4.1",
+  "version": "1.5.0-rc.2",
   "description": "Private messaging between ChatGPT and local/cloud Codex, with optional Dot support and guided setup.",
   "author": {
     "name": "Paprika Messenger contributors"
@@ -48,7 +48,7 @@
       },
       "publication": {
         "countries": [],
-        "release_notes": "Open recipient dropdown requests directly in the embedded menu without a preliminary question. Keep main as the default board and search, board filters, metadata refresh and conversation links inside the menu. Native question panels require an explicit request. Update both service discovery instructions and the packaged skill; selecting in choose mode still sends nothing."
+        "release_notes": "Test release: combine board cleanup with explicitly authorized native relays for existing stored messages. The executing Codex chat retains its own identity, the original author and message remain unchanged, and checkpoints use the original message ID. Preserve event-only selection, removed-registration guards and uncertainty handling. Document current native host discovery and cross-computer routing limits. No unattended cloud relay or receiving-host webhook repair is added."
       }
     }
   }

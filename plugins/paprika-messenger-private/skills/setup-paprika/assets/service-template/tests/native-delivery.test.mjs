@@ -19,6 +19,11 @@ const route = {deployment: 'verified-service', board: 'main', sender, recipient,
   destination: {thread_id: 'recipient-chat', source: 'read_thread'}, subscriptions: []};
 const direct = (changes = {}) => prepareDirectDelivery({...route, request_id: 'request-1', body: 'Exact requested text.', ...changes}, env);
 const stateFixture = async () => new NotificationState(await mkdtemp(join(tmpdir(), 'paprika-native-')));
+
+test('native delivery refuses a removed sender or recipient even when its native conversation still exists', () => {
+  for (const field of ['sender', 'recipient']) for (const status of [{registration_status: 'unregistered'}, {unregistered_at: '2026-10-12T00:00:00Z'}])
+    assert.throws(() => direct({[field]: {...route[field], ...status}}), /removed from this board/);
+});
 async function boardFixture() {
   const db = new SqliteD1(); db.connection.exec(await loadMigrations());
   const service = new BoardService(db, 'owner');

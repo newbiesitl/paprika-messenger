@@ -15,16 +15,27 @@ async function api(name,args){
 const recipientPicker=mountRecipientPicker($('recipient-picker'),{
   load:args=>api('list_recipients',{board,...args}),
   onSelect:async candidate=>{const current=generation,data=await api('get_recipient',{board,participant_id:candidate.participant_id});if(current!==generation)throw Error('Board changed. Choose a recipient again.');$('receiver').value=data.recipient.participant_id;attempt=null;return data.recipient;},
-  onClear:()=>{$('receiver').value='';attempt=null;}
+  onClear:()=>{$('receiver').value='';attempt=null;},
+  onUnregister:recipient=>changeRegistration(recipient,false),onRestore:recipient=>changeRegistration(recipient,true)
 });
+async function changeRegistration(recipient,restore) {
+  if(writing)throw Error('Wait for the current message to finish before changing registrations.');
+  const current=generation,selectedBoard=board;
+  const result=await api(restore?'restore_thread_registration':'unregister_thread',{board:selectedBoard,participant_id:recipient.participant_id});
+  if(current===generation){
+    if(!restore&&$('receiver').value===recipient.participant_id){$('receiver').value='';recipientPicker.setSelected(null);attempt=null;}
+    await poll();
+  }
+  return result;
+}
 function connection(text,kind=''){const n=$('connection');n.textContent=text;n.className=`connection ${kind}`;}
 function issue(text){$('problem').hidden=!text;$('problem').textContent=text || '';}
-function options(node,blank,selected){node.replaceChildren(new Option(blank,''));for(const p of state.participants.values())node.add(new Option(`${p.label} · ${p.id}`,p.id));if(state.participants.has(selected))node.value=selected;}
+function options(node,blank,selected){node.replaceChildren(new Option(blank,''));for(const p of state.participants.values())if(!p.unregistered_at)node.add(new Option(`${p.label} · ${p.id}`,p.id));if(state.participants.has(selected)&&!state.participants.get(selected).unregistered_at)node.value=selected;}
 function renderParticipants(){
   const chosen=$('me').value,filter=$('filter-receiver').value;
   options($('me'),'Choose participant',chosen);options($('filter-receiver'),'All receivers',filter);
-  if(!chosen && requestedReceiver && state.participants.has(requestedReceiver))$('me').value=requestedReceiver;
-  const rows=[...state.participants.values()].map(p=>{const n=el('div',p.label,'participant-row');n.append(el('code',p.id));
+  if(!chosen && requestedReceiver && state.participants.has(requestedReceiver)&&!state.participants.get(requestedReceiver).unregistered_at)$('me').value=requestedReceiver;
+  const rows=[...state.participants.values()].filter(p=>!p.unregistered_at).map(p=>{const n=el('div',p.label,'participant-row');n.append(el('code',p.id));
     if(p.thread_id)n.append(el('code',p.thread_id));
     else n.append(action('Link chat',()=>{const f=$('bind-form');f.elements.participant_id.value=p.id;f.dataset.board=board;$('bind-status').textContent='';$('bind-dialog').showModal();}));
     return n;});
@@ -66,7 +77,7 @@ function renderFeed(){
   $('inbox').textContent=$('me').value?`${count} unacknowledged message${count===1?'':'s'} for ${$('me').value}`:'Choose an ID for your inbox';
   document.title=count?`(${count}) Paprika Messenger · Inbox`:'Paprika Messenger · Private agent board';
 }
-function render(){renderParticipants();renderNote();renderFeed();}
+function render(){renderParticipants();renderNote();renderFeed();recipientPicker.setDisabled(writing||!ready);}
 async function poll(){
   if(polling || !navigator.onLine)return;
   polling=true;const current=generation;
@@ -101,7 +112,7 @@ $('compose').onsubmit=async event=>{
   const participant=state.participants.get($('me').value);
   const draft={board,sender_id:participant.id,sender_label:participant.label,receiver_id:$('receiver').value,topic:$('topic').value,body:$('body').value,reply_to_id:replyId};
   const signature=JSON.stringify(draft);if(attempt?.signature!==signature)attempt={signature,key:crypto.randomUUID()};
-  const sentBoard=board,sentGeneration=generation;writing=true;$('send').disabled=true;$('write-status').textContent='Sending · awaiting server confirmation';$('write-status').className='';
+  const sentBoard=board,sentGeneration=generation;writing=true;recipientPicker.setDisabled(true);$('send').disabled=true;$('write-status').textContent='Sending · awaiting server confirmation';$('write-status').className='';
   try{
     const result=await api('post_message',{...draft,idempotency_key:attempt.key});
     if(generation!==sentGeneration)return;
@@ -110,7 +121,7 @@ $('compose').onsubmit=async event=>{
     if(link){const anchor=el('a','Open recipient conversation','recipient-open');anchor.href=link.url;anchor.title=link.hint;anchor.target='_blank';anchor.rel='noopener noreferrer';$('write-status').append(anchor);}
     $('send').textContent='Send message';await poll();
   }catch(error){if(board===sentBoard && generation===sentGeneration){$('write-status').textContent=`Not confirmed. ${errorText(error)} Retry safely with the same key.`;$('write-status').className='failed';$('send').textContent='Retry message';}}
-  finally{writing=false;if(generation===sentGeneration)$('send').disabled=!ready || !$('me').value;}
+  finally{writing=false;recipientPicker.setDisabled(!ready);if(generation===sentGeneration)$('send').disabled=!ready || !$('me').value;}
 };
 $('register').onclick=()=>$('register-dialog').showModal();
 $('create-board').onclick=()=>$('board-dialog').showModal();

@@ -26,7 +26,7 @@ function harness() {
   const parent={postMessage(message){sent.push(message);}};
   const window={parent,addEventListener(name,callback){if(name==='message')listener=callback;}};
   const document={getElementById:id=>elements[id],createElement:tag=>new Element(tag),body:{},documentElement:{clientWidth:400,scrollHeight:600}};
-  const picker={disabled:true,selected:null,page:null,setDisabled(value){this.disabled=value;},reset(){this.selected=null;},setPage(value){this.page=value;},setSelected(value){this.selected=value;},open(){},getQuery(){return '';}};
+  const picker={disabled:true,selected:null,page:null,setDisabled(value){this.disabled=value;},reset(){this.selected=null;},setPage(value){this.page=value;},setSelected(value){this.selected=value;},open(){},getQuery(){return '';},getRegistrationStatus(){return this.page?.registration_status||'active';}};
   let host;
   const context={window,document,setTimeout(callback){const id=++timerId;timers.set(id,callback);return id;},clearTimeout(id){timers.delete(id);},mountStub(root,options){callbacks=options;return picker;}};
   runInNewContext(pickerSource+'\n'+hostSource+'\nglobalThis.host=createRecipientHost({window,document,mount:mountStub});',context);host=context.host;
@@ -80,6 +80,16 @@ test('explicit metadata refresh requests only the current 50 bindings and preser
   const h=harness();await h.initialize();h.show(page({mode:'send_agreed',agreed_message:agreed}));h.callbacks.onPage({recipients:Array.from({length:70},(_,n)=>({...recipient,participant_id:'fixture-'+n,thread_id:'native-'+n}))});
   const refreshing=h.elements['refresh-metadata'].onclick();const request=h.sent.at(-1);assert.equal(request.method,'ui/message');const context=JSON.parse(request.params.content[0].text.split('\n').at(-1));assert.equal(context.bindings.length,50);assert.equal(context.board,'main');assert.equal(context.mode,'send_agreed');assert.equal(context.agreed_message.body,agreed.body);assert.equal(context.agreed_message.idempotency_key,agreed.idempotency_key);assert.match(request.params.content[0].text,/does not send/);
   h.reply(request,{});await refreshing;assert.equal(h.picker.disabled,false);assert.equal(h.sent.some(m=>m.params?.name==='post_message'),false);assert.match(h.elements.feedback.textContent,/Refresh requested/);
+});
+
+test('refreshing removed threads keeps the archive view and cannot authorize the frozen agreed message',async()=>{
+  const h=harness();await h.initialize();h.show(page({registration_status:'unregistered',mode:'send_agreed',agreed_message:agreed}));
+  assert.match(h.elements.mode.textContent,/Restore a removed thread/);
+  const refreshing=h.elements['refresh-metadata'].onclick(),request=h.sent.at(-1);
+  const context=JSON.parse(request.params.content[0].text.split('\n').at(-1));
+  assert.equal(context.registration_status,'unregistered');assert.deepEqual(context.agreed_message,agreed);
+  assert.match(request.params.content[0].text,/does not send the message/);
+  h.reply(request,{});await refreshing;assert.equal(h.sent.some(m=>m.params?.name==='post_message'),false);
 });
 
 test('shared picker groups native projects, displays text safely, ignores stale searches and follows cursor pages',async()=>{
@@ -136,4 +146,112 @@ test('dropdown links are separate from recipient buttons and remain copyable whe
   assert.equal(prevented,true);assert.equal(opens,1);assert.equal(selections,0);assert.match(root.querySelectorAll('p').find(p=>p.className==='recipient-status').textContent,/Copy this link: codex:\/\/threads\/native-recipient/);
   picker.setSelected(recipient);assert.equal(root.querySelectorAll('a').length,2);
   picker.setPage(page({recipients:[{...recipient,source:'unknown'}]}));assert.equal(root.querySelectorAll('a').filter(a=>a.href?.startsWith('javascript:')).length,0);
+});
+
+function cleanupPicker(options) {
+  const root=new Element(),document={createElement:tag=>new Element(tag)},context={document,setTimeout,clearTimeout};
+  runInNewContext(pickerSource+'\nglobalThis.mount=mountRecipientPicker;',context);
+  return {root,picker:context.mount(root,options),button:text=>root.querySelectorAll('button').find(b=>b.textContent===text)};
+}
+const cleanupRecipient={...recipient,kind:'thread',registration_status:'active'};
+
+test('remove hides the normal dropdown row and clears its selection; undo restores without selecting or sending',async()=>{
+  let removed=false,selections=0;const mutations=[];
+  const h=cleanupPicker({load:async args=>page({registration_status:args.registration_status,recipients:removed?[]:[cleanupRecipient]}),
+    onSelect:async r=>{selections++;return r;},onUnregister:async r=>{mutations.push(['remove',r.participant_id]);removed=true;},
+    onRestore:async r=>{mutations.push(['restore',r.participant_id]);removed=false;}});
+  h.picker.setPage(page({recipients:[cleanupRecipient]}));h.picker.setSelected(cleanupRecipient);
+  const option=h.root.querySelectorAll('button').find(b=>b.className==='recipient-option');
+  assert.equal(option.querySelector('button'),undefined);
+  await h.button('Remove from board').onclick();
+  assert.equal(h.root.querySelectorAll('strong').length,0);assert.equal(h.root.querySelector('summary').textContent,'Choose recipient');
+  assert.equal(h.button('Clear recipient').hidden,true);assert.equal(h.button('Undo removal').hidden,false);
+  await h.button('Undo removal').onclick();
+  assert.equal(h.root.querySelectorAll('strong').length,1);assert.equal(h.button('Undo removal').hidden,true);
+  assert.equal(h.root.querySelector('summary').textContent,'Choose recipient');assert.equal(selections,0);
+  assert.deepEqual(mutations,[['remove',recipient.participant_id],['restore',recipient.participant_id]]);
+});
+
+test('removed threads are a separate searchable view with disabled recipient selection and an explicit restore action',async()=>{
+  let removed=true,selections=0;const reads=[];
+  const h=cleanupPicker({load:async args=>{reads.push(args);return page({registration_status:args.registration_status,
+    recipients:args.registration_status==='unregistered'&&removed?[{...cleanupRecipient,registration_status:'unregistered'}]:[]});},
+    onSelect:async()=>{selections++;},onUnregister:async()=>{},onRestore:async()=>{removed=false;}});
+  h.picker.setPage(page({recipients:[]}));
+  await h.button('Removed threads').onclick();
+  assert.equal(reads[0].registration_status,'unregistered');assert.equal(h.picker.getRegistrationStatus(),'unregistered');
+  assert.equal(h.root.querySelector('summary').textContent,'Removed threads');
+  const option=h.root.querySelectorAll('button').find(b=>b.className==='recipient-option');
+  assert.equal(option.disabled,true);await option.onclick();assert.equal(selections,0);
+  const search=h.root.querySelector('input');search.value='native-recipient';await h.picker.refresh();
+  assert.equal(reads.at(-1).query,'native-recipient');assert.equal(reads.at(-1).registration_status,'unregistered');
+  await h.button('Restore to board').onclick();assert.equal(h.root.querySelectorAll('strong').length,0);
+  await h.button('Back to recipients').onclick();assert.equal(reads.at(-1).registration_status,'active');
+  assert.equal(h.root.querySelector('summary').textContent,'Choose recipient');
+  assert.equal(selections,0);
+});
+
+test('stale list reads cannot resurrect a removed row and an old-board mutation cannot alter the new board',async()=>{
+  const reads=[];let finishRemoval;
+  const h=cleanupPicker({load:args=>new Promise(resolve=>reads.push({args,resolve})),onSelect:async r=>r,
+    onUnregister:async()=>{},onRestore:async()=>{}});
+  h.picker.setPage(page({recipients:[cleanupRecipient]}));const oldRead=h.picker.refresh();
+  const removing=h.button('Remove from board').onclick();await flush();assert.equal(reads.length,2);
+  reads[0].resolve(page({recipients:[cleanupRecipient]}));await oldRead;
+  assert.equal(h.root.querySelectorAll('strong').length,0);
+  reads[1].resolve(page({recipients:[]}));await removing;
+
+  const boardTest=cleanupPicker({load:async()=>page(),onSelect:async r=>r,
+    onUnregister:()=>new Promise(resolve=>{finishRemoval=resolve;}),onRestore:async()=>{}});
+  boardTest.picker.setPage(page({recipients:[cleanupRecipient]}));const changing=boardTest.button('Remove from board').onclick();
+  boardTest.picker.reset();boardTest.picker.setPage(page({board:'other',recipients:[{...cleanupRecipient,thread_name:'Other board thread'}]}));
+  finishRemoval();await changing;
+  assert.equal(boardTest.root.querySelector('strong').textContent,'Other board thread');assert.equal(boardTest.button('Undo removal').hidden,true);
+});
+
+test('failed removal leaves the recipient available and reports that no change was confirmed',async()=>{
+  const h=cleanupPicker({load:async()=>page(),onUnregister:async()=>{throw Error('Removal not confirmed.');},onRestore:async()=>{}});
+  h.picker.setPage(page({recipients:[cleanupRecipient]}));await h.button('Remove from board').onclick();
+  assert.equal(h.root.querySelectorAll('strong').length,1);assert.equal(h.button('Undo removal').hidden,true);
+  assert.equal(h.button('Remove from board').disabled,false);
+  assert.match(h.root.querySelectorAll('p').find(p=>p.className==='recipient-status').textContent,/not confirmed/);
+});
+
+test('host removal calls the exact board address and clears only its matching selected attachment',async()=>{
+  const h=harness();await h.initialize();h.show(page());
+  const selecting=h.callbacks.onSelect(recipient);await h.verify();h.reply(h.sent.at(-1),{_meta:{'openai/modelContext':{updateId:'selected'}}});await selecting;
+  const removing=h.callbacks.onUnregister(recipient),request=h.sent.at(-1);
+  assert.equal(request.params.name,'unregister_thread');assert.deepEqual(JSON.parse(JSON.stringify(request.params.arguments)),{board:'main',participant_id:recipient.participant_id});
+  h.reply(request,{structuredContent:{board:'main',participant_id:recipient.participant_id,registration_status:'unregistered'}});await flush();
+  const clearing=h.sent.at(-1);assert.equal(clearing.method,'ui/update-model-context');assert.equal(clearing.params.content.length,0);
+  h.reply(clearing,{});await removing;assert.equal(h.picker.selected,null);assert.equal(h.picker.disabled,false);
+  assert.equal(h.sent.some(m=>m.method==='ui/message'||m.params?.name==='post_message'),false);
+});
+
+test('cleanup preserves the pending agreed message and key; only an actual active recipient selection requests sending',async()=>{
+  const h=harness();await h.initialize();h.show(page({mode:'send_agreed',agreed_message:{...agreed}}));
+  const removing=h.callbacks.onUnregister(recipient);h.reply(h.sent.at(-1),{structuredContent:{registration_status:'unregistered'}});await removing;
+  const restoring=h.callbacks.onRestore(recipient);assert.equal(h.sent.at(-1).params.name,'restore_thread_registration');
+  h.reply(h.sent.at(-1),{structuredContent:{registration_status:'active'}});await restoring;
+  assert.equal(h.sent.some(m=>m.method==='ui/message'),false);assert.equal(h.elements['draft-body'].textContent,agreed.body);
+  const other={...recipient,participant_id:'active-other'},selecting=h.callbacks.onSelect(other);
+  assert.equal(h.sent.at(-1).params.name,'get_recipient');h.reply(h.sent.at(-1),{structuredContent:{board:'main',recipient:other}});await flush();
+  const send=h.sent.at(-1);assert.equal(send.method,'ui/message');
+  assert.deepEqual(JSON.parse(send.params.content[0].text.split('\n').at(-1)),{board:'main',...agreed,receiver_id:other.participant_id});
+  h.reply(send,{});await selecting;
+});
+
+test('a removal completed after a board rerender cannot clear a different board attachment',async()=>{
+  const h=harness();await h.initialize();h.show(page());
+  const selecting=h.callbacks.onSelect(recipient);await h.verify();h.reply(h.sent.at(-1),{_meta:{'openai/modelContext':{updateId:'selected'}}});await selecting;
+  const removing=h.callbacks.onUnregister(recipient),request=h.sent.at(-1);
+  h.show(page({board:'other',recipients:[{...recipient,thread_name:'Other board thread'}]}));
+  h.reply(request,{structuredContent:{registration_status:'unregistered'}});await assert.rejects(removing,/previous board/);
+  assert.equal(h.picker.page.board,'other');assert.equal(h.picker.disabled,false);
+  assert.equal(h.sent.filter(m=>m.method==='tools/call').at(-1),request);assert.equal(h.sent.some(m=>m.method==='ui/message'),false);
+  const attachments=h.sent.filter(m=>m.method==='ui/update-model-context').length;
+  const otherRemoval=h.callbacks.onUnregister(recipient),otherRequest=h.sent.filter(m=>m.method==='tools/call').at(-1);
+  assert.equal(otherRequest.params.arguments.board,'other');
+  h.reply(otherRequest,{structuredContent:{registration_status:'unregistered'}});await otherRemoval;
+  assert.equal(h.sent.filter(m=>m.method==='ui/update-model-context').length,attachments);
 });

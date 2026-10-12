@@ -15,6 +15,7 @@ export async function setRecipientConversation(service, args) {
   if (args.host_observation.kind !== 'chatgpt' || args.host_observation.id !== destination.conversation_id)
     fail(409, 'destination_mismatch', 'Require host metadata for the exact actual ChatGPT conversation, not its Codex execution thread.');
   const statement = (sql, ...values) => service.db.prepare(sql).bind(...values);
+  await service.activeParticipant(board,pid);
   const participant = await statement('SELECT thread_id FROM participants WHERE board=? AND id=?', board, pid).first();
   if (!participant) fail(404, 'participant_not_found', 'Recipient is not registered on this board.');
   if (participant.thread_id !== runtime) fail(409, 'thread_binding_conflict', 'Preserve the registered runtime binding; this mapping adds a separate conversation destination.');

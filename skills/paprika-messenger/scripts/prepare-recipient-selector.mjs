@@ -35,6 +35,8 @@ export function prepareRecipientSelector({ page, cursor = null, mode = 'choose',
   if (!['select', 'open'].includes(intent)) throw Error('Unknown picker intent.');
   if (!object(page) || !Array.isArray(page.recipients) || page.recipients.length > 50)
     throw Error('Require one confirmed recipient page of at most 50.');
+  if (page.registration_status === 'unregistered' || page.recipients.some(r => r.registration_status === 'unregistered' || r.unregistered_at))
+    throw Error('Removed threads cannot be selected as recipients. Restore the registration first.');
   const board = string(page.board, 'board', 64), query = page.query ?? '';
   if (typeof query !== 'string' || query.length > 160) throw Error('Invalid literal search.');
   if (typeof page.has_more !== 'boolean' || (page.has_more && typeof page.next_cursor !== 'string'))

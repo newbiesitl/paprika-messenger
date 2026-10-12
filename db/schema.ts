@@ -6,8 +6,9 @@ export const boards = sqliteTable('boards', {
 },t=>[check('board_id_length',sql`length(${t.id}) BETWEEN 1 AND 64`)]);
 export const participants=sqliteTable('participants',{
   board:text('board').notNull().references(()=>boards.id),id:text('id').notNull(),label:text('label').notNull(),kind:text('kind').notNull(),
-  thread_id:text('thread_id'),registered_by:text('registered_by').notNull(),created_at:text('created_at').notNull().default(now)
-},t=>[primaryKey({columns:[t.board,t.id]}),check('participant_id_length',sql`length(${t.id}) BETWEEN 1 AND 96`),check('participant_label_length',sql`length(${t.label}) BETWEEN 1 AND 120`),check('participant_kind',sql`${t.kind} IN ('human','agent','thread')`),check('participant_thread_length',sql`length(${t.thread_id}) <= 160`)]);
+  thread_id:text('thread_id'),registered_by:text('registered_by').notNull(),created_at:text('created_at').notNull().default(now),
+  unregistered_at:text('unregistered_at'),registration_changed_by:text('registration_changed_by')
+},t=>[primaryKey({columns:[t.board,t.id]}),index('participant_registration').on(t.board,t.unregistered_at,t.id),check('participant_id_length',sql`length(${t.id}) BETWEEN 1 AND 96`),check('participant_label_length',sql`length(${t.label}) BETWEEN 1 AND 120`),check('participant_kind',sql`${t.kind} IN ('human','agent','thread')`),check('participant_thread_length',sql`length(${t.thread_id}) <= 160`)]);
 export const messages=sqliteTable('messages',{
   id:text('id').primaryKey(),board:text('board').notNull().references(()=>boards.id),sender_id:text('sender_id').notNull(),sender_label:text('sender_label').notNull(),
   receiver_id:text('receiver_id').notNull(),topic:text('topic').notNull(),body:text('body').notNull(),reply_to_id:text('reply_to_id'),authored_by:text('authored_by').notNull(),

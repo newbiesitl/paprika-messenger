@@ -69,6 +69,9 @@ test('relay preparation keeps the sender guard and rejects mismatched author, me
   assert.throws(()=>prepareBridgeDelivery({...input, mode:'board'}, env), /confirmed/);
   for (const change of [
     {sender:originalSender}, {original_sender:undefined},
+    {sender:{...sender, unregistered_at:'2026-01-01T00:00:00Z'}},
+    {recipient_record:{...input.recipient_record,
+      recipient:{...input.recipient_record.recipient, registration_status:'unregistered'}}},
     {original_sender:{...originalSender, board:'other'}},
     {original_sender:{...originalSender, id:'wrong'}},
     {original_sender:{...originalSender, thread_id:'../invalid'}},

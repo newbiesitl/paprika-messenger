@@ -35,6 +35,8 @@ export function validateRoutes({board, sender, recipient, destination} = {}, env
   const current = getCurrentThreadId(env);
   for (const [name, participant] of [['sender', sender], ['recipient', recipient]]) {
     if (!participant || participant.board !== board) throw new Error(`${name} must be resolved on this board.`);
+    if (participant.unregistered_at || participant.registration_status === 'unregistered')
+      throw new Error(`${name} was removed from this board. Restore its registration before sending.`);
     routingId(participant.id, `${name}.id`);
     routingId(participant.thread_id, `${name}.thread_id`, 160);
   }
