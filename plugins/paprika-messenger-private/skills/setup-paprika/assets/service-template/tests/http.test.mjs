@@ -70,7 +70,9 @@ test('modern resource responses satisfy the per-request cache contract while leg
   const header=await invoke('resources/read',{uri:uiUri},{'MCP-Protocol-Version':'2026-07-28'});
   assert.equal(header.ttlMs,0);assert.equal(header.cacheScope,'private');
   const initialized=await invoke('initialize',{protocolVersion:'2025-06-18'});
-  assert.match(initialized.instructions,/prefer an available routine host user-choice panel/);
+  assert.match(initialized.instructions,/call show_recipient_picker in choose mode/);
+  assert.match(initialized.instructions,/without a preliminary question/);
+  assert.doesNotMatch(initialized.instructions,/prefer an available routine host user-choice panel/);
   for(const params of [{uri:uiUri},{uri:uiUri,_meta:{'io.modelcontextprotocol/protocolVersion':'2025-06-18'}}]) {
     const legacy=await invoke('resources/read',params,{'MCP-Protocol-Version':'2025-06-18'});
     assert.deepEqual(Object.keys(legacy),['contents']);assert.equal(legacy.contents[0].uri,uiUri);
