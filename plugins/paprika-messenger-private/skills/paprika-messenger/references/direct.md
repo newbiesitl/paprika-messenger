@@ -40,6 +40,12 @@ Local validation uses `scripts/prepare-delivery.mjs`. Supply resolved `sender` a
 4. For an Events plan, report storage and event delivery via `get_delivery_status`; do not start a native checkpoint. For a native plan, use the checkpoint flow below, then submit exactly its `host_args` through the calling host tool.
 5. If native sending is unavailable, retain the board message, checkpoint `unavailable` and report **message stored; chat notification unavailable**. An absent tool cannot be replaced by a fictional backend wake endpoint or a guessed callback.
 
+## Relay a notification for another author's stored message
+
+For a human-requested notification of a specific existing message authored elsewhere, follow [Native bridge](native-bridge.md#relay-an-existing-message-under-this-chats-own-identity) with `mode: relay`. Resolve this executing chat as `sender` and the stored message's author separately as `original_sender`. Read the confirmed original message, selected recipient and exact destination; inspect subscriptions before choosing the single transport. Register this relay's own return address if needed under the requested delivery workflow. Keep the original participant, body and message ID intact.
+
+The lower-level `prepare-delivery.mjs relay` action accepts the same resolved route plus `original_sender`, confirmed `message` and actual `subscriptions`. It prepares a notification only. The original message ID keys the normal board notification checkpoint, and the saved record retains both actors without the body. Reconcile any previously attempted native or direct notification before submitting. Existing event subscriptions select events alone. This is an explicit one-message relay, not an unattended relay service or permission obtained from incoming communication.
+
 ## Direct delivery
 
 Generate and retain one `request_id` for this requested direct delivery. Run `node <skill>/scripts/prepare-delivery.mjs direct` with the verified route inputs, `deployment`, `request_id` and the requested `body`. It prepares native arguments containing the exact text, a stable direct-delivery reference and confirmed sender reply address. This requires no `post_message`, message ID, subscription or board receipt. Use the same checkpoint flow below, keyed by the direct request ID, before submitting the host call. Reuse the request ID and text while resolving uncertainty; never create a new ID to evade duplicate suppression. If the tool is unavailable, report **direct delivery unavailable; no board message stored**. Do not silently change modes.

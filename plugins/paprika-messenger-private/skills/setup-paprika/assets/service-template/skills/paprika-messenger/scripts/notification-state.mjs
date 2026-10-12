@@ -7,7 +7,8 @@ import { digest, routingId, readJsonInput } from './prepare-delivery.mjs';
 
 const fields = ['deployment', 'board', 'mode', 'key', 'sender_id', 'sender_thread_id',
   'recipient_id', 'recipient_thread_id', 'host_id', 'payload_digest', 'reference', 'transport',
-  'native_kind', 'registered_thread_id', 'mapping_revision'];
+  'native_kind', 'registered_thread_id', 'mapping_revision', 'delivery_kind',
+  'original_message_id', 'original_sender_id', 'original_sender_thread_id'];
 const states = ['submitting', 'submitted', 'failed', 'unknown', 'unavailable'];
 
 function metadata(plan) {
@@ -23,6 +24,16 @@ function metadata(plan) {
   if (plan.registered_thread_id !== undefined) routingId(plan.registered_thread_id, 'registered_thread_id', 160);
   if (plan.mapping_revision !== undefined && (!Number.isSafeInteger(plan.mapping_revision) || plan.mapping_revision < 1))
     throw new Error('Invalid mapping revision.');
+  if (plan.delivery_kind === 'relay') {
+    if (plan.mode !== 'board' || plan.original_message_id !== plan.key || plan.original_sender_id === plan.sender_id)
+      throw new Error('Relay correlation must retain the original message and a distinct executing sender.');
+    routingId(plan.original_message_id, 'original_message_id');
+    routingId(plan.original_sender_id, 'original_sender_id');
+    if (plan.original_sender_thread_id !== undefined)
+      routingId(plan.original_sender_thread_id, 'original_sender_thread_id', 160);
+  } else if (plan.delivery_kind !== undefined || ['original_message_id', 'original_sender_id', 'original_sender_thread_id']
+    .some(field => plan[field] !== undefined))
+    throw new Error('Original message correlation requires an explicit relay plan.');
   if (!/^[a-f0-9]{64}$/.test(plan.payload_digest)) throw new Error('Require a prepared payload digest.');
   const reference = plan.mode === 'board' ? `New Paprika Messenger message on board ${plan.board}: ${plan.key}.`
     : `Paprika Messenger direct delivery: ${plan.key}.`;

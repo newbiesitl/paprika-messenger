@@ -2,6 +2,7 @@ import { fail, id, text, plainText, strict, integer, encodeCursor, decodeCursor 
 import { serviceConfiguration } from './service-config.mjs';
 import { listRecipients, getRecipient, updateRecipientMetadata, recipientMentions } from './recipient-directory.mjs';
 import { setRecipientConversation } from './recipient-conversations.mjs';
+import { registrationStatus, requireActiveRegistration, changeThreadRegistration } from './thread-registration.mjs';
 
 // All user identities originate at the Sites hosting boundary. Never trust caller-supplied labels.
 export function authorize(request, env) {
@@ -29,6 +30,8 @@ export class BoardService {
     return serviceConfiguration(this.env);
   }
   async list_recipients(a) { return listRecipients(this,a); }
+  async unregister_thread(a) { return changeThreadRegistration(this,a,true); }
+  async restore_thread_registration(a) { return changeThreadRegistration(this,a,false); }
   async get_recipient(a) { return getRecipient(this,a); }
   async set_recipient_conversation(a) { return setRecipientConversation(this,a); }
   async update_recipient_metadata(a) { return updateRecipientMetadata(this,a); }
@@ -68,16 +71,17 @@ export class BoardService {
     if (!row) fail(404, 'participant_not_found', `Register participant ${value} on this board first.`);
     return row;
   }
-  async resolveAddress(board, args, fields=participantAddressFields) {
+  async activeParticipant(board, value) { return requireActiveRegistration(await this.participant(board,value)); }
+  async resolveAddress(board, args, fields=participantAddressFields, {includeUnregistered=false}={}) {
     const supplied=fields.filter(field=>Object.hasOwn(args,field));
     if (supplied.length!==1) fail(400,'invalid_address',`Supply exactly one of ${fields.join(', ')}.`);
     const field=supplied[0], index=fields.indexOf(field), matched_by=participantAddressFields[index];
-    if (index===0) return {participant:await this.participant(board,args[field]),matched_by};
+    if (index===0) return {participant:await (includeUnregistered?this.participant(board,args[field]):this.activeParticipant(board,args[field])),matched_by};
     const value=text(args[field],field,index===1?160:120);
     // Column names are fixed by the selector, never supplied by a caller. Labels and
     // thread IDs match exactly within a board; duplicates cannot choose a recipient.
     const column=index===1?'thread_id':'label';
-    const rows=await all(this.db,`SELECT * FROM participants WHERE board=? AND ${column}=? ORDER BY id LIMIT 2`,board,value);
+    const rows=await all(this.db,`SELECT * FROM participants WHERE board=? AND ${column}=? ${includeUnregistered?'':'AND unregistered_at IS NULL'} ORDER BY id LIMIT 2`,board,value);
     if (!rows.length) fail(404,'participant_not_found','No registered participant matches this address on this board.');
     if (rows.length>1) fail(409,'ambiguous_address','This address matches multiple participants. Use a participant ID.');
     return {participant:rows[0],matched_by};
@@ -91,11 +95,12 @@ export class BoardService {
     strict(a,['board','thread_id']);
     if (a.thread_id === undefined) fail(400,'current_thread_unavailable','The calling host must supply its current thread_id. This service cannot infer it from account identity.');
     const thread_id=text(a.thread_id,'thread_id',160), board=await this.board(a.board);
-    const rows=await all(this.db,'SELECT id,label FROM participants WHERE board=? AND thread_id=? ORDER BY id LIMIT 2',board,thread_id);
+    const rows=await all(this.db,'SELECT id,label,unregistered_at FROM participants WHERE board=? AND thread_id=? ORDER BY id LIMIT 2',board,thread_id);
     if (rows.length>1) fail(409,'ambiguous_address','This thread ID has multiple registrations on this board. Use a participant ID to disambiguate.');
-    return {board,thread_id,thread_id_source:'caller_supplied',registered:rows.length===1,
+    const active=rows.length===1&&!rows[0].unregistered_at;
+    return {board,thread_id,thread_id_source:'caller_supplied',registered:active,unregistered:!!rows[0]?.unregistered_at,
       participant_id:rows[0]?.id ?? null,label:rows[0]?.label ?? null,
-      receiver:rows.length?{receiver_thread_id:thread_id}:null,identity_kind:'declared_label'};
+      receiver:active?{receiver_thread_id:thread_id}:null,identity_kind:'declared_label'};
   }
   async message(board, value) {
     id(value, 'message_id');
@@ -115,19 +120,21 @@ export class BoardService {
     await stmt(this.db, 'INSERT INTO participants(board,id,label,kind,thread_id,registered_by) VALUES(?,?,?,?,?,?) ON CONFLICT(board,id) DO NOTHING', board, pid, label, a.kind, thread, this.subject).run();
     const row = await this.participant(board, pid);
     if (row.label !== label || row.kind !== a.kind || row.thread_id !== thread) fail(409, 'participant_conflict', 'This participant ID is already registered with different details.');
+    requireActiveRegistration(row);
     return { participant: row, identity_kind: 'declared_label', ...await this.event(board, pid, 'participant_registered') };
   }
   async list_participants(a) {
-    strict(a, ['board','after_id','limit']);
+    strict(a, ['board','after_id','limit','registration_status']);
     const board = await this.board(a.board), limit = integer(a.limit, 'limit', 1, 200, 100);
     const after = a.after_id ? id(a.after_id, 'after_id') : '';
-    const rows = await all(this.db, 'SELECT * FROM participants WHERE board=? AND id>? ORDER BY id LIMIT ?', board, after, limit + 1);
+    const status=registrationStatus(a.registration_status);
+    const rows = await all(this.db, `SELECT * FROM participants WHERE board=? AND id>? AND unregistered_at IS ${status==='active'?'NULL':'NOT NULL'} ORDER BY id LIMIT ?`, board, after, limit + 1);
     return { participants: rows.slice(0, limit), has_more: rows.length > limit, next_after_id: rows.length > limit ? rows[limit - 1].id : null, identity_kind: 'declared_label' };
   }
   async bind_participant_thread(a) {
     strict(a,['board','participant_id','thread_id']);
     const board=await this.board(a.board), pid=id(a.participant_id,'participant_id'), thread_id=text(a.thread_id,'thread_id',160);
-    await this.participant(board,pid);
+    await this.activeParticipant(board,pid);
     // A single conditional write claims an unused address without replacing an
     // existing route. The matching event is in the same transaction.
     await this.db.batch([
@@ -146,16 +153,23 @@ export class BoardService {
     strict(a, ['board','sender_id','sender_label',...receiverAddressFields,'topic','body','reply_to_id','idempotency_key']);
     const board = await this.board(a.board);
     await this.participant(board, a.sender_id);
-    const {participant:receiver}=await this.resolveAddress(board,a,receiverAddressFields), receiver_id=receiver.id;
     const label = text(a.sender_label, 'sender_label', 120), topic = text(a.topic, 'topic', 120), body = text(a.body, 'body', 16000);
     const key = text(a.idempotency_key, 'idempotency_key', 128, true);
+    const existing=key?await first(this.db,'SELECT * FROM messages WHERE board=? AND authored_by=? AND sender_id=? AND idempotency_key=?',board,this.subject,a.sender_id,key):null;
+    const {participant:receiver}=await this.resolveAddress(board,a,receiverAddressFields,{includeUnregistered:!!existing}), receiver_id=receiver.id;
     const reply = a.reply_to_id === undefined || a.reply_to_id === null ? null : id(a.reply_to_id, 'reply_to_id');
     if (reply) await this.message(board, reply);
     const fingerprint = await hash(JSON.stringify([board,a.sender_id,label,receiver_id,topic,body,reply]));
+    if(existing){
+      if(existing.fingerprint!==fingerprint)fail(409,'idempotency_conflict','The idempotency key was used with a different message.');
+      return {message:resultMessage(existing),duplicate:true,...await this.event(board,existing.id,'message_posted')};
+    }
+    await this.activeParticipant(board,a.sender_id);requireActiveRegistration(receiver);
     const mid = crypto.randomUUID();
-    await stmt(this.db, `INSERT INTO messages(id,board,sender_id,sender_label,receiver_id,topic,body,reply_to_id,authored_by,idempotency_key,fingerprint)
+    try { await stmt(this.db, `INSERT INTO messages(id,board,sender_id,sender_label,receiver_id,topic,body,reply_to_id,authored_by,idempotency_key,fingerprint)
       VALUES(?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(board,authored_by,sender_id,idempotency_key) DO NOTHING`,
-    mid,board,a.sender_id,label,receiver_id,topic,body,reply,this.subject,key,fingerprint).run();
+    mid,board,a.sender_id,label,receiver_id,topic,body,reply,this.subject,key,fingerprint).run(); }
+    catch(error){if(error.message?.includes('participant_unregistered'))fail(409,'participant_unregistered','This thread was removed from the board before the message could be stored.');throw error;}
     const row = key ? await first(this.db, 'SELECT * FROM messages WHERE board=? AND authored_by=? AND sender_id=? AND idempotency_key=?', board,this.subject,a.sender_id,key) : await this.message(board,mid);
     if (row.fingerprint !== fingerprint) fail(409, 'idempotency_conflict', 'The idempotency key was used with a different message.');
     return { message: resultMessage(row), duplicate: row.id !== mid, ...await this.event(board,row.id,'message_posted') };
@@ -167,7 +181,7 @@ export class BoardService {
     let receiver_id;
     // Preserve the old ID-only filter, including filtering for an unregistered ID.
     if (addresses.length===1 && addresses[0]==='receiver_id') receiver_id=id(a.receiver_id,'receiver_id');
-    else if (addresses.length) receiver_id=(await this.resolveAddress(board,a,receiverAddressFields)).participant.id;
+    else if (addresses.length) receiver_id=(await this.resolveAddress(board,a,receiverAddressFields,{includeUnregistered:true})).participant.id;
     if (a.topic !== undefined) text(a.topic,'topic',120);
     // Page through the unfiltered event log, then filter. next_cursor always advances through
     // hidden events, preserving progress and exposing deletes/restores to the same filter.
@@ -240,7 +254,7 @@ export class BoardService {
   }
   async get_inbox(a) {
     strict(a,['board',...receiverAddressFields,'limit']); const board = await this.board(a.board);
-    const receiver_id=(await this.resolveAddress(board,a,receiverAddressFields)).participant.id;
+    const receiver_id=(await this.resolveAddress(board,a,receiverAddressFields,{includeUnregistered:true})).participant.id;
     const limit = integer(a.limit,'limit',1,100,50);
     const clause = `FROM messages m WHERE m.board=? AND m.receiver_id=? AND m.deleted_at IS NULL AND NOT EXISTS
       (SELECT 1 FROM acknowledgments k WHERE k.board=m.board AND k.message_id=m.id AND k.participant_id=m.receiver_id)`;
