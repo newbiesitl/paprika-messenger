@@ -190,8 +190,8 @@
     },
     {
       "path": "scripts/build.mjs",
-      "size_bytes": 4776,
-      "sha256": "d87cedcc171b68132fad6365191670d6a3e5b4658f66a05fc4551b2f6db67fe3"
+      "size_bytes": 4806,
+      "sha256": "37f6e70f6c7dfcb44a331067418c5502e14992e80c9050648813e8258b267255"
     },
     {
       "path": "scripts/bundle.mjs",
@@ -219,9 +219,14 @@
       "sha256": "6bebbd2a68c44921be84622d8f4912526edb922116075c8273809ce81ba2e09b"
     },
     {
+      "path": "skills/paprika-messenger/references/address-cache.md",
+      "size_bytes": 6039,
+      "sha256": "998abfefaede4d3634ebc84e7743ce7c68bb3a43b73a0d51870d0552f27e3dd5"
+    },
+    {
       "path": "skills/paprika-messenger/references/connect.md",
-      "size_bytes": 28103,
-      "sha256": "1ad9c2cc230ea4eea202d35cc21398cc8a5b71d206adda7ad00da61b0cb1c78a"
+      "size_bytes": 28655,
+      "sha256": "52a3f7723294b97f5df8c25cfdc029c85771d46ea1c51b6c108556311ff18770"
     },
     {
       "path": "skills/paprika-messenger/references/connection-ui.md",
@@ -230,8 +235,8 @@
     },
     {
       "path": "skills/paprika-messenger/references/direct.md",
-      "size_bytes": 18048,
-      "sha256": "1434bc932fa8dafcb9e77c6516a152e8e060e206e2a0891a6319ccb5c386a32d"
+      "size_bytes": 18693,
+      "sha256": "8b96accb8cbd352217ff8dbd75b1b0d7664c5f7ce04938f48449ebc4a1c6499a"
     },
     {
       "path": "skills/paprika-messenger/references/native-bridge.md",
@@ -295,8 +300,8 @@
     },
     {
       "path": "skills/paprika-messenger/SKILL.md",
-      "size_bytes": 18730,
-      "sha256": "264e1c302bd2958a2c12dbcd0d5b1898278cde3c2af71679ced51e137848c60b"
+      "size_bytes": 19772,
+      "sha256": "e06e20017608d02429ded851917463c4b84fe81d225d835acdf2a13e9b833cc8"
     },
     {
       "path": "src/connection-ui.mjs",
