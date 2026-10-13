@@ -34,7 +34,8 @@ test('connection card rendering does not request monitoring and rejects messages
   assert.equal(h.sent.filter(m=>m.method==='ui/message'||m.method==='tools/call').length,0);
   assert.match(h.elements.prompt.value,/this current chat/);
   assert.match(h.elements.prompt.value,/Do not automatically acknowledge/);
-  assert.match(h.elements.prompt.value,/establish event monitoring by default/);
+  assert.match(h.elements.prompt.value,/For a new binding on every host.*on-demand inbox reads and event hooks disabled/);
+  assert.doesNotMatch(h.elements.prompt.value,/Subscribe to message\.created|establish event monitoring by default/);
   assert.match(h.elements.prompt.value,/heartbeat only if I explicitly choose/);
   assert.match(h.elements.prompt.value,/Respect explicit events-only or no-polling/);
   assert.equal(h.timers.size,0);
@@ -60,7 +61,8 @@ test('enable is an explicit same-chat request, receipts are optional, and host a
   assert.equal(requests[0].params.role,'user');assert.match(prompt,/explicitly acknowledge each message/);
   assert.match(prompt,/lookup hint, not proof of this chat/);
   assert.match(prompt,/Reconcile any existing task/);assert.match(prompt,/saved task destination, enabled state and trigger/);
-  assert.match(prompt,/unscheduled same-chat event task and get_notification_setup ready/);
+  assert.match(prompt,/on-demand inbox reads and event hooks disabled/);
+  assert.doesNotMatch(prompt,/Subscribe to message\.created|unscheduled same-chat event task and get_notification_setup ready/);
   assert.match(prompt,/Explain what receiving task was created, reused or resumed/);
   assert.match(prompt,/quiet unchanged checks and how to stop it/);
   h.reply(requests[0],{});await action;
