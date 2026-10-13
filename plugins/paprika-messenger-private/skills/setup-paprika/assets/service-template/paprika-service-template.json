@@ -45,8 +45,8 @@
     },
     {
       "path": "docs/SCHEDULING.md",
-      "size_bytes": 15223,
-      "sha256": "26bb6cb46efe2893b4168ec4204c7215c6bd994fe07ed6310f0ab68e5217a403"
+      "size_bytes": 17159,
+      "sha256": "32d0708341d8af31ca6a6de6b27bec50b3d4d999d8e2c3aff5d0a9bb4a9dd88a"
     },
     {
       "path": "docs/SECURITY.md",
@@ -255,8 +255,8 @@
     },
     {
       "path": "skills/paprika-messenger/references/notifications.md",
-      "size_bytes": 9861,
-      "sha256": "854c933e7be5cec87fe1d07873bdc1e6098975c8fe8ac888e34c7d1910d1c7f5"
+      "size_bytes": 10688,
+      "sha256": "491a92ba90efd2c0736ddfad6ca411dfe93f5789b953dfde27d95d64f9caa808"
     },
     {
       "path": "skills/paprika-messenger/references/recipient-picker.md",
@@ -310,8 +310,8 @@
     },
     {
       "path": "skills/paprika-messenger/SKILL.md",
-      "size_bytes": 21912,
-      "sha256": "3a96b8245ce1db3fc06fc5901e468a4e67967ba367e3a1772edca59ab26f9de2"
+      "size_bytes": 22432,
+      "sha256": "f6081b3967c9832b1df3d514d13f873c706439209f732339edd9a9e009bb3f82"
     },
     {
       "path": "src/connection-ui.mjs",
@@ -320,13 +320,13 @@
     },
     {
       "path": "src/events.mjs",
-      "size_bytes": 24932,
-      "sha256": "4b28c01365e199494dc9beadb56e159e50c2380a0a1cfbc2a26a51c631c1a3c7"
+      "size_bytes": 26058,
+      "sha256": "5b4a9811fb90ea1d55467ec6f5c5b19f1737700f08b6836019df7424ef2c6482"
     },
     {
       "path": "src/protocol.mjs",
-      "size_bytes": 37477,
-      "sha256": "717c691cd8c9f87075460164d1cb4fb7932d374ad0a7282fc8ad9ff1485bf4b9"
+      "size_bytes": 38217,
+      "sha256": "51743c5be3dcb48e902d4dc5cc8d1e4bb5538039cd1a881b1d564e14c5aca6b1"
     },
     {
       "path": "src/recipient-cache-state.mjs",
@@ -375,8 +375,8 @@
     },
     {
       "path": "src/worker.mjs",
-      "size_bytes": 12235,
-      "sha256": "12c64ebcede02a9942d0f536578128a759e8df243a4fd1bb40fa87c8e0fb81cb"
+      "size_bytes": 12270,
+      "sha256": "563e897dfc0623c12c21dec51e5c159a71686590301a836a24edf2cb1c2d7df1"
     },
     {
       "path": "tests/addressing.test.mjs",
@@ -414,6 +414,11 @@
       "sha256": "fbcffb5e250efa32b7b79a5eca91b9a5fa81eda3d869e390ae99bb082ca727b5"
     },
     {
+      "path": "tests/event-retirement.test.mjs",
+      "size_bytes": 13328,
+      "sha256": "0ec7d259547c8349a0ddded4cb1eadc427c5240bb7d5ecd4486e44211076c86d"
+    },
+    {
       "path": "tests/events.test.mjs",
       "size_bytes": 28552,
       "sha256": "69e2dbedec5c197c7ce8a7579923fdf4c416a82d627a443cc22dc1672a5d90a9"
@@ -425,8 +430,8 @@
     },
     {
       "path": "tests/http.test.mjs",
-      "size_bytes": 52863,
-      "sha256": "a2fa624d11aafc5fa8b87405c34b0483c5831bc9449206e0b6f79893b319c255"
+      "size_bytes": 56310,
+      "sha256": "c37e894bde2f4720f398e259c27e46f00cab346c7f953875c1e2219bc7751234"
     },
     {
       "path": "tests/migrations.mjs",

@@ -553,3 +553,35 @@ test('rejected callbacks expose a policy reason and hostname without saving a su
     assert.equal(callbackDb.connection.prepare('SELECT COUNT(*) n FROM event_subscriptions').get().n,0);
   }finally{callbackDb.close();}
 });
+
+test('exact-ID subscription retirement uses authenticated MCP and CSRF-protected HTTP without requiring event keys',async()=>{
+  const {EventService}=await import('../src/events.mjs');
+  const localDb=new SqliteD1();localDb.connection.exec(await loadMigrations());
+  const localEnv={...env,DB:localDb},service=new BoardService(localDb,'owner');
+  try {
+    for(const participant_id of ['sender','receiver'])await service.register_participant({board:'main',participant_id,label:participant_id,kind:'thread'});
+    const secret='whsec_'+Buffer.alloc(32,17).toString('base64');
+    const events=new EventService(service,{...localEnv,EVENT_SECRET_KEY:Buffer.alloc(32,19).toString('base64')},{transport:async(_url,options)=>Response.json({challenge:JSON.parse(options.body).challenge})});
+    const sub=await events.subscribe({name:'message.created',arguments:{board:'main',receiver_id:'receiver'},delivery:{mode:'webhook',url:'https://chatgpt.com/fixture-retirement',secret}});
+    await service.post_message({board:'main',sender_id:'sender',sender_label:'sender',receiver_id:'receiver',topic:'Fixture',body:'Fixture content',idempotency_key:'retirement-fixture'});await events.reconcile();
+    const args={subscription_id:sub.id},payload={jsonrpc:'2.0',id:1,method:'tools/call',params:{name:'retire_event_subscription',arguments:args}};
+    const csrf={Origin:'https://board.test','X-Dot-Board':'1'};
+    assert.equal((await handle(request('/mcp',payload,'other-account'),localEnv)).status,403);
+    assert.equal((await handle(request('/mcp',payload,''),localEnv)).status,401);
+    assert.equal((await handle(request('/api/retire_event_subscription',args,'owner'),localEnv)).status,403);
+    assert.equal((await handle(request('/api/retire_event_subscription',args,'owner',{...csrf,Origin:'https://attacker.test'}),localEnv)).status,403);
+    const wrongOwner=await handle(request('/api/retire_event_subscription',args,'stranger',csrf),{...localEnv,OWNER_USER_ID:'stranger'});
+    assert.equal(wrongOwner.status,404);assert.equal((await wrongOwner.json()).error,'subscription_not_found');
+    assert.equal(localDb.connection.prepare('SELECT active FROM event_subscriptions').get().active,1);
+    const retired=await (await handle(request('/mcp',payload),localEnv)).json();
+    assert.equal(retired.result.isError,false);assert.equal(retired.result.structuredContent.cancelled_pending_deliveries,1);
+    assert.equal(retired.result.structuredContent.subscription_id,sub.id);assert.equal(retired.result.structuredContent.active,false);
+    assert(!JSON.stringify(retired).includes(secret));assert(!JSON.stringify(retired).includes('https://'));
+    const repeated=await (await handle(request('/api/retire_event_subscription',args,'owner',csrf),localEnv)).json();
+    assert.deepEqual(repeated,{...retired.result.structuredContent,cancelled_pending_deliveries:0});
+    const unknown=await handle(request('/api/retire_event_subscription',{subscription_id:'sub_unknown'},'owner',csrf),localEnv);assert.equal(unknown.status,404);
+    const invalid=await handle(request('/api/retire_event_subscription',{...args,callback_url:'https://chatgpt.com/private-fixture'},'owner',csrf),localEnv);assert.equal(invalid.status,400);
+    assert.equal(localDb.connection.prepare('SELECT COUNT(*) n FROM messages').get().n,1);
+    assert.equal(localDb.connection.prepare('SELECT state FROM event_deliveries').get().state,'cancelled');
+  } finally {localDb.close();}
+});
