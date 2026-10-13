@@ -59,11 +59,193 @@ test('matching signed events contain minimal references; stored, accepted and ac
     assert(!JSON.stringify(request.body).includes('Communication only.'));
     const status=await f.events.status({board:'main',message_id:sent.message.id});
     assert(status.stored);assert.equal(status.deliveries[0].state,'accepted');assert.equal(status.participant_acknowledged,false);
+    assert.equal(status.deliveries[0].event_id,request.options.headers['webhook-id']);
+    assert.equal(status.deliveries[0].event_id,request.body.eventId);
+    assert.deepEqual(status.notification.transport,{state:'accepted',total:1,accepted:1,pending:0,failed:0,cancelled:0});
+    assert.equal(status.notification.host_wake,'unverified');assert.equal(status.notification.readiness_scope,'configuration_only');
     await f.board.get_inbox({board:'main',receiver_id:'receiver'});
     assert.equal((await f.events.status({board:'main',message_id:sent.message.id})).participant_acknowledged,false);
     await f.board.acknowledge_message({board:'main',message_id:sent.message.id,participant_id:'receiver'});
-    assert.equal((await f.events.status({board:'main',message_id:sent.message.id})).participant_acknowledged,true);
+    const acknowledged=await f.events.status({board:'main',message_id:sent.message.id});
+    assert.equal(acknowledged.participant_acknowledged,true);assert.equal(acknowledged.notification.host_wake,'unverified');
     assert.equal((await f.events.dispatch()).attempted,0);
+  }finally{f.db.close();}
+});
+
+test('mixed callback acceptance and failure stay visible without retiring either subscription',async()=>{
+  const f=await fixture();try {
+    const stale=await f.events.subscribe(f.params());
+    const replacement=await f.events.subscribe({...f.params(),delivery:{...f.params().delivery,url:'https://chatgpt.com/another-mcp-callback'}});
+    assert.notEqual(stale.id,replacement.id);
+    const transport=f.events.transport;
+    f.events.transport=async(url,options)=>{
+      await transport(url,options);
+      return new Response(null,{status:url===f.params().delivery.url?404:200});
+    };
+    const sent=await f.post();assert.deepEqual(await f.events.dispatch(),{attempted:2,accepted:1,failed:1,pending:0});
+    const status=await f.events.status({board:'main',message_id:sent.message.id});
+    assert.equal(status.notification.state,'accepted'); // Preserve the legacy any-accepted contract.
+    assert.deepEqual(status.notification.transport,{state:'partially_accepted',total:2,accepted:1,pending:0,failed:1,cancelled:0});
+    assert.equal(status.notification.host_wake,'unverified');assert.equal(status.participant_acknowledged,false);
+    const setup=await f.events.setup({board:'main',receiver_id:'receiver'});
+    assert.equal(setup.state,'ready');assert.equal(setup.notification_ready,true);
+    assert.equal(setup.readiness_scope,'configuration_only');assert.equal(setup.delivery_evidence_order,'event_sequence');
+    const byId=Object.fromEntries(setup.subscriptions.map(s=>[s.id,s]));
+    for(const delivery of status.deliveries) {
+      assert.equal(byId[delivery.subscription_id].newest_queued_delivery.event_id,delivery.event_id);
+      assert(f.requests.some(request=>request.options.headers['webhook-id']===delivery.event_id));
+    }
+    assert.equal(new Set(status.deliveries.map(delivery=>delivery.event_id)).size,2);
+    assert.equal(byId[stale.id].active,true);assert.equal(byId[replacement.id].active,true);
+    assert.equal(byId[stale.id].newest_queued_delivery.state,'failed');
+    assert.equal(byId[stale.id].newest_queued_delivery.http_status,404);
+    assert.equal(byId[stale.id].newest_queued_delivery.last_error,'http_404');
+    assert.equal(byId[replacement.id].newest_queued_delivery.state,'accepted');
+    assert.equal(byId[replacement.id].newest_queued_delivery.http_status,200);
+    const listed=await f.events.listSubscriptions({board:'main'});
+    assert.equal(listed.host_wake,'unverified');assert.equal(listed.delivery_evidence_order,'event_sequence');
+    for(const row of listed.subscriptions)assert.deepEqual(row.newest_queued_delivery,byId[row.id].newest_queued_delivery);
+    assert(!JSON.stringify({setup,listed,status}).includes(signingSecret));
+    assert(!JSON.stringify({setup,listed,status}).includes('mcp-callback'));
+    assert.equal((await f.events.dispatch()).attempted,0);
+    assert.equal(f.db.connection.prepare('SELECT COUNT(*) n FROM event_subscriptions WHERE active=1').get().n,2);
+  }finally{f.db.close();}
+});
+
+test('per-message transport summary distinguishes partial acceptance with pending and cancelled listeners',async()=>{
+  const f=await fixture();try {
+    await f.events.subscribe(f.params());
+    const otherParams={...f.params(),delivery:{...f.params().delivery,url:'https://chatgpt.com/independent-listener'}};
+    const other=await f.events.subscribe(otherParams);
+    await f.events.configure({subscription_id:other.id,paused:true});
+    const sent=await f.post();await f.events.dispatch();
+    const read=async()=> (await f.events.status({board:'main',message_id:sent.message.id})).notification.transport;
+    assert.deepEqual(await read(),{state:'partially_accepted',total:2,accepted:1,pending:1,failed:0,cancelled:0});
+    await f.events.unsubscribe({name:otherParams.name,arguments:otherParams.arguments,delivery:{mode:'webhook',url:otherParams.delivery.url}});
+    assert.deepEqual(await read(),{state:'partially_accepted',total:2,accepted:1,pending:0,failed:0,cancelled:1});
+  }finally{f.db.close();}
+});
+
+test('per-message transport summaries exclude other owners even when their callback accepted',async()=>{
+  const f=await fixture();try {
+    const owned=await f.events.subscribe(f.params());
+    const other=await f.events.subscribe({...f.params(),delivery:{...f.params().delivery,url:'https://chatgpt.com/other-owner-listener'}});
+    const transport=f.events.transport;
+    f.events.transport=async(url,options)=>{
+      await transport(url,options);
+      return new Response(null,{status:url===f.params().delivery.url?404:204});
+    };
+    const sent=await f.post();await f.events.dispatch();
+    const otherEventId=f.db.connection.prepare('SELECT event_id FROM event_deliveries WHERE subscription_id=?').get(other.id).event_id;
+    // Model retained delivery history belonging to a different authenticated owner.
+    f.db.connection.prepare('UPDATE event_subscriptions SET owner_subject=? WHERE id=?').run('other-owner',other.id);
+    assert.equal(f.db.connection.prepare('SELECT COUNT(*) n FROM event_deliveries').get().n,2);
+    const status=await f.events.status({board:'main',message_id:sent.message.id});
+    assert.equal(status.notification.state,'failed');
+    assert.deepEqual(status.notification.transport,{state:'failed',total:1,accepted:0,pending:0,failed:1,cancelled:0});
+    assert.deepEqual(status.deliveries.map(d=>d.subscription_id),[owned.id]);
+    assert.equal(status.notification.host_wake,'unverified');
+    assert(!JSON.stringify(status).includes(other.id));
+    assert(!JSON.stringify(status).includes(otherEventId));
+    const setup=await f.events.setup({board:'main',receiver_id:'receiver'});
+    const listed=await f.events.listSubscriptions({board:'main'});
+    assert(!JSON.stringify({setup,listed}).includes(otherEventId));
+  }finally{f.db.close();}
+});
+
+test('transport summaries preserve counts and state precedence when no callback accepted',async()=>{
+  const f=await fixture();try {
+    const subscriptions=[];
+    for(let i=0;i<3;i++)subscriptions.push(await f.events.subscribe({...f.params(),delivery:{...f.params().delivery,url:`https://chatgpt.com/summary-listener-${i}`}}));
+    const cases=[
+      {states:['pending','pending','pending'],expected:{state:'pending',total:3,accepted:0,pending:3,failed:0,cancelled:0}},
+      {states:['pending','failed','cancelled'],expected:{state:'pending',total:3,accepted:0,pending:1,failed:1,cancelled:1}},
+      {states:['pending','pending','cancelled'],expected:{state:'pending',total:3,accepted:0,pending:2,failed:0,cancelled:1}},
+      {states:['pending','failed','failed'],expected:{state:'pending',total:3,accepted:0,pending:1,failed:2,cancelled:0}},
+      {states:['failed','failed','cancelled'],expected:{state:'failed',total:3,accepted:0,pending:0,failed:2,cancelled:1}},
+      {states:['failed','failed','failed'],expected:{state:'failed',total:3,accepted:0,pending:0,failed:3,cancelled:0}},
+      {states:['cancelled','cancelled','cancelled'],expected:{state:'cancelled',total:3,accepted:0,pending:0,failed:0,cancelled:3}}
+    ];
+    const requests=f.requests.length;
+    for(const {states,expected} of cases) {
+      const sent=await f.post();await f.events.reconcile();
+      const sequence=f.db.connection.prepare('SELECT sequence FROM events WHERE entity_id=? AND kind=?').get(sent.message.id,'message_posted').sequence;
+      // Exercise reporting of synthetic persisted outcomes, without sending callbacks.
+      states.forEach((state,i)=>f.db.connection.prepare('UPDATE event_deliveries SET state=? WHERE subscription_id=? AND event_sequence=?').run(state,subscriptions[i].id,sequence));
+      const status=await f.events.status({board:'main',message_id:sent.message.id});
+      assert.deepEqual(status.notification.transport,expected,states.join(', '));
+      assert.equal(status.notification.state,expected.state);
+      assert.equal(status.notification.host_wake,'unverified');
+    }
+    assert.equal(f.requests.length,requests);
+  }finally{f.db.close();}
+});
+
+test('newest queued delivery is event-ordered evidence, not the latest callback attempt',async()=>{
+  const f=await fixture();try {
+    const sub=await f.events.subscribe(f.params());
+    let setup=await f.events.setup({board:'main',receiver_id:'receiver'});
+    assert.equal(setup.subscriptions[0].newest_queued_delivery,null);assert.equal(setup.host_wake,'unverified');
+    const older=await f.post();f.setStatus(500);await f.events.dispatch();
+    const newer=await f.post();f.setStatus(204);await f.events.dispatch();
+    f.tick(3000);f.setStatus(404);await f.events.dispatch(); // Older retry finishes last.
+    const olderStatus=await f.events.status({board:'main',message_id:older.message.id});
+    assert.deepEqual(olderStatus.notification.transport,{state:'failed',total:1,accepted:0,pending:0,failed:1,cancelled:0});
+    setup=await f.events.setup({board:'main',receiver_id:'receiver'});
+    const newest=setup.subscriptions[0].newest_queued_delivery;
+    const sequence=f.db.connection.prepare('SELECT sequence FROM events WHERE entity_id=? AND kind=?').get(newer.message.id,'message_posted').sequence;
+    assert.equal(newest.event_sequence,sequence);assert.equal(newest.state,'accepted');assert.equal(newest.http_status,204);
+    assert.equal(setup.delivery_evidence_order,'event_sequence');assert.equal(setup.host_wake,'unverified');
+    // A still newer queued row may have no attempt at all; it must not claim health.
+    await f.post();await f.events.reconcile();
+    const before=f.db.connection.prepare('SELECT * FROM event_subscriptions WHERE id=?').get(sub.id);
+    const requests=f.requests.length;
+    const pending=(await f.events.setup({board:'main',receiver_id:'receiver'})).subscriptions[0].newest_queued_delivery;
+    assert.equal(pending.state,'pending');assert.equal(pending.attempts,0);assert.equal(pending.http_status,null);
+    assert.equal(pending.accepted_at,null);
+    assert.equal(f.requests.length,requests);
+    assert.deepEqual(f.db.connection.prepare('SELECT * FROM event_subscriptions WHERE id=?').get(sub.id),before);
+  }finally{f.db.close();}
+});
+
+test('delivery evidence keeps account boundaries and no-delivery setup reads remain read-only',async()=>{
+  const f=await fixture();try {
+    const unsent=await f.post();
+    const empty=await f.events.status({board:'main',message_id:unsent.message.id});
+    assert.equal(empty.notification.state,'subscription_required');
+    assert.deepEqual(empty.notification.transport,{state:'not_queued',total:0,accepted:0,pending:0,failed:0,cancelled:0});
+    await f.events.subscribe(f.params());await f.post();await f.events.dispatch();
+    f.db.connection.prepare('UPDATE event_subscriptions SET owner_subject=?').run('other-owner');
+    const requests=f.requests.length;
+    assert.equal((await f.events.listSubscriptions({board:'main'})).subscriptions.length,0);
+    assert.equal((await f.events.setup({board:'main',receiver_id:'receiver'})).subscriptions.length,0);
+    assert.equal(f.requests.length,requests);
+  }finally{f.db.close();}
+});
+
+test('reactivating a callback preserves historical evidence without claiming a fresh accepted delivery',async()=>{
+  const f=await fixture();try {
+    const params=f.params(),sub=await f.events.subscribe(params);
+    const sent=await f.post();f.setStatus(410);await f.events.dispatch();
+    const failed=(await f.events.setup({board:'main',receiver_id:'receiver'})).subscriptions[0];
+    assert.equal(failed.active,false);assert.equal(failed.newest_queued_delivery.state,'failed');
+    assert.equal(failed.newest_queued_delivery.http_status,410);
+    const requests=f.requests.length;
+    assert.equal((await f.events.subscribe(params)).id,sub.id);
+    assert.equal(f.requests.length,requests+1);
+    assert.equal(f.requests.at(-1).body.type,'verification');
+    const ready=await f.events.setup({board:'main',receiver_id:'receiver'});
+    assert.equal(ready.state,'ready');assert.equal(ready.readiness_scope,'configuration_only');
+    assert.equal(ready.host_wake,'unverified');assert.equal(ready.subscriptions[0].active,true);
+    assert.deepEqual(ready.subscriptions[0].newest_queued_delivery,failed.newest_queued_delivery);
+    const status=await f.events.status({board:'main',message_id:sent.message.id});
+    assert.equal(status.notification.transport.state,'failed');assert.equal(status.notification.receiver_ready,true);
+    assert.equal(status.deliveries[0].event_id,failed.newest_queued_delivery.event_id);
+    f.setStatus(204);assert.equal((await f.events.dispatch()).attempted,0);
+    const newer=await f.post();assert.equal((await f.events.dispatch()).accepted,1);
+    const latest=(await f.events.setup({board:'main',receiver_id:'receiver'})).subscriptions[0].newest_queued_delivery;
+    assert.equal(latest.state,'accepted');assert.notEqual(latest.event_id,failed.newest_queued_delivery.event_id);
+    assert.equal(latest.event_id,(await f.events.status({board:'main',message_id:newer.message.id})).deliveries[0].event_id);
   }finally{f.db.close();}
 });
 

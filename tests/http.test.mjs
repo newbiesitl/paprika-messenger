@@ -151,8 +151,8 @@ test('service type stays authenticated and consistent across MCP, browser contro
         assert.equal(response.structuredContent.connection_policy.local_binding_default,'on_demand');
       }
     }
-    assert.deepEqual((await (await handle(call('list_event_subscriptions',{board:'main'}),profileEnv)).json()).result.structuredContent,{subscriptions:[]});
-    assert.deepEqual(await (await handle(request('/api/list_event_subscriptions',{board:'main'},'owner',csrf),profileEnv)).json(),{subscriptions:[]});
+    assert.deepEqual((await (await handle(call('list_event_subscriptions',{board:'main'}),profileEnv)).json()).result.structuredContent,{delivery_evidence_order:'event_sequence',host_wake:'unverified',subscriptions:[]});
+    assert.deepEqual(await (await handle(request('/api/list_event_subscriptions',{board:'main'},'owner',csrf),profileEnv)).json(),{delivery_evidence_order:'event_sequence',host_wake:'unverified',subscriptions:[]});
     assert.equal(profileDb.connection.prepare('SELECT COUNT(*) n FROM event_subscriptions').get().n,0);
     assert.equal(profileDb.connection.prepare('SELECT COUNT(*) n FROM messages').get().n,0);
   } finally {profileDb.close();}
@@ -508,6 +508,17 @@ test('generated Worker sends an authenticated subscription’s notification in r
     const posted=await handle(request('/mcp',{jsonrpc:'2.0',id:2,method:'tools/call',params:{name:'post_message',arguments:args}}),eventEnv,ctx);
     assert.equal((await posted.json()).result.isError,false);await Promise.all(jobs);
     assert.equal(sent.filter(e=>e.name==='message.created').length,1);
+    const delivered=sent.find(e=>e.name==='message.created');
+    const diagnostics=async(name,args)=> (await (await handle(request('/mcp',{jsonrpc:'2.0',id:5,method:'tools/call',params:{name,arguments:args}}),eventEnv)).json()).result.structuredContent;
+    const status=await diagnostics('get_delivery_status',{board:'main',message_id:delivered.data.message_id});
+    assert.equal(status.deliveries[0].event_id,delivered.eventId);
+    assert.deepEqual(status.notification.transport,{state:'accepted',total:1,accepted:1,pending:0,failed:0,cancelled:0});
+    assert.equal(status.notification.host_wake,'unverified');assert.equal(status.notification.readiness_scope,'configuration_only');
+    const setup=await diagnostics('get_notification_setup',{board:'main',receiver_id:'receiver'});
+    assert.equal(setup.subscriptions[0].newest_queued_delivery.event_id,delivered.eventId);
+    assert.equal(setup.subscriptions[0].newest_queued_delivery.event_sequence,delivered.data.sequence);
+    assert(!JSON.stringify({status,setup}).includes(params.delivery.secret));
+    assert(!JSON.stringify({status,setup}).includes(params.delivery.url));
     assert.equal(eventDb.connection.prepare('SELECT COUNT(*) AS count FROM acknowledgments').get().count,0);
     await handle(request('/mcp',{jsonrpc:'2.0',id:3,method:'tools/call',params:{name:'post_message',arguments:args}}),eventEnv,ctx);await Promise.all(jobs);
     assert.equal(sent.filter(e=>e.name==='message.created').length,1);
