@@ -52,6 +52,7 @@ test('direct text includes a confirmed reply address without requiring any board
   const {db, service} = await boardFixture();
   try {
     const plan = direct();
+    assert(plan.host_args.prompt.startsWith('From: "Sender" · Sender ID: sender\n'));
     assert(plan.host_args.prompt.endsWith('Exact requested text.'));
     assert(plan.host_args.prompt.includes('"receiver_thread_id":"current-chat"'));
     assert.equal((await service.get_inbox({board: 'main', receiver_id: 'receiver'})).messages.length, 0);
@@ -74,6 +75,8 @@ test('board write must confirm storage before a native plan and same-key retry r
     const retry = await service.post_message(payload);
     assert.equal(retry.duplicate, true); assert.equal(retry.message.id, stored.message.id);
     const plan = prepareStoredDelivery({...route, message: retry.message}, env);
+    assert(plan.host_args.prompt.startsWith('From: "Sender" · Sender ID: sender\n'));
+    assert(plan.host_args.prompt.includes(plan.reference));
     assert.equal(plan.key, stored.message.id); assert(!plan.host_args.prompt.includes('Full message'));
     assert.throws(() => prepareStoredDelivery({...route, message: {...stored.message, created_at: undefined}}, env), /confirmed/);
     assert.throws(() => prepareStoredDelivery({...route, message: {...stored.message, sender_id: 'wrong'}}, env));

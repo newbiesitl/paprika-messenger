@@ -53,6 +53,8 @@ test('an explicit relay preserves the original message and attributes the execut
   assert.equal(plan.delivery_kind, 'relay');
   assert.equal(plan.host_args.threadId, 'receiver-thread'); assert.equal(plan.host_args.hostId, 'local');
   assert(plan.host_args.prompt.includes(input.message.id));
+  assert(plan.host_args.prompt.startsWith('From: "Original" · Sender ID: original\n'));
+  assert(!plan.host_args.prompt.startsWith('From: "Relay"'));
   assert(plan.host_args.prompt.includes('"relay_id":"relay"'));
   assert(plan.host_args.prompt.includes('"original_sender_id":"original"'));
   assert(!plan.host_args.prompt.includes(input.message.body));
