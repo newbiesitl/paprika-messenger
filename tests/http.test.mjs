@@ -211,6 +211,15 @@ test('generated MCP exposes connection controls and bundled UI without changing 
     const catalog=(await (await handle(call('tools/list'),uiEnv)).json()).result;
     const control=catalog.tools.find(t=>t.name==='show_connection_controls');
     assert.equal(control.annotations.readOnlyHint,true);
+    const discovered=(await (await handle(call('server/discover'),uiEnv)).json()).result;
+    for(const instructions of [initialized.instructions,discovered.instructions,control.description]) {
+      assert.match(instructions,/call show_connection_controls before setup mutations/);
+      assert.match(instructions,/Continue already-authorized setup without a redundant click/);
+      assert.match(instructions,/Settings-only requests show controls without enabling anything/);
+      assert.match(instructions,/explicit event-off or paused settings unless the latest user request clearly changes them/);
+      assert.match(instructions,/a data result alone does not prove UI rendering/);
+      assert.match(instructions,/Host approval prompts remain host-managed/);
+    }
     assert.equal(control.inputSchema.type,'object');
     assert.equal(Object.hasOwn(control.inputSchema,'oneOf'),false);
     assert.equal(control._meta.ui.resourceUri,'ui://paprika-messenger/connection/v1.html');
