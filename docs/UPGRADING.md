@@ -1,5 +1,11 @@
 # Upgrade an existing Paprika Messenger instance
 
+## Stable 1.5.0: connection guidance and sender annotations
+
+Plugin **1.5.0** bundles service **0.7.0**, promoting the existing 1.5 release candidates plus the merged sender-annotation change. Requested receiving setup shows the existing connection card before continuing authorized setup; settings-only requests remain read-only. Native notifications display the stored original sender's label and immutable ID. Relays retain the original author, and direct delivery uses its verified sender. Labels are quoted as display data; routing IDs, permissions, transport selection and retry checkpoints are unchanged.
+
+Update the same private account plugin and service, preserving their App/OAuth binding, audience, boards, messages and receiving settings. Upgrades from stable 1.4.0 require the existing append-only migrations through `0008_recipient-cache-revisions.sql`; this stable promotion adds no migration beyond the release candidates. It does not create or resume a receiving task or subscription. The separate callback-health work is excluded. Retain all earlier archives and saved Site versions. Client context refresh, visible card rendering and actual unattended receiving remain separate verification steps.
+
 ## 1.5.0-rc.4: connection-card guidance
 
 Plugin **1.5.0-rc.4** / service **0.7.0-rc.4** packages PR #28. Explicit connect, initialize, reinitialize and enable-incoming requests display the existing connection card and continue the already-authorized receiving setup without a redundant click. Settings-only requests still show controls without enabling anything. The guidance distinguishes the card from host-managed approval prompts and preserves explicit event-off or paused choices.

@@ -1,7 +1,7 @@
 {
   "format": 1,
   "kind": "paprika-messenger-service-template",
-  "service_version": "0.7.0-rc.4",
+  "service_version": "0.7.0",
   "files": [
     {
       "path": ".env.example",
@@ -65,13 +65,13 @@
     },
     {
       "path": "docs/TEST-RESULTS.md",
-      "size_bytes": 405,
-      "sha256": "1b5e1927b4b099beec2d5d7a381cd39924cdcb8f3f7e32d7a41472fd4990ce4a"
+      "size_bytes": 400,
+      "sha256": "196b4bf8b73cba971f9e3e3afb6447870dcfc75f375db82dd814a7117ebad5b0"
     },
     {
       "path": "docs/UPGRADING.md",
-      "size_bytes": 37862,
-      "sha256": "b9522d1999d0442b7de2c1a391f498aa782f22c210c05348ec24c7607498e716"
+      "size_bytes": 39081,
+      "sha256": "3310741ca1a583d3bb3a50f39b006b415709b77005b2c5d73e27cf9ea8a842f1"
     },
     {
       "path": "docs/WINDOWS-SITES-PACKAGING.md",
@@ -185,18 +185,18 @@
     },
     {
       "path": "package-lock.json",
-      "size_bytes": 50625,
-      "sha256": "82d1e606fafc8b707440a0cc22f436293785ca4145ebe525ed4a6f3606c5a2f5"
+      "size_bytes": 50615,
+      "sha256": "136cfb75f620038fd4fabc6ddd9ad106b648dbebeaa93aff8f94fb6460eea78a"
     },
     {
       "path": "package.json",
-      "size_bytes": 445,
-      "sha256": "e2359f335fb5d60844d1387d4a5ef7706059032be4b34e40b6fc11c119dda810"
+      "size_bytes": 440,
+      "sha256": "b0901584ddde4718df7cf4ee2f73b677631baa626a4efbf0d0f15d702d37ba20"
     },
     {
       "path": "README.md",
-      "size_bytes": 24562,
-      "sha256": "a26afab05f80a523b0fc838e3facf96f0f75965bffcb273a783bb74940a532a6"
+      "size_bytes": 24583,
+      "sha256": "c207aa1976f2fb30651727fbbc48ce34b9c5e7e9dedf3ece8ae07d54c716351c"
     },
     {
       "path": "scripts/build.mjs",
@@ -325,8 +325,8 @@
     },
     {
       "path": "src/protocol.mjs",
-      "size_bytes": 36559,
-      "sha256": "1ae9dda5ea4462f1be519fe7c5563a7a3d59fab39d0e285f5dd8b1802ebf2d04"
+      "size_bytes": 36554,
+      "sha256": "dae8177d76adf7243570b5396354888621c87c740cbe02d63ed4d2701ab03199"
     },
     {
       "path": "src/recipient-cache-state.mjs",
@@ -515,8 +515,8 @@
     },
     {
       "path": "web/recipient-host.js",
-      "size_bytes": 14209,
-      "sha256": "2e3c83c68e68bbce173772d9a7269ac66a942d44273624fbce5213736c0b7195"
+      "size_bytes": 14204,
+      "sha256": "ca41d85d0bc537ca9562b3804e03934999503ff3c77cad51c457466040931901"
     },
     {
       "path": "web/recipient-picker.css",
