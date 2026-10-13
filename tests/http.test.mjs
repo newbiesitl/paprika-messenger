@@ -211,11 +211,16 @@ test('generated MCP exposes connection controls and bundled UI without changing 
     const catalog=(await (await handle(call('tools/list'),uiEnv)).json()).result;
     const control=catalog.tools.find(t=>t.name==='show_connection_controls');
     assert.equal(control.annotations.readOnlyHint,true);
+    assert.match(catalog.tools.find(t=>t.name==='get_inbox').description,/On-demand bindings read only when requested.*only for an explicitly selected inbox_checks binding/);
     const discovered=(await (await handle(call('server/discover'),uiEnv)).json()).result;
     for(const instructions of [initialized.instructions,discovered.instructions,control.description]) {
-      assert.match(instructions,/call show_connection_controls before setup mutations/);
-      assert.match(instructions,/Continue already-authorized setup without a redundant click/);
-      assert.match(instructions,/Settings-only requests show controls without enabling anything/);
+      assert.match(instructions,/Do not call show_connection_controls during ordinary setup/);
+      assert.match(instructions,/Call show_connection_controls only for an explicit settings or card request/);
+      assert.doesNotMatch(instructions,/call show_connection_controls before setup mutations|Use show_connection_controls for friendly receiving setup/);
+      assert.match(instructions,/continue already-authorized setup without a redundant click/);
+      assert.match(instructions,/showing settings alone enables nothing/);
+      assert.match(instructions,/New bindings on every host default to on-demand inbox reads with event hooks disabled/);
+      assert.doesNotMatch(instructions,/New (?:receiving )?bindings prefer (?:message\.created )?events|reconcile existing tasks, establish the host event task/);
       assert.match(instructions,/explicit event-off or paused settings unless the latest user request clearly changes them/);
       assert.match(instructions,/a data result alone does not prove UI rendering/);
       assert.match(instructions,/Host approval prompts remain host-managed/);
@@ -235,6 +240,9 @@ test('generated MCP exposes connection controls and bundled UI without changing 
     assert.equal(initial.isError,false);assert.equal(initial.structuredContent.state,'receiver_required');
     assert.equal(initial.structuredContent.notification_ready,false);assert.equal(initial._meta.ui.resourceUri,uiUri);
     assert.equal(initial.structuredContent.connection_policy.heartbeat_requires_explicit_choice,true);
+    assert.equal(initial.structuredContent.connection_policy.new_binding_default,'on_demand');
+    assert.equal(initial.structuredContent.connection_policy.cloud_binding_default,'on_demand');
+    assert.equal(initial.structuredContent.connection_policy.event_hooks_require_explicit_choice,true);
     assert.equal(initial.structuredContent.connection_policy.receiving_host_capability_verification_required,true);
     const mapped=(await (await handle(toolCall({board:'main',receiver_thread_id:'current-host-thread'}),uiEnv)).json()).result;
     assert.equal(mapped.structuredContent.receiver_id,'current');assert.equal(mapped.structuredContent.state,'subscription_required');

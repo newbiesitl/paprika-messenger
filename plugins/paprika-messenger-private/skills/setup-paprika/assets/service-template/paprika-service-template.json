@@ -45,8 +45,8 @@
     },
     {
       "path": "docs/SCHEDULING.md",
-      "size_bytes": 15063,
-      "sha256": "dc2dc4f3790c87e35dc07ccd4dba057baec92cd9a9ef3d94fbf7af1cc0feb43f"
+      "size_bytes": 15223,
+      "sha256": "26bb6cb46efe2893b4168ec4204c7215c6bd994fe07ed6310f0ab68e5217a403"
     },
     {
       "path": "docs/SECURITY.md",
@@ -70,8 +70,8 @@
     },
     {
       "path": "docs/UPGRADING.md",
-      "size_bytes": 39081,
-      "sha256": "3310741ca1a583d3bb3a50f39b006b415709b77005b2c5d73e27cf9ea8a842f1"
+      "size_bytes": 39793,
+      "sha256": "26c0b5d2e1d942239244ea7f5c7e3782b549bbd5f2b1b6f14974ee93609b2b6c"
     },
     {
       "path": "docs/WINDOWS-SITES-PACKAGING.md",
@@ -195,8 +195,8 @@
     },
     {
       "path": "README.md",
-      "size_bytes": 24583,
-      "sha256": "c207aa1976f2fb30651727fbbc48ce34b9c5e7e9dedf3ece8ae07d54c716351c"
+      "size_bytes": 23853,
+      "sha256": "b6045b19dc0a05f3b7a5fbb470224472c3f1c747a8d840be517397db344ac81b"
     },
     {
       "path": "scripts/build.mjs",
@@ -235,13 +235,13 @@
     },
     {
       "path": "skills/paprika-messenger/references/connect.md",
-      "size_bytes": 30255,
-      "sha256": "0a9ac23f62b5951a35a34f6fee4d0155537d222b34ff0ede7b0caead04cf08cc"
+      "size_bytes": 28652,
+      "sha256": "8196ae67064554860c2693007a3d57f0f42fc3653d468c1f288464e172567451"
     },
     {
       "path": "skills/paprika-messenger/references/connection-ui.md",
-      "size_bytes": 8347,
-      "sha256": "da611f4420e83a443e08bf5623fea13537a7c937a41d2148997710895439316e"
+      "size_bytes": 7691,
+      "sha256": "1bc700d64d6efb8f3280a60d26d2644e4e869d33dc7ee29776d960e305b9fd4a"
     },
     {
       "path": "skills/paprika-messenger/references/direct.md",
@@ -255,8 +255,8 @@
     },
     {
       "path": "skills/paprika-messenger/references/notifications.md",
-      "size_bytes": 10876,
-      "sha256": "e559e50d03719f88e7f6ffe4fca040997d2dbb27e3234b117c953fbf0d89adde"
+      "size_bytes": 9861,
+      "sha256": "854c933e7be5cec87fe1d07873bdc1e6098975c8fe8ac888e34c7d1910d1c7f5"
     },
     {
       "path": "skills/paprika-messenger/references/recipient-picker.md",
@@ -310,23 +310,23 @@
     },
     {
       "path": "skills/paprika-messenger/SKILL.md",
-      "size_bytes": 21727,
-      "sha256": "fabc0b9cb3a64605c97d5fd2d091cb5ca7aaa6b90b7e758c077a2801be99c7e5"
+      "size_bytes": 21912,
+      "sha256": "3a96b8245ce1db3fc06fc5901e468a4e67967ba367e3a1772edca59ab26f9de2"
     },
     {
       "path": "src/connection-ui.mjs",
-      "size_bytes": 2548,
-      "sha256": "8bcaf4f0df6b0e3cd47439fe31113f9d821d386452f86ae723dc085f767e773c"
+      "size_bytes": 2696,
+      "sha256": "780fbf30e973f4dd9057d615cb4d914b544863efac60b3b594c9dca3e46206de"
     },
     {
       "path": "src/events.mjs",
-      "size_bytes": 25370,
-      "sha256": "42a1b56a1c7eb8ec5d9f0442b3658ceafc02d34971bfa62343df40ada70f896c"
+      "size_bytes": 24932,
+      "sha256": "4b28c01365e199494dc9beadb56e159e50c2380a0a1cfbc2a26a51c631c1a3c7"
     },
     {
       "path": "src/protocol.mjs",
-      "size_bytes": 36554,
-      "sha256": "dae8177d76adf7243570b5396354888621c87c740cbe02d63ed4d2701ab03199"
+      "size_bytes": 37477,
+      "sha256": "717c691cd8c9f87075460164d1cb4fb7932d374ad0a7282fc8ad9ff1485bf4b9"
     },
     {
       "path": "src/recipient-cache-state.mjs",
@@ -400,8 +400,8 @@
     },
     {
       "path": "tests/connection-ui.test.mjs",
-      "size_bytes": 9779,
-      "sha256": "aa59c499599679bb61887ec75c69ba8821950df76a377d82484f658664cfa0b5"
+      "size_bytes": 10049,
+      "sha256": "cfb243fe329d0f9e427fac6a757fcd6a1642c2261ab152476313151814fff835"
     },
     {
       "path": "tests/conversation-links.test.mjs",
@@ -415,8 +415,8 @@
     },
     {
       "path": "tests/events.test.mjs",
-      "size_bytes": 28513,
-      "sha256": "4e57c199492cfb7a1dac2aa4345650a691bf05398078b9d2aa81850bd023ef37"
+      "size_bytes": 28552,
+      "sha256": "69e2dbedec5c197c7ce8a7579923fdf4c416a82d627a443cc22dc1672a5d90a9"
     },
     {
       "path": "tests/generic.test.mjs",
@@ -425,8 +425,8 @@
     },
     {
       "path": "tests/http.test.mjs",
-      "size_bytes": 51859,
-      "sha256": "06b8a91ec54b602ad117a44f35a6aa0078b37d5a989772aaebfb1426794d2db9"
+      "size_bytes": 52863,
+      "sha256": "a2fa624d11aafc5fa8b87405c34b0483c5831bc9449206e0b6f79893b319c255"
     },
     {
       "path": "tests/migrations.mjs",
@@ -495,8 +495,8 @@
     },
     {
       "path": "web/connection-controls.html",
-      "size_bytes": 14420,
-      "sha256": "759603487612e1f6c6cbe3db6180d3f063caaaab05e2b975baf16bcf4f47e98f"
+      "size_bytes": 14299,
+      "sha256": "c8ef5dc55239f8204c4de0f2dae077028b6c4d4323fd76b0fe186ad377e397bd"
     },
     {
       "path": "web/index.html",
