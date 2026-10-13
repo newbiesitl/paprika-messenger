@@ -1,5 +1,11 @@
 # Upgrade an existing Paprika Messenger instance
 
+## 1.5.0-rc.4: connection-card guidance
+
+Plugin **1.5.0-rc.4** / service **0.7.0-rc.4** packages PR #28. Explicit connect, initialize, reinitialize and enable-incoming requests display the existing connection card and continue the already-authorized receiving setup without a redundant click. Settings-only requests still show controls without enabling anything. The guidance distinguishes the card from host-managed approval prompts and preserves explicit event-off or paused choices.
+
+Update the same private account package and service together. This release changes connection workflow instructions and next-step text; the connection card HTML is unchanged. It adds no migration, task, subscription, host callback or background polling by deployment alone. Preserve the existing App/OAuth binding, boards, messages and receiving settings. The separate callback-health work is not included. Refresh host plugin context or verify in a fresh chat if old guidance is cached; a saved package or successful publication does not itself verify the host's receiving behavior.
+
 ## 1.5.0-rc.3: cached dropdowns and change revisions
 
 The source update removes native thread/project enrichment from the menu-opening path. Call `show_recipient_picker` first and display the saved details immediately. The private board's durable metadata is the cloud cache; the client keeps scoped recipient-page copies in browser storage when supported, or memory otherwise. Missing local copies fall back to the private board. **Refresh thread details** remains the explicit bounded native refresh.
