@@ -245,8 +245,8 @@
     },
     {
       "path": "skills/paprika-messenger/references/direct.md",
-      "size_bytes": 18693,
-      "sha256": "8b96accb8cbd352217ff8dbd75b1b0d7664c5f7ce04938f48449ebc4a1c6499a"
+      "size_bytes": 19053,
+      "sha256": "fcaec0d8c1bda21110689510750aa163b3b438156544764567e0c59797900ba4"
     },
     {
       "path": "skills/paprika-messenger/references/native-bridge.md",
@@ -295,13 +295,13 @@
     },
     {
       "path": "skills/paprika-messenger/scripts/prepare-delivery.mjs",
-      "size_bytes": 9862,
-      "sha256": "7f06b835afd80e3a832da09c384771f1e1b1f698f511e3ed04f73b095bbfdde5"
+      "size_bytes": 9913,
+      "sha256": "61362d20f81f30a9fa1b4815d8ff42cf841090648ff1b23822c79d30e0055725"
     },
     {
       "path": "skills/paprika-messenger/scripts/prepare-notification.mjs",
-      "size_bytes": 2022,
-      "sha256": "9a2c87ad01754ce47f666b829fc89321b3a8707fd4ce08e09e351a01eed5a46e"
+      "size_bytes": 2851,
+      "sha256": "bd413e7edbf9d1f1afbc10694f9921a74809ee9ca105f071ef625a0710549544"
     },
     {
       "path": "skills/paprika-messenger/scripts/prepare-recipient-selector.mjs",
@@ -310,8 +310,8 @@
     },
     {
       "path": "skills/paprika-messenger/SKILL.md",
-      "size_bytes": 21359,
-      "sha256": "2d4fb28a9db68b8cc631a6a4b41dad218dc73b13b20addc31d1b3fd6e9b6f8fc"
+      "size_bytes": 21727,
+      "sha256": "fabc0b9cb3a64605c97d5fd2d091cb5ca7aaa6b90b7e758c077a2801be99c7e5"
     },
     {
       "path": "src/connection-ui.mjs",
@@ -440,8 +440,8 @@
     },
     {
       "path": "tests/native-delivery.test.mjs",
-      "size_bytes": 13560,
-      "sha256": "3f15a6c909355dcb8092787a461ffdfd1f7ef30673e34854028149458bfbc598"
+      "size_bytes": 13794,
+      "sha256": "a070330b643f15e5b332d2775721073eb89ef25be09555a1c6687510d598ea0b"
     },
     {
       "path": "tests/native-recipient-selector.test.mjs",
@@ -450,8 +450,8 @@
     },
     {
       "path": "tests/native-relay.test.mjs",
-      "size_bytes": 10454,
-      "sha256": "93e39916d276d91410e2fc90540af64e08f5901f05526c39b7c404776d86a1ee"
+      "size_bytes": 10605,
+      "sha256": "869fa7b4f266de2b908621ed4af8891919c7947306a1302ebd96615c815d7a0b"
     },
     {
       "path": "tests/recipient-cache.test.mjs",
@@ -467,6 +467,11 @@
       "path": "tests/recipients.test.mjs",
       "size_bytes": 12696,
       "sha256": "d7dfea431439a30ee43997083dbad9e88345211f5fd118199c2521a855a0aa77"
+    },
+    {
+      "path": "tests/sender-annotation.test.mjs",
+      "size_bytes": 2433,
+      "sha256": "5137c4ca2621cc4ef0d3dfff932b588420e230348325e13d49f5465eea4bf00e"
     },
     {
       "path": "tests/thread-id.test.mjs",
