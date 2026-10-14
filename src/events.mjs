@@ -11,6 +11,22 @@ const evtAddress={receiver_id:{type:'string'},receiver_thread_id:{type:'string',
 // NOT NULL column. Public APIs use null; existing finite rows keep their expiry.
 const expired=(subscription,now)=>subscription.expires_at!==0 && subscription.expires_at<=now;
 const refreshBefore=expires=>expires===0?null:new Date(expires).toISOString();
+// The compound delivery primary key makes this one indexed row per subscription,
+// not a scan of delivery history. Event order is NOT callback-attempt order:
+// an older event can be retried after this newer queued event has completed.
+const newestDeliveryColumns=`d.event_sequence AS delivery_sequence,d.event_id AS delivery_event_id,d.state AS delivery_state,d.attempts AS delivery_attempts,
+  d.http_status AS delivery_http_status,d.last_error AS delivery_last_error,d.accepted_at AS delivery_accepted_at`;
+const newestDeliveryJoin=`LEFT JOIN event_deliveries d ON d.subscription_id=s.id AND d.event_sequence=(
+  SELECT MAX(recent.event_sequence) FROM event_deliveries recent WHERE recent.subscription_id=s.id)`;
+const newestQueuedDelivery=s=>s.delivery_sequence==null?null:{event_sequence:s.delivery_sequence,event_id:s.delivery_event_id,state:s.delivery_state,
+  attempts:s.delivery_attempts,http_status:s.delivery_http_status,last_error:s.delivery_last_error,accepted_at:s.delivery_accepted_at};
+const transportSummary=deliveries=>{
+  const counts={total:deliveries.length,accepted:0,pending:0,failed:0,cancelled:0};
+  for(const delivery of deliveries)counts[delivery.state]++;
+  const state=counts.accepted?(counts.accepted===counts.total?'accepted':'partially_accepted'):
+    counts.pending?'pending':counts.failed?'failed':counts.cancelled?'cancelled':'not_queued';
+  return {state,...counts};
+};
 export const receivingConnectionPolicy=Object.freeze({
   new_binding_board_default:'main',
   subscription_lifetime_default:'indefinite',
@@ -126,8 +142,11 @@ export class EventService {
   }
   async listSubscriptions(a) {
     strict(a,['board']);const board=await this.boardService.board(a.board);
-    const subscriptions=await evtAll(this.db,`SELECT id,board,receiver_id,active,paused,notification_mode,wake_limit,expires_at FROM event_subscriptions WHERE board=? AND owner_subject=? ORDER BY created_at DESC LIMIT 100`,board,this.subject);
-    return {subscriptions:subscriptions.map(s=>({...s,expires_at:s.expires_at===0?null:s.expires_at,active:!!s.active,paused:!!s.paused,refresh_before:refreshBefore(s.expires_at)}))};
+    const subscriptions=await evtAll(this.db,`SELECT s.id,s.board,s.receiver_id,s.active,s.paused,s.notification_mode,s.wake_limit,s.expires_at,${newestDeliveryColumns}
+      FROM event_subscriptions s ${newestDeliveryJoin} WHERE s.board=? AND s.owner_subject=? ORDER BY s.created_at DESC LIMIT 100`,board,this.subject);
+    return {delivery_evidence_order:'event_sequence',host_wake:'unverified',subscriptions:subscriptions.map(s=>({
+      id:s.id,board:s.board,receiver_id:s.receiver_id,active:!!s.active,paused:!!s.paused,notification_mode:s.notification_mode,wake_limit:s.wake_limit,
+      expires_at:s.expires_at===0?null:s.expires_at,refresh_before:refreshBefore(s.expires_at),newest_queued_delivery:newestQueuedDelivery(s)}))};
   }
   async setup(a) {
     strict(a,['board',...Object.keys(evtAddress)]);
@@ -135,11 +154,15 @@ export class EventService {
     const participant=(await this.boardService.resolveAddress(board,a,Object.keys(evtAddress),{includeUnregistered:true})).participant,receiver=participant.id;
     let runtimeConfigured=true;
     try {await this.key();}catch(error){if(error?.code!=='events_not_configured')throw error;runtimeConfigured=false;}
-    const now=this.now(),rows=await evtAll(this.db,'SELECT * FROM event_subscriptions WHERE board=? AND receiver_id=? AND owner_subject=? ORDER BY created_at DESC',board,receiver,this.subject);
-    const subscriptions=rows.map(s=>({id:s.id,active:!!s.active && !expired(s,now) && this.ownerAllowed(s),paused:!!s.paused,expired:expired(s,now),limited:s.window_start>now-3600000 && s.wake_count>=s.wake_limit,notification_mode:s.notification_mode,refresh_before:refreshBefore(s.expires_at)}));
+    const now=this.now(),rows=await evtAll(this.db,`SELECT s.*,${newestDeliveryColumns} FROM event_subscriptions s ${newestDeliveryJoin}
+      WHERE s.board=? AND s.receiver_id=? AND s.owner_subject=? ORDER BY s.created_at DESC`,board,receiver,this.subject);
+    const subscriptions=rows.map(s=>({id:s.id,active:!!s.active && !expired(s,now) && this.ownerAllowed(s),paused:!!s.paused,expired:expired(s,now),limited:s.window_start>now-3600000 && s.wake_count>=s.wake_limit,notification_mode:s.notification_mode,refresh_before:refreshBefore(s.expires_at),newest_queued_delivery:newestQueuedDelivery(s)}));
     const active=subscriptions.filter(s=>s.active);
     const state=participant.unregistered_at?'unregistered':!runtimeConfigured?'events_not_configured':!active.length?'subscription_required':active.some(s=>!s.paused && !s.limited)?'ready':active.every(s=>s.paused)?'paused':'limited';
-    return {board,receiver_id:receiver,state,runtime_configured:runtimeConfigured,notification_ready:state==='ready',subscriptions,
+    // Keep legacy readiness configuration-only. Neither an eligible subscription
+    // nor a recorded HTTP acceptance proves the host woke this conversation.
+    return {board,receiver_id:receiver,state,runtime_configured:runtimeConfigured,notification_ready:state==='ready',readiness_scope:'configuration_only',
+      delivery_evidence_order:'event_sequence',host_wake:'unverified',subscriptions,
       event:{name:'message.created',arguments:{board,receiver_id:receiver}},
       ...serviceConfiguration(this.env),
       connection_policy:receivingConnectionPolicy,
@@ -159,12 +182,13 @@ export class EventService {
   }
   async status(a) {
     strict(a,['board','message_id']);const board=await this.boardService.board(a.board),message=await this.boardService.message(board,a.message_id);
-    const deliveries=await evtAll(this.db,`SELECT d.subscription_id,d.state,d.attempts,d.next_attempt,d.http_status,d.last_error,d.accepted_at FROM event_deliveries d JOIN event_subscriptions s ON s.id=d.subscription_id JOIN events e ON e.sequence=d.event_sequence WHERE e.board=? AND e.entity_id=? AND s.owner_subject=? ORDER BY d.subscription_id`,board,message.id,this.subject);
+    const deliveries=await evtAll(this.db,`SELECT d.subscription_id,d.event_id,d.state,d.attempts,d.next_attempt,d.http_status,d.last_error,d.accepted_at FROM event_deliveries d JOIN event_subscriptions s ON s.id=d.subscription_id JOIN events e ON e.sequence=d.event_sequence WHERE e.board=? AND e.entity_id=? AND s.owner_subject=? ORDER BY d.subscription_id`,board,message.id,this.subject);
     const acknowledgment=await evtFirst(this.db,'SELECT acknowledged_at FROM acknowledgments WHERE board=? AND message_id=? AND participant_id=?',board,message.id,message.receiver_id);
     const setup=await this.setup({board,receiver_id:message.receiver_id});
     const state=deliveries.some(d=>d.state==='accepted')?'accepted':deliveries.some(d=>d.state==='pending')?'pending':deliveries.some(d=>d.state==='failed')?'failed':deliveries.length?'cancelled':setup.state==='ready'?'not_queued':setup.state;
     return {message_id:message.id,stored:true,deliveries,participant_acknowledged:!!acknowledgment,acknowledged_at:acknowledgment?.acknowledged_at||null,
-      notification:{state,receiver_id:message.receiver_id,receiver_ready:setup.notification_ready,next_step:state==='not_queued'?'This message has no queued event; subscriptions monitor new messages. Recover it through the inbox.':setup.next_step}};
+      notification:{state,receiver_id:message.receiver_id,receiver_ready:setup.notification_ready,readiness_scope:'configuration_only',
+        transport:transportSummary(deliveries),host_wake:'unverified',next_step:state==='not_queued'?'This message has no queued event; subscriptions monitor new messages. Recover it through the inbox.':setup.next_step}};
   }
   ownerAllowed(subscription) {
     return this.env.OWNER_USER_ID?subscription.owner_subject===this.env.OWNER_USER_ID:!!this.env.OWNER_EMAIL && subscription.owner_email===this.env.OWNER_EMAIL.toLowerCase();

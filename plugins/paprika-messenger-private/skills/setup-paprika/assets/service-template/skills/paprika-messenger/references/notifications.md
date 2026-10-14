@@ -25,11 +25,19 @@ The sender posts through `post_message` with its registered sender and one recei
 
 Inspect the post result's `notification.state`. `subscription_required` means stored without a wake route; `pending` means a subscribed delivery is queued; `accepted` means webhook receipt only. `status_unavailable` still confirms storage and requires a status read rather than a fresh post. With `events_not_configured`, storage works but event delivery needs runtime setup. Use `get_delivery_status` for the confirmed message ID and record receiver acknowledgment separately.
 
+When available, inspect `notification.transport` as well: legacy `notification.state: accepted` means at least one callback accepted, even if another failed or is still pending. The transport summary counts all recorded deliveries for that message and reports `partially_accepted` when acceptance is mixed with any other outcome. `host_wake: unverified` remains separate from HTTP acceptance and participant acknowledgment; neither proves that the intended host task woke, fetched or displayed the message.
+
+Delivery rows and newest-queued evidence include a persisted `event_id` when supported. It matches the callback's `webhook-id` and `eventId`, remains stable across retries, and can correlate an existing receiving-host trace without disclosing callback credentials. It does not identify a host task or prove a wake. For accepted callbacks with no observed wake, the remaining evidence is the host's ingestion, filter/deduplication decision, queue outcome and task run; do not substitute guessed causes or new probes.
+
 Only send a live test when the human has authorized that recipient test. Send it after the host confirms monitoring. Retrieve older messages through the inbox: first subscription creation does not replay earlier posts. Deduplicate by event ID and message ID, including when another separately authorized receiving route exists. Replies to receipts must not create a message loop.
 
 ## Status and disconnect
 
 For an event binding, `status` reads the saved host task and `get_notification_setup`; it creates no schedule, subscription or connection message. Report backend readiness separately from host event discovery and an observed live delivery.
+
+`readiness_scope: configuration_only` labels the existing `ready`/`notification_ready` check. Setup and subscription listing expose `newest_queued_delivery` for each returned subscription, or null when no delivery has been queued. `delivery_evidence_order: event_sequence` means newest queued event, not latest callback attempt or current callback health: retries for older events can finish later, and a newer unattempted row can hide an older failure. Use the specific message's delivery status and verify the intended host binding when diagnosing a failure.
+
+Different callback URLs for the same receiver remain distinct subscriptions. Do not infer that one replaces another from its age, a shared receiver or a 404 response. Safe replacement requires trusted host task/conversation identity and explicit identification of the superseded binding. Until that information is available, reconcile through the receiving host and preserve independent listeners.
 
 `disconnect` stops that binding's host event-monitoring task so ChatGPT invokes `events/unsubscribe`, then verifies the saved subscription is inactive. Preserve independently configured subscriptions. If the host cannot stop it, pause the exact saved subscription with `configure_event_subscription` and report the remaining host task. Retain the checkpoint for reconnection. Backend maintenance retries queued webhook delivery; it is not an AI heartbeat that polls the receiver inbox.
 

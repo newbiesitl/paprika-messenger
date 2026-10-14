@@ -4,6 +4,7 @@ import { listRecipients, getRecipient, updateRecipientMetadata, recipientMention
 import { setRecipientConversation } from './recipient-conversations.mjs';
 import { registrationStatus, requireActiveRegistration, changeThreadRegistration } from './thread-registration.mjs';
 import { getRecipientDirectoryState, catalogVersionStatement, directoryCacheScope } from './recipient-cache-state.mjs';
+import { getCollaborationSettings, configureCollaboration, startCollaboration, getCollaboration, stopCollaboration, checkCollaborationHandoff } from './collaboration.mjs';
 
 // All user identities originate at the Sites hosting boundary. Never trust caller-supplied labels.
 export function authorize(request, env) {
@@ -18,7 +19,7 @@ const stmt = (db, sql, ...values) => db.prepare(sql).bind(...values);
 const first = (db, sql, ...values) => stmt(db, sql, ...values).first();
 const all = async (db, sql, ...values) => (await stmt(db, sql, ...values).all()).results;
 const hash = async value => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value))), x => x.toString(16).padStart(2, '0')).join('');
-const resultMessage = row => { const { fingerprint, idempotency_key, ...message } = row; return message; };
+const resultMessage = row => { const { fingerprint, idempotency_key, collaboration_id, handoff_depth, handoff_limit, ...message } = row; return collaboration_id ? {...message,collaboration_id,handoff_depth,handoff_limit} : message; };
 const resultBoard = row => ({...row, label:row.label || row.id});
 const legacyNoteBody = row => `Reference: ${row.queue_reference}\nResponsible participant: ${row.execution_owner}\nStatus: ${row.launch_status}\nReported time: ${row.reported_clock || 'Not reported'}`;
 const resultNote = row => ({...row, body:row.body ?? legacyNoteBody(row)});
@@ -26,6 +27,11 @@ const participantAddressFields = ['participant_id','thread_id','label'];
 const receiverAddressFields = ['receiver_id','receiver_thread_id','receiver_label'];
 export class BoardService {
   constructor(db, subject, env = {}) { this.db = db; this.subject = subject; this.env = env; }
+  async get_collaboration_settings(a) { return getCollaborationSettings(this,a); }
+  async configure_collaboration(a) { return configureCollaboration(this,a); }
+  async start_collaboration(a) { return startCollaboration(this,a); }
+  async get_collaboration(a) { return getCollaboration(this,a); }
+  async stop_collaboration(a) { return stopCollaboration(this,a); }
   async get_service_config(a) {
     strict(a, []);
     return serviceConfiguration(this.env);
@@ -158,7 +164,7 @@ export class BoardService {
     return {participant,identity_kind:'declared_label'};
   }
   async post_message(a) {
-    strict(a, ['board','sender_id','sender_label',...receiverAddressFields,'topic','body','reply_to_id','idempotency_key']);
+    strict(a, ['board','sender_id','sender_label',...receiverAddressFields,'topic','body','reply_to_id','idempotency_key','collaboration_id']);
     const board = await this.board(a.board);
     await this.participant(board, a.sender_id);
     const label = text(a.sender_label, 'sender_label', 120), topic = text(a.topic, 'topic', 120), body = text(a.body, 'body', 16000);
@@ -166,18 +172,41 @@ export class BoardService {
     const existing=key?await first(this.db,'SELECT * FROM messages WHERE board=? AND authored_by=? AND sender_id=? AND idempotency_key=?',board,this.subject,a.sender_id,key):null;
     const {participant:receiver}=await this.resolveAddress(board,a,receiverAddressFields,{includeUnregistered:!!existing}), receiver_id=receiver.id;
     const reply = a.reply_to_id === undefined || a.reply_to_id === null ? null : id(a.reply_to_id, 'reply_to_id');
-    if (reply) await this.message(board, reply);
-    const fingerprint = await hash(JSON.stringify([board,a.sender_id,label,receiver_id,topic,body,reply]));
+    const parent = reply ? await this.message(board, reply) : null;
+    const collaboration = a.collaboration_id === undefined ? null : id(a.collaboration_id,'collaboration_id');
+    if(parent?.collaboration_id && parent.collaboration_id!==collaboration)fail(409,'collaboration_required','Keep the same collaboration_id when replying to a collaboration message.');
+    const fingerprint = await hash(JSON.stringify([board,a.sender_id,label,receiver_id,topic,body,reply,...(collaboration ? [collaboration] : [])]));
     if(existing){
       if(existing.fingerprint!==fingerprint)fail(409,'idempotency_conflict','The idempotency key was used with a different message.');
       return {message:resultMessage(existing),duplicate:true,...await this.event(board,existing.id,'message_posted')};
     }
     await this.activeParticipant(board,a.sender_id);requireActiveRegistration(receiver);
+    if(collaboration && !key)fail(400,'idempotency_key_required','Collaboration handoffs require a stable idempotency key.');
     const mid = crypto.randomUUID();
-    try { await stmt(this.db, `INSERT INTO messages(id,board,sender_id,sender_label,receiver_id,topic,body,reply_to_id,authored_by,idempotency_key,fingerprint)
+    try {
+      if(collaboration){
+        await stmt(this.db,`INSERT INTO messages(id,board,sender_id,sender_label,receiver_id,topic,body,reply_to_id,authored_by,idempotency_key,fingerprint,collaboration_id,handoff_depth,handoff_limit)
+          SELECT ?,?,?,?,?,?,?,?,?,?,?,?,r.handoffs_used+1,MIN(r.max_handoff_depth,p.max_handoff_depth)
+          FROM (SELECT 1) seed LEFT JOIN collaboration_runs r ON r.board=? AND r.id=? LEFT JOIN collaboration_policies p ON p.board=r.board WHERE 1
+          ON CONFLICT(board,authored_by,sender_id,idempotency_key) DO NOTHING`,mid,board,a.sender_id,label,receiver_id,topic,body,reply,this.subject,key,fingerprint,collaboration,board,collaboration).run();
+      } else await stmt(this.db, `INSERT INTO messages(id,board,sender_id,sender_label,receiver_id,topic,body,reply_to_id,authored_by,idempotency_key,fingerprint)
       VALUES(?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(board,authored_by,sender_id,idempotency_key) DO NOTHING`,
-    mid,board,a.sender_id,label,receiver_id,topic,body,reply,this.subject,key,fingerprint).run(); }
-    catch(error){if(error.message?.includes('participant_unregistered'))fail(409,'participant_unregistered','This thread was removed from the board before the message could be stored.');throw error;}
+      mid,board,a.sender_id,label,receiver_id,topic,body,reply,this.subject,key,fingerprint).run();
+    } catch(error){
+      const stored=key ? await first(this.db,'SELECT * FROM messages WHERE board=? AND authored_by=? AND sender_id=? AND idempotency_key=?',board,this.subject,a.sender_id,key) : null;
+      if(stored){
+        if(stored.fingerprint!==fingerprint)fail(409,'idempotency_conflict','The idempotency key was used with a different message.');
+        return {message:resultMessage(stored),duplicate:true,...await this.event(board,stored.id,'message_posted')};
+      }
+      if(error.message?.includes('participant_unregistered'))fail(409,'participant_unregistered','This thread was removed from the board before the message could be stored.');
+      if(error.message?.includes('collaboration_blocked')){
+        // Diagnostics are only needed for a rejected handoff. Successful posts
+        // check and advance the count in their existing database write.
+        await checkCollaborationHandoff(this,{board,collaboration_id:collaboration,sender_id:a.sender_id,receiver_id,reply_to_id:reply});
+        fail(409,'handoff_conflict','The collaboration changed or a participant became unavailable before this handoff. Read its current state; do not reset it.');
+      }
+      throw error;
+    }
     const row = key ? await first(this.db, 'SELECT * FROM messages WHERE board=? AND authored_by=? AND sender_id=? AND idempotency_key=?', board,this.subject,a.sender_id,key) : await this.message(board,mid);
     if (row.fingerprint !== fingerprint) fail(409, 'idempotency_conflict', 'The idempotency key was used with a different message.');
     return { message: resultMessage(row), duplicate: row.id !== mid, ...await this.event(board,row.id,'message_posted') };
