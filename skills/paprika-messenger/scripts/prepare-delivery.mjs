@@ -62,6 +62,7 @@ export function prepareBoardPost(input, env = process.env) {
   };
   checkedText(payload.body, 'body including reply address', 16000);
   if (input.reply_to_id !== undefined) payload.reply_to_id = routingId(input.reply_to_id, 'reply_to_id');
+  if (input.collaboration_id !== undefined) payload.collaboration_id = routingId(input.collaboration_id, 'collaboration_id');
   return payload;
 }
 
