@@ -1,7 +1,7 @@
 {
   "format": 1,
   "kind": "paprika-messenger-service-template",
-  "service_version": "0.8.0-rc.1",
+  "service_version": "0.8.0",
   "files": [
     {
       "path": ".env.example",
@@ -65,13 +65,13 @@
     },
     {
       "path": "docs/TEST-RESULTS.md",
-      "size_bytes": 405,
-      "sha256": "8f623b33f4b40af6c77aca00b2a778ca53c2e67679841b686dd9252f1af4aebc"
+      "size_bytes": 400,
+      "sha256": "593bddcaea16003a11467b262b9e6758879cfc66cd3272e3fb243b3bdfda2802"
     },
     {
       "path": "docs/UPGRADING.md",
-      "size_bytes": 40079,
-      "sha256": "fb9648182471fd61adf03b9fc2fff17b160c62d6e1bb1e7bcb4af9bf15ac66c4"
+      "size_bytes": 41434,
+      "sha256": "c8ed0e12b1cfcb17cb4eaad006508c104924dfe15ef1a59f007f64c3ac898b06"
     },
     {
       "path": "docs/WINDOWS-SITES-PACKAGING.md",
@@ -195,18 +195,18 @@
     },
     {
       "path": "package-lock.json",
-      "size_bytes": 50625,
-      "sha256": "72999ebf5d61a09ab2bdafaed6eb08b3e84ad56284b3f9119f32fc042f7f3e21"
+      "size_bytes": 50615,
+      "sha256": "660d4eda086c66d57cfcf8ef5dc121d2cafe04dbd602c427089c150914435cae"
     },
     {
       "path": "package.json",
-      "size_bytes": 445,
-      "sha256": "adba3b2a93e3b6c57ab529d899c41739bb5427e511881b79af109abe3eb79e90"
+      "size_bytes": 440,
+      "sha256": "2f4613432f9f8bd9c5e58bcf907f6c028f9482774ecea1d6646f063252745a4a"
     },
     {
       "path": "README.md",
-      "size_bytes": 25351,
-      "sha256": "82750fc5c967dd2f8c209e01ab011cc7bd2a1f1d6e8c25766dd897ac942d1eeb"
+      "size_bytes": 25340,
+      "sha256": "248cdcdef2cec3ea8ff286e6f9af5c61500344086d684f92c96ee64039796a07"
     },
     {
       "path": "scripts/build.mjs",
@@ -345,8 +345,8 @@
     },
     {
       "path": "src/protocol.mjs",
-      "size_bytes": 42175,
-      "sha256": "65dd02a3c6caa2662c053401558832045bb20cc0707a9b8cc7d2b8ff488d4e03"
+      "size_bytes": 42170,
+      "sha256": "6a7043699f2c8471e5be661a3ea6bd773a36acb1639a25201ca032e636b59e16"
     },
     {
       "path": "src/recipient-cache-state.mjs",
