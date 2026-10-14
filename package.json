@@ -17,6 +17,6 @@
     "drizzle-kit": "0.31.11"
   },
   "dependencies": {
-    "drizzle-orm": "0.45.3"
+    "drizzle-orm": "0.45.4"
   }
 }
