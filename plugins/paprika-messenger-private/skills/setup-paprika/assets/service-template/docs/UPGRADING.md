@@ -1,5 +1,9 @@
 # Upgrade an existing Paprika Messenger instance
 
+## Stable 1.5.1: direct setup with event hooks off
+
+Plugin **1.5.1** bundles service **0.7.1** and PR #34. Ordinary connect/initialize/enable requests now complete registration and an inbox read directly, without a settings card. New bindings on every host use `on_demand`, with event hooks disabled and no task or subscription. Show controls only for an explicit settings request. Explicit event hooks and inbox-check intervals remain opt-in; existing verified routes, paused/off choices, receipts and history are preserved. This changes setup guidance, UI prompts and reported defaults; it adds no migration and does not pause existing subscriptions or deploy/update an installed client by itself. Update the existing private service and account package together. Keep the current App/OAuth binding and apply the existing append-only migrations through `0008` when upgrading from older stable versions; this patch adds no migration. Older version notes below describe their historical defaults.
+
 ## Stable 1.5.0: connection guidance and sender annotations
 
 Plugin **1.5.0** bundles service **0.7.0**, promoting the existing 1.5 release candidates plus the merged sender-annotation change. Requested receiving setup shows the existing connection card before continuing authorized setup; settings-only requests remain read-only. Native notifications display the stored original sender's label and immutable ID. Relays retain the original author, and direct delivery uses its verified sender. Labels are quoted as display data; routing IDs, permissions, transport selection and retry checkpoints are unchanged.

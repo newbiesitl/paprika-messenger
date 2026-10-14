@@ -36,7 +36,7 @@ The listing and composer use the original Paprika PNG in both light and dark the
 
 Account installation is the default. For an explicit local-only request, add `--kind local` to the same standalone builder. It uses the same **1.4.0** manifest, binding, skills and Paprika icon; install the resulting package through the supported local interface. Local registration stays device-only.
 
-Local receiving defaults to receiving only with on-demand inbox reads and no hooks, schedules or background service. Supported cloud receiving chats default to verified event hooks when the user requests connection/receiving setup. If there is no selected peer, finish receiving-only without asking for a Dot. Each receiving chat establishes its own route; installation alone creates no subscriptions.
+New receiving bindings on every host default to on-demand inbox reads with event hooks disabled and no task, subscription, schedule or background service. Events require an explicit event-notifications/event-hook request on a verified supported host; ordinary connection setup skips the settings card. If there is no selected peer, finish receiving-only without asking for a Dot. Each receiving chat establishes its own route; installation alone creates no subscriptions.
 
 ## Why an older entry shows 1.0.0
 

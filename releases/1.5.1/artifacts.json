@@ -1,0 +1,49 @@
+{
+  "format": 1,
+  "plugin_version": "1.5.1",
+  "service_version": "0.7.1",
+  "source_commit": "6496318df788e02da4e51334a323b895e9644d51",
+  "worker_sha256": "ec6f624702639fef7e6a8794f5fe896bf62b10d27a07137f43fbc329ac6b70f6",
+  "platforms": [
+    "macOS",
+    "Windows"
+  ],
+  "artifacts": [
+    {
+      "file": "paprika-messenger-private-1.5.1.zip",
+      "kind": "plugin",
+      "root": "paprika-messenger-private",
+      "sha256": "20b69cf22b5a72a9d8e9b328d1270beffa49d847f8f9f40f8e94a5c0640f8d71"
+    },
+    {
+      "file": "paprika-messenger-private-1.5.1.tar.gz",
+      "kind": "plugin",
+      "root": "paprika-messenger-private",
+      "sha256": "a8b607c2c1f8f0b78acab6230e2a68c2c146c2e7a94b30e92db37715f34b3774"
+    },
+    {
+      "file": "paprika-messenger-service-0.7.1.zip",
+      "kind": "service",
+      "root": "paprika-messenger-service",
+      "sha256": "b62fe801d17adbabbaf2a8411af86eb68b4de820e5fd1504dfbf350f150d00cd"
+    },
+    {
+      "file": "paprika-messenger-service-0.7.1.tar.gz",
+      "kind": "service",
+      "root": "paprika-messenger-service",
+      "sha256": "937945cbd9885b58b9a4e5d4aa672104135a0eceb5c36d987212d91e37f7b7b7"
+    },
+    {
+      "file": "paprika-messenger-worker-0.7.1.zip",
+      "kind": "worker",
+      "root": "paprika-messenger-worker",
+      "sha256": "356cca0c3c868636189bad68c188d04c4fb2041438e53b366b71320896cca018"
+    },
+    {
+      "file": "paprika-messenger-worker-0.7.1.tar.gz",
+      "kind": "worker",
+      "root": "paprika-messenger-worker",
+      "sha256": "b3bd044d67d178cc1aee30fe63b21961d04f0db9fa54172acdbf92070c0ef2c1"
+    }
+  ]
+}

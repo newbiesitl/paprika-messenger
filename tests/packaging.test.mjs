@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdir, mkdtemp, readFile, readdir, rm, symlink, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, readdir, rename, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -232,6 +232,18 @@ test('Bash-free Site archive retains validator, build attribution, migrations an
     const previous = await readFile(report.archive);
     await assert.rejects(prepareDeploymentArchive(fixture), /Archive already exists/);
     assert.deepEqual(await readFile(report.archive), previous);
+  } finally { await fixture.cleanup(); }
+});
+
+test('native archive recovery also supports the current Sites skill directory', async () => {
+  const fixture = await deploymentFixture();
+  try {
+    const directory = join(fixture.sitesPluginRoot, 'skills/sites/scripts');
+    await mkdir(directory, { recursive: true });
+    await rename(fixture.validator, join(directory, 'prepare-site-build.cjs'));
+    const report = await prepareDeploymentArchive(fixture);
+    assert.equal(report.commit_sha, fixture.source.commit_sha);
+    assert.equal(await readFile(join(directory, 'called.txt'), 'utf8'), 'validated');
   } finally { await fixture.cleanup(); }
 });
 

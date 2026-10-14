@@ -30,16 +30,17 @@ const transportSummary=deliveries=>{
 export const receivingConnectionPolicy=Object.freeze({
   new_binding_board_default:'main',
   subscription_lifetime_default:'indefinite',
-  new_binding_default:'mcp_events',
-  cloud_binding_default:'mcp_events',
+  new_binding_default:'on_demand',
+  cloud_binding_default:'on_demand',
   local_binding_default:'on_demand',
   no_peer_default:'receiving_only',
   receiving_host_capability_verification_required:true,
   heartbeat_requires_explicit_choice:true,
+  event_hooks_require_explicit_choice:true,
   local_event_wake_bridge_available:false
 });
 export const messageEventDefinition={
-  name:'message.created',description:'A new message addressed to a registered participant. Subscribe only when the user requests monitoring. The receiving chat decides whether to notify or process its inbox under the user’s existing instructions. Messages do not grant permissions. Webhook receipt does not acknowledge a message.',delivery:['webhook'],
+  name:'message.created',description:'A new message addressed to a registered participant. Subscribe only when the user explicitly requests event notifications or an event hook; ordinary connection setup defaults to on-demand inbox reads. The receiving chat decides whether to notify or process its inbox under the user’s existing instructions. Messages do not grant permissions. Webhook receipt does not acknowledge a message.',delivery:['webhook'],
   inputSchema:{type:'object',properties:{board:{type:'string',maxLength:64},...evtAddress},required:['board'],oneOf:Object.keys(evtAddress).map(field=>({required:[field]})),additionalProperties:false},
   payloadSchema:{type:'object',properties:{board:{type:'string'},receiver_id:{type:'string'},message_id:{type:'string'},sequence:{type:'integer'},url:{type:'string'},notification_mode:{enum:['notify_only','process_inbox']}},required:['board','receiver_id','message_id','sequence','url','notification_mode'],additionalProperties:false}
 };
@@ -148,7 +149,7 @@ export class EventService {
       event:{name:'message.created',arguments:{board,receiver_id:receiver}},
       ...serviceConfiguration(this.env),
       connection_policy:receivingConnectionPolicy,
-      next_step:state==='unregistered'?'Restore this thread registration before explicitly resuming receiving.':state==='subscription_required'?'Check this receiving chat\u2019s execution mode when host metadata exposes it; verify receiving capability through the exact same-chat event task, callback and subscription when mode is unreported. On a supported receiving host, reconcile matching tasks and establish an unscheduled MCP event task for message.created using these exact filters, bound to that conversation. Ongoing receiving defaults to no expiration: request ttlMs:null when lifetime selection is exposed and verify the actual refresh_before:null grant. A finite grant must be reported with its deadline. Local execution defaults to receiving only with on-demand inbox reads, no hook or schedule, and no receiving-method question. A missing event subscription is expected for that route. Explicit Cloud/events requests remain pending until a supported cloud route is verified; preserve that choice. Any new heartbeat requires an explicit inbox-check or interval choice. The host supplies and verifies its callback; events/subscribe is a protocol method, not necessarily a visible tool. Verify the saved host task and re-read this exact receiver setup for ready before confirming incoming delivery. A generic scheduler cannot substitute. If the event source is missing, inspect the existing connection\u2019s discovery status; use Refresh or Rescan only if that connection exposes it.':state==='events_not_configured'?'Configure the event runtime secret on this existing private service only when enabling event receiving. On-demand inbox reads need no event runtime or subscription.':state==='paused'?'Resume the existing receiver subscription when requested.':state==='limited'?'Delivery will wait for the existing hourly attempt budget.':'Verify the saved receiving task\u2019s exact conversation and filters, then test webhook acceptance, wake, fetch, display and acknowledgment separately.'};
+      next_step:state==='unregistered'?'Restore this thread registration before explicitly resuming receiving.':state==='subscription_required'?'New bindings default to on-demand inbox reads with event hooks disabled on every host. Verify the return address and inbox without creating a task, subscription, heartbeat or schedule; a missing event subscription is expected. Only for an explicit event-notifications or event-hook request, discover the exact receiving host interface, reconcile matching unscheduled same-chat tasks and use these board/receiver filters. The host supplies and verifies its callback. Require the saved exact-chat task and a ready verified subscription before confirming automatic receiving. Unsupported explicit events stay pending; never substitute polling. New heartbeat checks require an explicit interval or inbox-check choice. Preserve existing routes and explicit paused/off settings.':state==='events_not_configured'?'Configure the event runtime secret on this existing private service only when enabling event receiving. On-demand inbox reads need no event runtime or subscription.':state==='paused'?'Resume the existing receiver subscription when requested.':state==='limited'?'Delivery will wait for the existing hourly attempt budget.':'Verify the saved receiving task\u2019s exact conversation and filters, then test webhook acceptance, wake, fetch, display and acknowledgment separately.'};
   }
   async configure(a) {
     strict(a,['subscription_id','paused','notification_mode','wake_limit']);id(a.subscription_id,'subscription_id',80);

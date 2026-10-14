@@ -74,8 +74,15 @@ export async function prepareDeploymentArchive({ project = process.cwd(), sitesP
   if (hosting.artifact_metadata != null && built.artifact_metadata != null && !isDeepStrictEqual(hosting.artifact_metadata, built.artifact_metadata))
     throw new Error('Conflicting artifact_metadata; rebuild with matching attribution.');
   const plugin = await realpath(sitesPluginRoot);
-  const validator = resolve(plugin, 'skills/sites-hosting/scripts/prepare-site-build.cjs');
-  if (!(await lstat(validator)).isFile() || !inside(plugin, await realpath(validator))) throw new Error('Installed Sites build validator is unavailable.');
+  let validator;
+  for (const directory of ['sites','sites-hosting']) {
+    const candidate = resolve(plugin, `skills/${directory}/scripts/prepare-site-build.cjs`);
+    const stat = await lstat(candidate).catch(error => { if (error.code === 'ENOENT') return null; throw error; });
+    if (!stat) continue;
+    if (!stat.isFile() || !inside(plugin, await realpath(candidate))) throw new Error('Installed Sites build validator is unavailable.');
+    validator = candidate; break;
+  }
+  if (!validator) throw new Error('Installed Sites build validator is unavailable.');
   const artifacts = resolve(project, 'artifacts');
   await mkdir(artifacts, { recursive: true });
   if (!inside(project, await realpath(artifacts)) || (await lstat(artifacts)).isSymbolicLink()) throw new Error('Artifacts must stay inside the project.');
