@@ -117,11 +117,28 @@ export class EventService {
   }
   async unsubscribe(params) {
     const {subscriptionId}=await this.identity(params,false);
-    await this.db.batch([
+    await this.deactivateSubscription(subscriptionId);
+    return {};
+  }
+  async deactivateSubscription(subscriptionId) {
+    // The same owner-scoped transaction serves protocol unsubscribe and exact-ID
+    // retirement. Preserve completed deliveries and all message/receipt history.
+    const results=await this.db.batch([
       evtStmt(this.db,'UPDATE event_subscriptions SET active=0 WHERE id=? AND owner_subject=?',subscriptionId,this.subject),
       evtStmt(this.db,"UPDATE event_deliveries SET state='cancelled',last_error='unsubscribed',lease_token=NULL,lease_until=0 WHERE subscription_id=? AND state='pending' AND EXISTS(SELECT 1 FROM event_subscriptions WHERE id=? AND owner_subject=?)",subscriptionId,subscriptionId,this.subject)
     ]);
-    return {};
+    return results[1].meta.changes;
+  }
+  async retire(a) {
+    strict(a,['subscription_id']);id(a.subscription_id,'subscription_id',80);
+    const row=await evtFirst(this.db,'SELECT id FROM event_subscriptions WHERE id=? AND owner_subject=?',a.subscription_id,this.subject);
+    if(!row)fail(404,'subscription_not_found','Subscription not found for this account.');
+    const cancelled=await this.deactivateSubscription(row.id);
+    // A dispatch holding an eligible snapshot may still send or complete a webhook.
+    // Lease invalidation prevents it from overwriting cancellation. Existing
+    // explicit events/subscribe may reactivate this identity after verification.
+    return {subscription_id:row.id,active:false,cancelled_pending_deliveries:cancelled,
+      in_flight_delivery_may_complete:true,resubscribe_can_reactivate:true};
   }
   async listSubscriptions(a) {
     strict(a,['board']);const board=await this.boardService.board(a.board);

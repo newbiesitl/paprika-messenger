@@ -122,7 +122,7 @@ export async function handle(request,env,ctx={}) {
       const name=path.slice('/api/'.length);
       if (!tools.some(t=>t.name===name)) fail(404,'not_found','Unknown operation.');
       const events=env.EVENT_SECRET_KEY?new EventService(service,env,{email:request.headers.get('oai-authenticated-user-email')}):null;
-      const eventTools={list_event_subscriptions:'listSubscriptions',configure_event_subscription:'configure',get_delivery_status:'status'};
+      const eventTools={list_event_subscriptions:'listSubscriptions',retire_event_subscription:'retire',configure_event_subscription:'configure',get_delivery_status:'status'};
       let result;
       if(name==='get_notification_setup')result=await (events??new EventService(service,env)).setup(args);
       else if(name==='show_connection_controls')result=await connectionControls(service,events,args);
