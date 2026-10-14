@@ -16,9 +16,22 @@ export const participants=sqliteTable('participants',{
   thread_id:text('thread_id'),registered_by:text('registered_by').notNull(),created_at:text('created_at').notNull().default(now),
   unregistered_at:text('unregistered_at'),registration_changed_by:text('registration_changed_by')
 },t=>[primaryKey({columns:[t.board,t.id]}),index('participant_registration').on(t.board,t.unregistered_at,t.id),check('participant_id_length',sql`length(${t.id}) BETWEEN 1 AND 96`),check('participant_label_length',sql`length(${t.label}) BETWEEN 1 AND 120`),check('participant_kind',sql`${t.kind} IN ('human','agent','thread')`),check('participant_thread_length',sql`length(${t.thread_id}) <= 160`)]);
+export const collaborationPolicies=sqliteTable('collaboration_policies',{
+  board:text('board').primaryKey().references(()=>boards.id),enabled:integer('enabled').notNull().default(0),max_handoff_depth:integer('max_handoff_depth').notNull().default(5),
+  participant_ids_json:text('participant_ids_json').notNull().default('[]'),revision:integer('revision').notNull().default(0),updated_by:text('updated_by'),updated_at:text('updated_at').notNull().default(now)
+},t=>[check('collaboration_enabled',sql`${t.enabled} IN (0,1)`),check('collaboration_max_depth',sql`${t.max_handoff_depth} BETWEEN 1 AND 100`),check('collaboration_participants_json',sql`json_valid(${t.participant_ids_json})`)]);
+export const collaborationRuns=sqliteTable('collaboration_runs',{
+  id:text('id').primaryKey(),board:text('board').notNull().references(()=>boards.id),initiator_id:text('initiator_id').notNull(),current_participant_id:text('current_participant_id').notNull(),
+  goal:text('goal').notNull(),participant_ids_json:text('participant_ids_json').notNull(),max_handoff_depth:integer('max_handoff_depth').notNull().default(5),policy_revision:integer('policy_revision').notNull(),
+  handoffs_used:integer('handoffs_used').notNull().default(0),last_message_id:text('last_message_id'),status:text('status').notNull().default('active'),started_by:text('started_by').notNull(),
+  idempotency_key:text('idempotency_key').notNull(),fingerprint:text('fingerprint').notNull(),created_at:text('created_at').notNull().default(now),updated_at:text('updated_at').notNull().default(now)
+},t=>[unique('collaboration_board_id').on(t.board,t.id),unique('collaboration_idempotency').on(t.board,t.started_by,t.idempotency_key),
+  foreignKey({columns:[t.board,t.initiator_id],foreignColumns:[participants.board,participants.id]}),foreignKey({columns:[t.board,t.current_participant_id],foreignColumns:[participants.board,participants.id]}),
+  check('collaboration_run_depth',sql`${t.max_handoff_depth} BETWEEN 1 AND 100 AND ${t.handoffs_used} BETWEEN 0 AND ${t.max_handoff_depth}`),check('collaboration_run_status',sql`${t.status} IN ('active','stopped')`),
+  check('collaboration_run_participants_json',sql`json_valid(${t.participant_ids_json})`)]);
 export const messages=sqliteTable('messages',{
   id:text('id').primaryKey(),board:text('board').notNull().references(()=>boards.id),sender_id:text('sender_id').notNull(),sender_label:text('sender_label').notNull(),
-  receiver_id:text('receiver_id').notNull(),topic:text('topic').notNull(),body:text('body').notNull(),reply_to_id:text('reply_to_id'),authored_by:text('authored_by').notNull(),
+  receiver_id:text('receiver_id').notNull(),topic:text('topic').notNull(),body:text('body').notNull(),reply_to_id:text('reply_to_id'),authored_by:text('authored_by').notNull(),collaboration_id:text('collaboration_id'),handoff_depth:integer('handoff_depth'),handoff_limit:integer('handoff_limit'),
   idempotency_key:text('idempotency_key'),fingerprint:text('fingerprint').notNull(),deleted_at:text('deleted_at'),deleted_by:text('deleted_by'),created_at:text('created_at').notNull().default(now),updated_at:text('updated_at').notNull().default(now)
 },t=>[unique('message_board_id').on(t.board,t.id),unique('message_idempotency').on(t.board,t.authored_by,t.sender_id,t.idempotency_key),
   foreignKey({columns:[t.board,t.sender_id],foreignColumns:[participants.board,participants.id]}),foreignKey({columns:[t.board,t.receiver_id],foreignColumns:[participants.board,participants.id]}),

@@ -3,7 +3,7 @@ import {mountRecipientPicker} from './recipient-picker.js';
 import {browserRecipientPageCache} from './recipient-cache.js';
 const $=id=>document.getElementById(id);
 const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(cls)node.className=cls;return node;};
-let state=createState(),cursor=null,board='main',generation=0,polling=false,ready=false,replyId=null,attempt=null,canCoordinate=false,alerts=false,writing=false;
+let state=createState(),cursor=null,board='main',generation=0,polling=false,ready=false,replyId=null,replyCollaboration=null,attempt=null,canCoordinate=false,alerts=false,writing=false;
 const recipientPageCache=browserRecipientPageCache(window);let recipientCacheScope=null,boardsRevision=null;
 const deepLink=new URL(location.href).searchParams;
 const requestedBoard=deepLink.get('board'),requestedReceiver=deepLink.get('receiver');
@@ -69,14 +69,16 @@ async function loadBoards(){
   $('board').value=board;
 }
 function action(label,callback){const b=el('button',label,'quiet');b.type='button';b.onclick=async()=>{b.disabled=true;try{await callback();await poll();}catch(error){issue(`${label} was not confirmed. ${errorText(error)}`);}finally{b.disabled=false;}};return b;}
-async function beginReply(m){const current=generation;const data=await api('get_recipient',{board,participant_id:m.sender_id});if(current!==generation)return;replyId=m.id;$('receiver').value=m.sender_id;recipientPicker.setSelected(data.recipient);$('topic').value=m.topic;$('reply-context').hidden=false;$('reply-label').textContent=`Replying to ${m.sender_label} · ${m.id}`;$('body').focus();attempt=null;}
+async function beginReply(m){const current=generation;const data=await api('get_recipient',{board,participant_id:m.sender_id});if(current!==generation)return;replyId=m.id;replyCollaboration=m.collaboration_id??null;$('receiver').value=m.sender_id;recipientPicker.setSelected(data.recipient);$('topic').value=m.topic;$('reply-context').hidden=false;$('reply-label').textContent=`Replying to ${m.sender_label} · ${m.id}`;$('body').focus();attempt=null;}
 function renderFeed(){
   const receiver=$('filter-receiver').value,topic=$('filter-topic').value.trim(),deleted=$('show-deleted').checked;
   const messages=[...state.messages.values()].filter(m=>(!receiver || m.receiver_id===receiver)&&(!topic || m.topic===topic)&&(deleted || !m.deleted_at)).sort((a,b)=>a.created_sequence-b.created_sequence);
   $('message-count').textContent=`${messages.length} message${messages.length===1?'':'s'}`;
   const nodes=messages.map(m=>{
     const n=el('article',undefined,`message${m.reply_to_id?' reply':''}${m.deleted_at?' deleted':''}`),top=el('div',undefined,'message-top');
-    const who=el('div',m.sender_label,'message-sender');who.append(el('small',m.sender_id));const time=el('time',stamp(m.created_at));time.dateTime=m.created_at;top.append(who,time);
+    const who=el('div',m.sender_label,'message-sender');
+    if(m.collaboration_id && Number.isSafeInteger(m.handoff_depth) && Number.isSafeInteger(m.handoff_limit))who.append(el('span',` · Handoff ${m.handoff_depth}/${m.handoff_limit}`,'handoff-depth'));
+    who.append(el('small',m.sender_id));const time=el('time',stamp(m.created_at));time.dateTime=m.created_at;top.append(who,time);
     n.append(top,el('div',`To ${state.participants.get(m.receiver_id)?.label || m.receiver_id} · ${m.receiver_id} / ${m.topic}`,'message-routing'));
     if(m.reply_to_id)n.append(el('div',`Reply to ${m.reply_to_id}`,'message-id'));
     n.append(el('p',m.deleted_at?'Deleted · content is retained for restore':m.body,'message-body'));
@@ -108,7 +110,7 @@ async function poll(){
   finally{polling=false;}
 }
 async function openBoard(){
-  generation++;state=createState();cursor=null;ready=false;replyId=null;attempt=null;recipientCacheScope=null;$('receiver').value='';recipientPicker.reset();$('reply-context').hidden=true;connection('Connecting…');render();
+  generation++;state=createState();cursor=null;ready=false;replyId=null;replyCollaboration=null;attempt=null;recipientCacheScope=null;$('receiver').value='';recipientPicker.reset();$('reply-context').hidden=true;connection('Connecting…');render();
   const current=generation;
   try{const session=await fetch('/api/session',{signal:AbortSignal.timeout(15000)});const data=await session.json();if(!session.ok)throw Error(data.message || 'Sign in to continue.');if(current!==generation)return;canCoordinate=data.can_coordinate;
     await loadBoards();if(current!==generation)return;
@@ -120,17 +122,17 @@ $('board').onchange=()=>{board=$('board').value;openBoard();};
 $('board').onfocus=()=>loadBoards().catch(error=>issue(errorText(error)));
 for(const name of ['filter-receiver','filter-topic','show-deleted'])$(name).addEventListener('input',renderFeed);
 $('me').onchange=()=>{attempt=null;render();};
-$('cancel-reply').onclick=()=>{replyId=null;$('reply-context').hidden=true;attempt=null;};
+$('cancel-reply').onclick=()=>{replyId=null;replyCollaboration=null;$('reply-context').hidden=true;attempt=null;};
 $('compose').onsubmit=async event=>{
   event.preventDefault();if(!ready || !$('me').value)return;if(!$('receiver').value){issue('Choose a recipient before sending.');recipientPicker.open();return;}
   const participant=state.participants.get($('me').value);
-  const draft={board,sender_id:participant.id,sender_label:participant.label,receiver_id:$('receiver').value,topic:$('topic').value,body:$('body').value,reply_to_id:replyId};
+  const draft={board,sender_id:participant.id,sender_label:participant.label,receiver_id:$('receiver').value,topic:$('topic').value,body:$('body').value,reply_to_id:replyId,...(replyCollaboration?{collaboration_id:replyCollaboration}:{})};
   const signature=JSON.stringify(draft);if(attempt?.signature!==signature)attempt={signature,key:crypto.randomUUID()};
   const sentBoard=board,sentGeneration=generation;writing=true;recipientPicker.setDisabled(true);$('send').disabled=true;$('write-status').textContent='Sending · awaiting server confirmation';$('write-status').className='';
   try{
     const result=await api('post_message',{...draft,idempotency_key:attempt.key});
     if(generation!==sentGeneration)return;
-    $('body').value='';replyId=null;attempt=null;$('reply-context').hidden=true;$('write-status').textContent='Confirmed by the server';
+    $('body').value='';replyId=null;replyCollaboration=null;attempt=null;$('reply-context').hidden=true;$('write-status').textContent='Confirmed by the server';
     const link=result.recipient_conversation_link;
     if(link){const anchor=el('a','Open recipient conversation','recipient-open');anchor.href=link.url;anchor.title=link.hint;anchor.target='_blank';anchor.rel='noopener noreferrer';$('write-status').append(anchor);}
     $('send').textContent='Send message';await poll();

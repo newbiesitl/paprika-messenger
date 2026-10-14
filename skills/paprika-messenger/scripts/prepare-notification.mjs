@@ -10,7 +10,7 @@ const identifier = (value, field, maximum = 96) => {
 
 // Display declared routing metadata as a single line, never as instructions.
 // Older minimal message records may lack a sender; do not invent one.
-export function senderAnnotation({id, label} = {}) {
+export function senderAnnotation({id, label, handoff_depth, handoff_limit} = {}) {
   if (id == null) return '';
   const senderId = identifier(id, 'sender.id');
   if (label != null && (typeof label !== 'string' || !label.trim()
@@ -18,7 +18,13 @@ export function senderAnnotation({id, label} = {}) {
     throw new Error('sender.label must be nonempty text of at most 120 UTF-8 bytes.');
   const quoted = JSON.stringify(label ?? senderId).replace(/[\u0085\u2028\u2029]/g,
     character => '\\u' + character.charCodeAt(0).toString(16).padStart(4, '0'));
-  return `From: ${quoted} · Sender ID: ${senderId}\n`;
+  let depth='';
+  if(handoff_depth!=null || handoff_limit!=null) {
+    if(!Number.isSafeInteger(handoff_depth) || !Number.isSafeInteger(handoff_limit) || handoff_depth<1 || handoff_depth>handoff_limit || handoff_limit>100)
+      throw new Error('Require confirmed handoff_depth and handoff_limit for collaboration messages.');
+    depth=` · Handoff ${handoff_depth}/${handoff_limit}`;
+  }
+  return `From: ${quoted}${depth} · Sender ID: ${senderId}\n`;
 }
 
 // No send occurs here: the calling agent performs the host action with this
@@ -31,7 +37,7 @@ export function prepareNotification({message, recipient} = {}) {
   if (message.deleted_at) throw new Error('Do not notify for a deleted message.');
   if (recipient.board !== board || recipient.id !== receiverId) throw new Error('The stored message and recipient address do not match.');
   const threadId = identifier(recipient.thread_id, 'recipient.thread_id', 160);
-  const sender = senderAnnotation({id: message.sender_id, label: message.sender_label});
+  const sender = senderAnnotation({id: message.sender_id, label: message.sender_label,handoff_depth:message.handoff_depth,handoff_limit:message.handoff_limit});
   return {threadId, prompt: `${sender}New Paprika Messenger message on board ${board}: ${messageId}. Read it and handle it within this chat's existing authorized scope.`};
 }
 

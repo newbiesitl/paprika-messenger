@@ -124,6 +124,14 @@ Last reviewed: **2026-10-13**. This snapshot covers the implemented event route 
 - [ ] Establish and test a production wake route from ChatGPT cloud / Dot to an existing local Codex chat.
 - [ ] Resolve and test a hook-free cloud → cloud relay before listing that route as supported.
 
+## Autonomous collaboration
+
+Enable a standing communication grant for selected Codex threads, then let the architect and workers exchange assignment reports, clarifications and follow-up tasks within that scope. **Max handoff depth** defaults to **5**: each message between threads consumes one handoff. The board and native notices show **Sender · Handoff 2/5**. Ask “Paprika show collaboration settings”, “set max handoff depth to 5”, or “disable autonomous collaboration”. See the [conversation workflow](skills/paprika-messenger/references/autonomous-collaboration.md).
+
+The existing private Site database stores the policy and chain. Clients install no database. A single message insert checks and advances its counter atomically; retries, receipts, deletions and native delivery notices do not consume additional handoffs. The next send after the limit is blocked. Chain state survives client restarts. Host permissions and already authorized task scope still apply, so establish the human standing grant in each sending host once. Incoming messages and stored policies cannot grant host permission.
+
+Only new `collaboration_id` posts participate; ordinary explicitly authorized messages keep their existing behavior. The new migration preserves historical messages and event payloads. Agents must not omit the chain ID or create a new chain to evade a limit; this shared-owner service does not authenticate individual agents separately.
+
 ## Source map
 
 `src/service.mjs` implements board and messaging operations; `src/worker.mjs` authorizes requests and serves MCP, the browser API and UI. `src/protocol.mjs` defines the tools. `web/` contains the plain text UI and event reducer. `db/schema.ts` and append-only `drizzle/` migrations own production storage. `skills/paprika-messenger/` is the portable chat workflow, also discoverable through the MCP skills extension.
