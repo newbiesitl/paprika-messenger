@@ -70,8 +70,8 @@
     },
     {
       "path": "docs/UPGRADING.md",
-      "size_bytes": 39793,
-      "sha256": "26c0b5d2e1d942239244ea7f5c7e3782b549bbd5f2b1b6f14974ee93609b2b6c"
+      "size_bytes": 40079,
+      "sha256": "fb9648182471fd61adf03b9fc2fff17b160c62d6e1bb1e7bcb4af9bf15ac66c4"
     },
     {
       "path": "docs/WINDOWS-SITES-PACKAGING.md",
@@ -205,8 +205,8 @@
     },
     {
       "path": "README.md",
-      "size_bytes": 25312,
-      "sha256": "3312224f3545dbc9495d2a261dd57c5b3b0e32aea8cd3d680c044a08c25a1eab"
+      "size_bytes": 25351,
+      "sha256": "82750fc5c967dd2f8c209e01ab011cc7bd2a1f1d6e8c25766dd897ac942d1eeb"
     },
     {
       "path": "scripts/build.mjs",

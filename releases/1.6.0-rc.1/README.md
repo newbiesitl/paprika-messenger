@@ -2,6 +2,8 @@
 
 Plugin **1.6.0-rc.1**, bundled service **0.8.0-rc.1**.
 
+This candidate includes the stable 1.5.1 baseline, retaining direct setup with event hooks off by default.
+
 Autonomous collaboration lets selected, verified Codex threads exchange reports and follow-up tasks under an explicit human standing grant. Each sending host must accept that grant under its own permission rules. The default Max handoff depth is **5**: each logical thread-to-thread message counts once, while retries and receipts do not count. A new human-initiated assignment starts a new chain; reaching the limit requires human intervention.
 
 Board policies and collaboration runs use the existing Site database. Atomic message guards enforce participant scope, the current sender, reply continuity and the handoff cap. New tools configure collaboration and start, inspect or stop runs. Board messages and native notices show `Sender · Handoff N/M`.
