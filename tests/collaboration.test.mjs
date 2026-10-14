@@ -188,6 +188,19 @@ test('a successful handoff adds no database API calls to an ordinary message',as
   }finally{db.close();}
 });
 
+test('the cloud migration uses LF and independently prepared D1 batch statements',async()=>{
+  const journal=JSON.parse(await readFile('drizzle/meta/_journal.json','utf8'));
+  const sql=await readFile('drizzle/'+journal.entries.at(-1).tag+'.sql','utf8');
+  // Cloudflare's remote statement splitter differs from local SQLite for CRLF
+  // trigger bodies and unparenthesized CASE...END (workers-sdk #14991/#4727).
+  assert.equal(sql.includes('\r'),false);
+  const db=new SqliteD1();try{
+    for(const entry of journal.entries.slice(0,-1))db.connection.exec(await readFile('drizzle/'+entry.tag+'.sql','utf8'));
+    await db.batch(sql.split('--> statement-breakpoint').map(part=>part.trim()).filter(Boolean).map(statement=>db.prepare(statement)));
+    assert(db.connection.prepare("SELECT name FROM sqlite_schema WHERE type='trigger' AND name='collaboration_message_guard'").get());
+  }finally{db.close();}
+});
+
 test('additive migration preserves legacy messages, event history and event triggers without enabling collaboration',async()=>{
   const journal=JSON.parse(await readFile('drizzle/meta/_journal.json','utf8')),db=new SqliteD1();try{
     for(const entry of journal.entries.slice(0,-1))db.connection.exec(await readFile('drizzle/'+entry.tag+'.sql','utf8'));

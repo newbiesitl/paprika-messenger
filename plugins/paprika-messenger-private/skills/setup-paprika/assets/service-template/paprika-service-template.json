@@ -130,8 +130,8 @@
     },
     {
       "path": "drizzle/0009_autonomous-collaboration.sql",
-      "size_bytes": 5400,
-      "sha256": "dc64b2a099a7f1ecec0599bb81cffa7d4bd487705e8a045c689fcd84697d45f8"
+      "size_bytes": 5387,
+      "sha256": "d1e6cb5dc0bdc11ff27eb21462a24a0bfcb09bbfd30112c053c74066f65236f0"
     },
     {
       "path": "drizzle/meta/_journal.json",
@@ -420,8 +420,8 @@
     },
     {
       "path": "tests/collaboration.test.mjs",
-      "size_bytes": 16916,
-      "sha256": "4e3e3dff2bcaba6cbcd36fa642dd98e98783cb035201c4d226a9f74bac8c6d22"
+      "size_bytes": 17825,
+      "sha256": "64d4a9ed08026e9622763f7bc918fdc94335321a9efc016c18fa8f3a744252ce"
     },
     {
       "path": "tests/connection-ui.test.mjs",

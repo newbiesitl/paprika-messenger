@@ -47,7 +47,7 @@ ALTER TABLE `messages` ADD `handoff_limit` integer;
 -- cannot reserve the same turn, exceed the cap or consume a slot on rollback.
 CREATE TRIGGER collaboration_message_guard BEFORE INSERT ON messages
 WHEN NEW.collaboration_id IS NOT NULL OR NEW.handoff_depth IS NOT NULL OR NEW.handoff_limit IS NOT NULL BEGIN
-  SELECT CASE WHEN NOT EXISTS (
+  SELECT RAISE(ABORT,'collaboration_blocked') WHERE NOT EXISTS (
     SELECT 1 FROM collaboration_runs r JOIN collaboration_policies p ON p.board=r.board
     WHERE r.id=NEW.collaboration_id AND r.board=NEW.board AND r.status='active' AND p.enabled=1
       AND r.current_participant_id=NEW.sender_id AND r.last_message_id IS NEW.reply_to_id
@@ -62,7 +62,7 @@ WHEN NEW.collaboration_id IS NOT NULL OR NEW.handoff_depth IS NOT NULL OR NEW.ha
       AND 2=(SELECT COUNT(*) FROM participants t JOIN recipient_metadata m ON m.board=t.board AND m.participant_id=t.id
         WHERE t.board=NEW.board AND t.id IN (NEW.sender_id,NEW.receiver_id)
           AND t.kind='thread' AND t.thread_id IS NOT NULL AND t.unregistered_at IS NULL AND m.source='codex')
-  ) THEN RAISE(ABORT,'collaboration_blocked') END;
+  );
 END;
 --> statement-breakpoint
 CREATE TRIGGER collaboration_message_advance AFTER INSERT ON messages
