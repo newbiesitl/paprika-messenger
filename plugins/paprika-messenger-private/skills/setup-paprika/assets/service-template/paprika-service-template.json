@@ -196,12 +196,12 @@
     {
       "path": "package-lock.json",
       "size_bytes": 50615,
-      "sha256": "660d4eda086c66d57cfcf8ef5dc121d2cafe04dbd602c427089c150914435cae"
+      "sha256": "8d28cdfd7457bbaf3cd9c71be48d81bc4af1ebb778bc917251b6ef85b04ce4f9"
     },
     {
       "path": "package.json",
       "size_bytes": 440,
-      "sha256": "2f4613432f9f8bd9c5e58bcf907f6c028f9482774ecea1d6646f063252745a4a"
+      "sha256": "986c1202b553691ec8817a673a5c6884c46aef92261be71f97308c84aa1cf3f6"
     },
     {
       "path": "README.md",
