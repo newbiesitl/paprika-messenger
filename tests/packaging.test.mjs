@@ -51,8 +51,8 @@ test('presentation diagnostics identify missing, malformed, oversized and escapi
 
 test('review candidate versions preserve the published source version and service identity', async t => {
   const root=await mkdtemp(join(tmpdir(),'paprika-candidate-version-'));t.after(()=>rm(root,{recursive:true,force:true}));
-  const report=await preparePluginPackage({repository,kind:'account',outputRoot:root,packageVersion:'1.6.1-rc.1'});
-  assert.equal(report.package_version,'1.6.1-rc.1');assert.equal(report.source_plugin_version,'1.6.0');assert.equal(report.source_version,'0.8.0');assert.equal(report.presentation.package_valid,true);
+  const report=await preparePluginPackage({repository,kind:'account',outputRoot:root,packageVersion:'1.6.2-rc.1'});
+  assert.equal(report.package_version,'1.6.2-rc.1');assert.equal(report.source_plugin_version,'1.6.1');assert.equal(report.source_version,'0.8.1');assert.equal(report.presentation.package_valid,true);
   await assert.rejects(preparePluginPackage({repository,outputRoot:root,packageVersion:'1.5.0'}),/newer than/);
 });
 
