@@ -2,7 +2,8 @@ import { cp, mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { resolve } from 'node:path';
 import { inspectReusableFiles, normalizeReusableText, stageTemplate, verifyTemplate } from './bundle.mjs';
-import { connectionFiles, verifyStandaloneBinding, writePluginZip } from '../plugin-public/skills/setup-paprika/scripts/merge-service-plugin.mjs';
+import { connectionFiles, verifyStandaloneBinding, writePluginZip, comparePackageVersions } from '../plugin-public/skills/setup-paprika/scripts/merge-service-plugin.mjs';
+import { inspectPluginPresentation } from '../plugin-public/skills/setup-paprika/scripts/inspect-plugin-presentation.mjs';
 
 export const bundleMetadataFile = 'paprika-bundle.json';
 const templatePath = 'skills/setup-paprika/assets/service-template';
@@ -62,12 +63,18 @@ export async function verifyPluginPackage(pluginRoot) {
   return { manifest, bundle, files, icon: { width, height } };
 }
 
-export async function preparePluginPackage({ repository, kind = 'account', outputRoot } = {}) {
+export async function preparePluginPackage({ repository, kind = 'account', outputRoot, packageVersion } = {}) {
   if (!repository || !['account', 'directory', 'local'].includes(kind)) throw new Error('Provide a repository and package kind.');
   repository = resolve(repository);
   outputRoot = resolve(outputRoot ?? resolve(repository, 'artifacts/paprika-messenger-' + (kind === 'account' ? 'account' : 'directory')));
   const sourceManifest = JSON.parse(await readFile(resolve(repository, 'plugin-public/plugin.json'), 'utf8'));
   const manifest = structuredClone(sourceManifest);
+  // Review candidates can carry a distinct version without rewriting immutable
+  // released archives or declaring an upstream release published.
+  if (packageVersion !== undefined) {
+    if (comparePackageVersions(packageVersion, manifest.version) <= 0) throw new Error('Candidate package version must be newer than the source release version.');
+    manifest.version = packageVersion;
+  }
   const extension = manifest.extensions['com.openai'];
   if (kind === 'account') {
     manifest.name = 'paprika-messenger-private';
@@ -107,10 +114,12 @@ export async function preparePluginPackage({ repository, kind = 'account', outpu
       + ', bundled service version ' + service.service_version + '. This local Codex copy includes the setup workflow, messaging skills and reusable service source. Use the existing authenticated Messenger service connection. Installing the local plugin creates no additional service, subscription or schedule. This copy is separate from the private account plugin and public submission.\n');
   await normalizeReusableText(pluginRoot);
   const validation = await verifyPluginPackage(pluginRoot);
+  const presentation = await inspectPluginPresentation(pluginRoot);
+  if (!presentation.package_valid) throw new Error('Generated package presentation failed: ' + presentation.issues.join(', '));
   const archive = resolve(outputRoot, manifest.name + '-' + manifest.version + '.zip');
   await writePluginZip(archive, pluginRoot, manifest.name, validation.files);
-  const report = { archive, plugin_root: pluginRoot, package_version: manifest.version, source_version: service.service_version,
-    file_count: validation.files.length, icon: validation.icon,
+  const report = { archive, plugin_root: pluginRoot, package_version: manifest.version, source_plugin_version: sourceManifest.version, source_version: service.service_version,
+    file_count: validation.files.length, icon: validation.icon, presentation,
     sha256: createHash('sha256').update(await readFile(archive)).digest('hex'), files: validation.files };
   await writeFile(resolve(outputRoot, 'package-report.json'), JSON.stringify(report, null, 2) + '\n');
   return report;

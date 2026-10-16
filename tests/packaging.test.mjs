@@ -12,6 +12,49 @@ import { prepareGithubPlugin } from '../scripts/prepare-github-plugin.mjs';
 import { selectServiceType } from '../plugin-public/skills/setup-paprika/scripts/select-service-type.mjs';
 import { prepareDeploymentArchive } from '../scripts/package.mjs';
 import { mergeServicePlugin, readSiteServiceBinding, comparePackageVersions } from '../plugin-public/skills/setup-paprika/scripts/merge-service-plugin.mjs';
+import { inspectPluginPresentation } from '../plugin-public/skills/setup-paprika/scripts/inspect-plugin-presentation.mjs';
+
+test('presentation diagnostics honor root precedence, compatibility fallback and packaged skill-root icons', async t => {
+  const root=await mkdtemp(join(tmpdir(),'paprika-icon-diagnostic-'));t.after(()=>rm(root,{recursive:true,force:true}));
+  await mkdir(join(root,'assets'));await mkdir(join(root,'.codex-plugin'));await mkdir(join(root,'skills/fixture/agents'),{recursive:true});await mkdir(join(root,'skills/fixture/assets'));
+  const bytes=await readFile(new URL('../skills/paprika-messenger/assets/dot-icon.png',import.meta.url));
+  await writeFile(join(root,'assets/icon.png'),bytes);await writeFile(join(root,'skills/fixture/assets/icon.png'),bytes);
+  await writeFile(join(root,'skills/fixture/agents/openai.yaml'),'interface:\n  icon_small: "./assets/icon.png"\n  icon_large: "./assets/icon.png"\n');
+  const listing={logo:'./assets/icon.png',composerIcon:'./assets/icon.png'};
+  const portable={name:'fixture-plugin',version:'1.0.0',extensions:{'com.openai':{interface:listing}}};
+  const overlay={name:portable.name,version:portable.version,interface:listing};
+  const save=async()=>{await writeFile(join(root,'plugin.json'),JSON.stringify(portable));await writeFile(join(root,'.codex-plugin/plugin.json'),JSON.stringify(overlay));};
+  await save();let report=await inspectPluginPresentation(root);
+  assert.equal(report.package_valid,true);assert.equal(report.presentation_source,'root_extension');assert.equal(report.icons.length,4);assert.equal(report.host_rendering,'not_tested');
+  overlay.interface={logo:'./assets/missing.png',composerIcon:'./assets/missing.png'};await save();report=await inspectPluginPresentation(root);
+  assert.ok(report.icons.filter(icon=>['logo','composerIcon'].includes(icon.field)).every(icon=>icon.status==='valid'));
+  assert.ok(report.issues.includes('shadowed_compatibility_interface_differs'));
+  delete portable.extensions;overlay.interface=listing;await save();report=await inspectPluginPresentation(root);
+  assert.equal(report.presentation_source,'compatibility_overlay');assert.equal(report.package_valid,true);
+  portable.extensions={'com.openai':{}};await save();report=await inspectPluginPresentation(root);
+  assert.equal(report.presentation_source,'root_extension');assert.ok(report.issues.includes('effective_interface_missing'));
+});
+
+test('presentation diagnostics identify missing, malformed, oversized and escaping PNG references', async t => {
+  const root=await mkdtemp(join(tmpdir(),'paprika-icon-invalid-'));t.after(()=>rm(root,{recursive:true,force:true}));await mkdir(join(root,'assets'));
+  const path=join(root,'assets/icon.png'),bytes=await readFile(new URL('../skills/paprika-messenger/assets/dot-icon.png',import.meta.url));
+  const manifest={name:'fixture-plugin',version:'1.0.0',extensions:{'com.openai':{interface:{logo:'./assets/icon.png',composerIcon:'./assets/icon.png'}}}};
+  await writeFile(join(root,'plugin.json'),JSON.stringify(manifest));
+  assert.ok((await inspectPluginPresentation(root)).issues.some(issue=>issue.includes('ENOENT')));
+  for(const data of [Buffer.from('invalid PNG'),Buffer.alloc(5*1024*1024+1)]){await writeFile(path,data);assert.equal((await inspectPluginPresentation(root)).package_valid,false);}
+  await writeFile(path,bytes);manifest.extensions['com.openai'].interface.logo='./../outside.png';await writeFile(join(root,'plugin.json'),JSON.stringify(manifest));
+  assert.ok((await inspectPluginPresentation(root)).issues.includes('logo:unsafe_relative_path'));
+  manifest.extensions['com.openai'].interface.logo='./assets/icon.png';await writeFile(join(root,'plugin.json'),JSON.stringify(manifest));
+  await rename(join(root,'assets'),join(root,'original-assets'));await symlink(join(root,'original-assets'),join(root,'assets'),process.platform==='win32'?'junction':'dir');
+  assert.ok((await inspectPluginPresentation(root)).issues.includes('logo:nonregular_or_symlink'));
+});
+
+test('review candidate versions preserve the published source version and service identity', async t => {
+  const root=await mkdtemp(join(tmpdir(),'paprika-candidate-version-'));t.after(()=>rm(root,{recursive:true,force:true}));
+  const report=await preparePluginPackage({repository,kind:'account',outputRoot:root,packageVersion:'1.6.1-rc.1'});
+  assert.equal(report.package_version,'1.6.1-rc.1');assert.equal(report.source_plugin_version,'1.6.0');assert.equal(report.source_version,'0.8.0');assert.equal(report.presentation.package_valid,true);
+  await assert.rejects(preparePluginPackage({repository,outputRoot:root,packageVersion:'1.5.0'}),/newer than/);
+});
 
 const repository = fileURLToPath(new URL('../', import.meta.url));
 test('standalone releases compare prereleases numerically and cannot hide a downgrade with build metadata',()=>{

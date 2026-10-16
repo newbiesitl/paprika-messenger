@@ -147,3 +147,5 @@ The current stable installation kit is [1.6.0](releases/1.6.0/README.md), with m
 The [local Codex receiving pilot](experiments/local/codex-event-receiver/README.md) contains the unshipped prototype, recorded fixture evidence and [functional test plan](experiments/local/codex-event-receiver/TEST-PLAN.md). It successfully wakes a dedicated app-server-owned session in a bounded fixture experiment. Live Sites-to-local transport and ordinary Codex desktop chat integration remain pending. The pilot is separate from the installed plugin.
 
 The current public archive is an owner-neutral installation kit. Finish the [standalone merge](https://github.com/newbiesitl/paprika-messenger/blob/main/docs/ACCOUNT-PLUGIN.md#build-the-single-package) before saving the final account package. The generated private ZIP combines the required existing App, both skills and the original Paprika logo/composer icon.
+
+Native message branding and icon diagnostics are described in [Plugin presentation](docs/PLUGIN-PRESENTATION.md). These source changes are an unreleased review candidate; existing stable release archives remain unchanged.
