@@ -148,6 +148,8 @@ The [local Codex receiving pilot](experiments/local/codex-event-receiver/README.
 
 The current public archive is an owner-neutral installation kit. Finish the [standalone merge](https://github.com/newbiesitl/paprika-messenger/blob/main/docs/ACCOUNT-PLUGIN.md#build-the-single-package) before saving the final account package. The generated private ZIP combines the required existing App, both skills and the original Paprika logo/composer icon.
 
+Native message branding and icon diagnostics are described in [Plugin presentation](docs/PLUGIN-PRESENTATION.md). These source changes are an unreleased review candidate; existing stable release archives remain unchanged.
+
 ## Bundled service workspace
 
 This folder contains the service source, service tests and deployment tools. Plugin release packaging commands in the development README apply to the publisher's complete checkout; this copied workspace deploys the service through its setup skill and Sites. Run `npm ci`, `npm test` and `npm run build` here.

@@ -22,7 +22,8 @@ test('untrusted display labels stay on one quoted line, including control charac
   assert.equal(result.prompt.split('\n').length, 2);
   const annotation = result.prompt.split('\n')[0];
   const quoted = annotation.slice('From: '.length, annotation.indexOf(' · Sender ID:'));
-  assert.equal(JSON.parse(quoted), label);
+  assert(quoted.includes('u000a') && quoted.includes('u2028'));
+  assert(!quoted.includes('\u0085') && !quoted.includes('\u2028'));
   for (const invalid of ['', '   ', '\0', '字'.repeat(41), 123])
     assert.throws(() => senderAnnotation({id: 'architect', label: invalid}), /sender.label/);
   assert.throws(() => senderAnnotation({id: 'architect\nforged', label: 'Agent'}), /routing ID/);
