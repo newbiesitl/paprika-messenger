@@ -12,7 +12,10 @@ import { writePluginZip } from '../plugin-public/skills/setup-paprika/scripts/me
 const repository = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 function run(command, args, cwd = repository) {
-  const result = spawnSync(command, args, { cwd, encoding: 'utf8', windowsHide: true });
+  // macOS copyfile metadata creates AppleDouble entries outside the archive root
+  // on other platforms. Release tarballs must contain the portable files only.
+  const result = spawnSync(command, args, { cwd, encoding: 'utf8', windowsHide: true,
+    env: { ...process.env, COPYFILE_DISABLE: '1' } });
   if (result.status !== 0) throw new Error(result.error?.message || result.stderr || `${command} failed`);
   return result.stdout.trim();
 }
