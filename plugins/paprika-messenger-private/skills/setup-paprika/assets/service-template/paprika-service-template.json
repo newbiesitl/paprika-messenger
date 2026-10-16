@@ -245,8 +245,8 @@
     },
     {
       "path": "skills/paprika-messenger/references/adaptive-delivery.md",
-      "size_bytes": 5653,
-      "sha256": "35b13d735ec5b21bcfdc50eebbe2aadebcdfc935d9244c7f0b38c630f158bc79"
+      "size_bytes": 5779,
+      "sha256": "a176f221ed23777da038f7d7e6c0203d2316a0f8a2d4ac2161b8efa638c12348"
     },
     {
       "path": "skills/paprika-messenger/references/address-cache.md",
@@ -295,8 +295,8 @@
     },
     {
       "path": "skills/paprika-messenger/scripts/adaptive-delivery.mjs",
-      "size_bytes": 9239,
-      "sha256": "c0122566406b9287ee84ee27facad9d165562f5c7bcff517bd620dc32c2ab905"
+      "size_bytes": 9276,
+      "sha256": "6001b823ffd27ceb45a5fbd1d5eb40f0f6b303c1042dfabe7ddb832df3c293e1"
     },
     {
       "path": "skills/paprika-messenger/scripts/conversation-link.mjs",
@@ -430,8 +430,8 @@
     },
     {
       "path": "tests/adaptive-delivery.test.mjs",
-      "size_bytes": 9318,
-      "sha256": "9415af694f6c4719d720b0946f86889a6a679590cdc2d09d17202a7d11b6e86a"
+      "size_bytes": 11381,
+      "sha256": "21c14fd9a0a18ecb4554a2e6d97f42f720f21012a2a910c71653a569dc9b1741"
     },
     {
       "path": "tests/addressing.test.mjs",

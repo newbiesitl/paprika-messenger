@@ -48,10 +48,12 @@ branding where actually supported, observed sender identity/role, canonical
 routing IDs/labels, board/message ID and minimal retrieval/authorization
 instructions. No body, excerpt, transcript or attachment is included. Invoke
 those arguments through the supported native host tool, then `record-native`
-with the actual submitted/failed/unknown result and exact attempt ID. Existing
-active subscriptions, including paused routes, select events alone; a native
-call is never returned for that plan. Supply fresh `subscriptions` before native
-submission; a detected transport change blocks. A discovery snapshot cannot
+with the actual submitted/failed/unknown result and exact attempt ID. For stored/reference
+delivery, existing active subscriptions, including paused routes, select events
+alone; a native call is never returned for that plan. Supply fresh `subscriptions`
+before reference notification; a detected transport change blocks. Inline sends
+create no board event and remain native with active or paused subscriptions.
+A discovery snapshot cannot
 prevent an external race or establish cross-device exactly-once delivery.
 
 `reconcile` reuses existing NotificationState evidence rules. Missing receipts,

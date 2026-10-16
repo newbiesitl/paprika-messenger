@@ -75,7 +75,7 @@ export class AdaptiveDelivery {
       if (state.notification_conflict) return blocked('transport_changed','Storage reported an event or unknown route; reconcile before native notification.');
       if (state.transport === 'events') return blocked('stored_events_only','Existing recipient event route owns notification; no native send.');
       if (state.policy.mode === 'reference' && !Array.isArray(subscriptions)) return blocked('subscription_check_required','Refresh actual subscriptions before native notification.');
-      if (subscriptions && selectNotificationTransport({recipient:input.recipient,subscriptions}) !== state.transport)
+      if (state.policy.mode === 'reference' && subscriptions && selectNotificationTransport({recipient:input.recipient,subscriptions}) !== state.transport)
         return blocked('transport_changed','Reconcile the recipient subscription change; do not send via a second transport.');
       const attempt = await this.notifications.begin(state.plan, {available:native_available});
       state.phase = attempt.checkpoint.state;

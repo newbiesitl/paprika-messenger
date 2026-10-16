@@ -113,3 +113,35 @@ test('adaptive storage uses the real service and idempotent retry, preserving Un
   await state.recordStorage(data,stored); const native=await state.next(data,caps,env);
   assert.equal(native.status,'send'); assert(!native.arguments.prompt.includes(data.body));
 });
+
+
+test('active and paused recipient subscriptions allow short inline delivery without storage or event notification',async t=>{
+  for(const paused of [false,true]) {
+    const subscriptions=[{board:'main',receiver_id:recipient.id,active:true,paused,expires_at:null}];
+    const {state,data}=await fixture(t,{body:'Short inline task.',subscriptions});
+    const action=await state.next(data,{native_available:true,subscriptions},env);
+    assert.equal(action.status,'send'); assert.equal(action.policy.mode,'inline');
+    assert.equal(action.tool,'mcp__codex_app__send_message_to_thread');
+    assert(action.arguments.prompt.endsWith(data.body));
+    const saved=JSON.parse(await readFile(state.path(data),'utf8'));
+    assert.equal(saved.transport,'native'); assert(!saved.post); assert(!saved.message_id);
+    assert.equal((await state.next(data,{native_available:true,subscriptions},env)).status,'reconcile');
+  }
+});
+
+test('active and paused subscriptions retain event-only long delivery and block a changed reference transport',async t=>{
+  for(const paused of [false,true]) {
+    const subscription={board:'main',receiver_id:recipient.id,active:true,paused,expires_at:null};
+    const owned=await fixture(t,{subscriptions:[subscription]});
+    const post=await owned.state.next(owned.data,caps,env);
+    assert.equal(post.status,'store'); assert.equal(post.transport,'events'); assert.equal(post.policy.mode,'reference');
+    await owned.state.recordStorage(owned.data,confirmed(post.arguments));
+    const complete=await owned.state.next(owned.data,{...caps,subscriptions:[subscription]},env);
+    assert.equal(complete.status,'stored_events_only'); assert(!complete.arguments);
+    const changed=await fixture(t);
+    const prepared=await changed.state.next(changed.data,caps,env);
+    await changed.state.recordStorage(changed.data,confirmed(prepared.arguments));
+    const blocked=await changed.state.next(changed.data,{...caps,subscriptions:[subscription]},env);
+    assert.equal(blocked.status,'transport_changed'); assert(!blocked.arguments);
+  }
+});
