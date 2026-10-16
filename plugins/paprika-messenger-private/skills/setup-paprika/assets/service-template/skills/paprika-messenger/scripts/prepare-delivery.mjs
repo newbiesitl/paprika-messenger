@@ -1,3 +1,4 @@
+import { deliveryPolicy } from './delivery-policy.mjs';
 import { existsSync, realpathSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
@@ -142,6 +143,8 @@ export function prepareRelayedDelivery(input, env = process.env) {
 }
 
 export function prepareDirectDelivery(input, env = process.env) {
+  if (deliveryPolicy(input.body, input.delivery_policy).mode !== 'inline')
+    throw Error('Reference delivery required: use adaptive-delivery with confirmed storage; oversized bodies cannot be forced inline.');
   const reply = validateRoutes(input, env);
   const key = routingId(input.request_id, 'request_id');
   const body = checkedText(input.body, 'body', 16000);

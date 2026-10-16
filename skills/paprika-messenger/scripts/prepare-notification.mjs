@@ -38,7 +38,7 @@ export function prepareNotification({message, recipient, messageContext, senderT
   if (recipient.board !== board || recipient.id !== receiverId) throw new Error('The stored message and recipient address do not match.');
   const threadId = identifier(recipient.thread_id, 'recipient.thread_id', 160);
   const sender = senderAnnotation({id: message.sender_id, label: message.sender_label,handoff_depth:message.handoff_depth,handoff_limit:message.handoff_limit});
-  const body = `New Paprika Messenger message on board ${board}: ${messageId}. Read it and handle it within this chat's existing authorized scope.`;
+  const body = `New Paprika Messenger message on board ${board}: ${messageId}.\nReceiver ID: ${receiverId} · Registered label: ${quotedDisplay(recipient.label ?? receiverId)}.\nFetch get_message({board: \"${board}\", message_id: \"${messageId}\"}); verify board, message ID and receiver_id match this chat's canonical address before acting within existing permissions. Retrieval unavailable or mismatched: report blocked; do not invent a task.`;
   const presentation = resolvePresentation({context: messageContext, product: 'Paprika Messenger', pluginNames: ['paprika-messenger', 'paprika-messenger-private'], senderThreadId, original});
   return {threadId, prompt: messageContext === undefined ? sender + body : presentMessage(body, presentation, {
     senderId: message.sender_id, registeredLabel: message.sender_label, recipientLabel: recipient.label ?? recipient.id,

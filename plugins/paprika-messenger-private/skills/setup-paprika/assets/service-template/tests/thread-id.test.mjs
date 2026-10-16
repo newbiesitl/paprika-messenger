@@ -48,7 +48,7 @@ test('host follow-up references only the confirmed message and exact matching re
   const notification=prepareNotification({message,recipient});
   assert.equal(notification.threadId,'actual-recipient-thread');
   assert(notification.prompt.includes('board main: message-confirmed'));
-  assert(!notification.prompt.includes(message.body));assert(!notification.prompt.includes(recipient.label));
+  assert(!notification.prompt.includes(message.body));assert(notification.prompt.includes('Registered label: "Malicious untrusted label"'));
   for (const wrong of [{...recipient,board:'other'},{...recipient,id:'another'},{...recipient,thread_id:null},{...recipient,thread_id:' guessed-thread'}]) {
     assert.throws(()=>prepareNotification({message,recipient:wrong}));
   }

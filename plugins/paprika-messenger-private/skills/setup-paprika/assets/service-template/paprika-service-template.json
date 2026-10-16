@@ -244,6 +244,11 @@
       "sha256": "6bebbd2a68c44921be84622d8f4912526edb922116075c8273809ce81ba2e09b"
     },
     {
+      "path": "skills/paprika-messenger/references/adaptive-delivery.md",
+      "size_bytes": 5653,
+      "sha256": "35b13d735ec5b21bcfdc50eebbe2aadebcdfc935d9244c7f0b38c630f158bc79"
+    },
+    {
       "path": "skills/paprika-messenger/references/address-cache.md",
       "size_bytes": 6039,
       "sha256": "998abfefaede4d3634ebc84e7743ce7c68bb3a43b73a0d51870d0552f27e3dd5"
@@ -265,8 +270,8 @@
     },
     {
       "path": "skills/paprika-messenger/references/direct.md",
-      "size_bytes": 19664,
-      "sha256": "a98826b7f5c3a4b65f45bec829ef4ca948f561dfda11b92fe975dcc9fa713ab6"
+      "size_bytes": 19918,
+      "sha256": "49f611917f84f10030ab838d3dcfd0e727de068d622f3fc16a0cc18ea9588410"
     },
     {
       "path": "skills/paprika-messenger/references/message-presentation.md",
@@ -275,8 +280,8 @@
     },
     {
       "path": "skills/paprika-messenger/references/native-bridge.md",
-      "size_bytes": 9166,
-      "sha256": "5e990dc7e71a34a96fd8e8fcbe8a8a3bf21fcc0881942ca9c23ca7e50729ab6a"
+      "size_bytes": 9394,
+      "sha256": "423c1dff2b7f72060cdb1dc60449dbefa19e76d187e7d1dd97dafb727ec4c41e"
     },
     {
       "path": "skills/paprika-messenger/references/notifications.md",
@@ -289,9 +294,19 @@
       "sha256": "c484b3df1592e8da33297ff1817298221372dfc15ba37faedbfc2b272effe33e"
     },
     {
+      "path": "skills/paprika-messenger/scripts/adaptive-delivery.mjs",
+      "size_bytes": 9239,
+      "sha256": "c0122566406b9287ee84ee27facad9d165562f5c7bcff517bd620dc32c2ab905"
+    },
+    {
       "path": "skills/paprika-messenger/scripts/conversation-link.mjs",
       "size_bytes": 3807,
       "sha256": "0e6702c1f4a544b639ce5c1734be578fe19b7d0efa3500f7d8e6c6d4a51c1e96"
+    },
+    {
+      "path": "skills/paprika-messenger/scripts/delivery-policy.mjs",
+      "size_bytes": 1826,
+      "sha256": "2f11988457191558f180be6c7aa7514739c37eb58b2b71ea20fd03262a6e6345"
     },
     {
       "path": "skills/paprika-messenger/scripts/get-thread-id.mjs",
@@ -325,13 +340,13 @@
     },
     {
       "path": "skills/paprika-messenger/scripts/prepare-delivery.mjs",
-      "size_bytes": 11961,
-      "sha256": "641ec3592fefe8103c3b1e93cd751bc3a9443e2f9d7428aeee00beea42192d4c"
+      "size_bytes": 12229,
+      "sha256": "49a6d10f2e300b76eb8bb75419fd71b504eecc0ea15698c4fb2181c2d78086bf"
     },
     {
       "path": "skills/paprika-messenger/scripts/prepare-notification.mjs",
-      "size_bytes": 3894,
-      "sha256": "903f9ea3236bebb4baba72df8f5244cd6af3886f4c2bc76adc00350e8bfa6aae"
+      "size_bytes": 4192,
+      "sha256": "3e80ec4c6d3539cea30050bb66ac8e952adf84d73c1edecc84fabf4644aa7698"
     },
     {
       "path": "skills/paprika-messenger/scripts/prepare-recipient-selector.mjs",
@@ -340,8 +355,8 @@
     },
     {
       "path": "skills/paprika-messenger/SKILL.md",
-      "size_bytes": 23728,
-      "sha256": "9a296f97f4d0adda390ea613508de08fd023a01fb469a9f1326b34f033d64c02"
+      "size_bytes": 24282,
+      "sha256": "0e3aa8f82331596caa8d594af3240c4eb00fb63265b6026b942589a924b2db8c"
     },
     {
       "path": "src/collaboration.mjs",
@@ -412,6 +427,11 @@
       "path": "src/worker.mjs",
       "size_bytes": 12270,
       "sha256": "563e897dfc0623c12c21dec51e5c159a71686590301a836a24edf2cb1c2d7df1"
+    },
+    {
+      "path": "tests/adaptive-delivery.test.mjs",
+      "size_bytes": 9318,
+      "sha256": "9415af694f6c4719d720b0946f86889a6a679590cdc2d09d17202a7d11b6e86a"
     },
     {
       "path": "tests/addressing.test.mjs",
@@ -520,13 +540,13 @@
     },
     {
       "path": "tests/sender-annotation.test.mjs",
-      "size_bytes": 2522,
-      "sha256": "4f091be137ee52de887b8e69e6dff38b945109fc2116ed8cc1425bc26944fa70"
+      "size_bytes": 2561,
+      "sha256": "9925dc56660786b8bb5e53fc45ad7d9721e3c3d644eeb345eadd938970a805ec"
     },
     {
       "path": "tests/thread-id.test.mjs",
-      "size_bytes": 7589,
-      "sha256": "ebce3472b25ce529373d3a76b3625abc4bc4ea151a9b4c4631a09897ed5dd6ca"
+      "size_bytes": 7620,
+      "sha256": "58a418301d9a51eff00dac1f23d454fec8342cc43bf1c34770fe7b3ce3965e70"
     },
     {
       "path": "tests/thread-registration.test.mjs",
