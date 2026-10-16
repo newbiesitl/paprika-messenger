@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "paprika-messenger",
-  "version": "1.6.0",
+  "version": "1.6.1",
   "description": "Private messaging between ChatGPT and local/cloud Codex, with optional Dot support and guided setup.",
   "author": {
     "name": "Paprika Messenger contributors"
@@ -48,7 +48,7 @@
       },
       "publication": {
         "countries": [],
-        "release_notes": "Stable release of the latest merged source: cached recipient discovery, recoverable board cleanup, verified native delivery and explicit bounded Codex collaboration. Receiving remains on demand with hooks off by default. Adds callback transport evidence and owner-scoped retirement of an exact paused event subscription. Apply existing additive migrations through 0009 when upgrading the service. Preserve existing App/OAuth bindings, private audience, addresses, history and receiving settings. Callback acceptance alone does not prove a receiving-host wake."
+        "release_notes": "Adds adaptive agent delivery and branded sender headers. Long bodies and all linked replies/collaboration use confirmed storage and reference notifications; ordinary short messages stay inline. Preserves server-counted handoffs, event transport ownership and uncertain native submissions. Adds package/PNG diagnostics; the generic picker icon cause and rendering remain unresolved. Bundled service source 0.8.1 has unchanged APIs and migrations; package installation does not deploy it. Preserve the existing private plugin, App/OAuth binding, service, history and receiving settings."
       }
     }
   }

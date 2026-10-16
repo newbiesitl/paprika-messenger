@@ -1,8 +1,8 @@
 # One private account package (default)
 
-Paprika **1.4.0** combines the current messaging skill, setup skill, full service source **0.6.0**, original Paprika pixel icon and the required existing service App in one personalized package. The main package is **Paprika Messenger**; its connector is **Paprika Service**. The App supplies authenticated MCP tools and the existing OAuth connection. Supported cloud, mobile and desktop clients use that same private account package and service.
+Paprika **1.6.1** combines the current messaging skill, setup skill, full service source **0.8.1**, original Paprika pixel icon and the required existing service App in one personalized package. The main package is **Paprika Messenger**; its connector is **Paprika Service**. The App supplies authenticated MCP tools and the existing OAuth connection. Supported cloud, mobile and desktop clients use that same private account package and service.
 
-The [public ZIP](../releases/1.4.0/paprika-messenger-private-1.4.0.zip) and [checksum](../releases/1.4.0/SHA256SUMS) are an owner-neutral installation kit. Each owner binds it to their own private Site before saving the final standalone package. Publishing one owner's App ID or endpoint in a shared archive would connect other installers to the wrong service.
+The [public ZIP](../releases/1.6.1/paprika-messenger-private-1.6.1.zip) and [checksum](../releases/1.6.1/SHA256SUMS) are an owner-neutral installation kit. Each owner binds it to their own private Site before saving the final standalone package. Publishing one owner's App ID or endpoint in a shared archive would connect other installers to the wrong service.
 
 ## Build the single package
 
@@ -34,7 +34,7 @@ The listing and composer use the original Paprika PNG in both light and dark the
 
 ## Local installation and receiving defaults
 
-Account installation is the default. For an explicit local-only request, add `--kind local` to the same standalone builder. It uses the same **1.4.0** manifest, binding, skills and Paprika icon; install the resulting package through the supported local interface. Local registration stays device-only.
+Account installation is the default. For an explicit local-only request, add `--kind local` to the same standalone builder. It uses the same **1.6.1** manifest, binding, skills and Paprika icon; install the resulting package through the supported local interface. Local registration stays device-only.
 
 New receiving bindings on every host default to on-demand inbox reads with event hooks disabled and no task, subscription, schedule or background service. Events require an explicit event-notifications/event-hook request on a verified supported host; ordinary connection setup skips the settings card. If there is no selected peer, finish receiving-only without asking for a Dot. Each receiving chat establishes its own route; installation alone creates no subscriptions.
 
