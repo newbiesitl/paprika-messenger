@@ -10,7 +10,11 @@ header/routing. Do not trim or normalize: astral emoji count once, combining
 marks and CR/LF each count separately. The default is 1500 inclusive: 1499 and
 1500 may stay inline; 1501 requires reference. `delivery_policy` accepts
 `short_message_limit` (1..15000) and `force_reference` (boolean). There is no
-force-inline bypass. Direct preparation also enforces this policy; a large
+force-inline bypass. Supplying `collaboration_id` or `reply_to_id` forces
+confirmed storage/reference at any length, even for `Done.` and even with a
+higher short limit. This preserves server handoff/stop checks and stored reply
+parents. Low-level direct preparation rejects linked metadata instead of
+dropping it. Omit unused optional IDs rather than supplying null/invalid IDs. Direct preparation also enforces this policy; a large
 explicit direct request must use confirmed storage rather than inline fallback.
 Explicit send-and-notify may continue storing short messages too.
 
@@ -35,7 +39,10 @@ A `store` action provides exact `post_message` arguments through the existing
 post helper, retaining the intact original body and its existing confirmed reply
 address footer. Invoke those arguments once and use `record-storage` with the
 actual result. Confirm the original content plus footer, board, message ID,
-receiver, author, timestamp and reply correlation before any native call. A
+receiver, author, timestamp and exact reply/chain correlation before any native
+call. A linked collaboration confirmation also requires the server-counted
+handoff_depth/handoff_limit; notification headers display those confirmed
+counts. Exhausted/stopped/rejected chain posts expose no native call. A
 storage failure/unknown result returns `storage_unconfirmed`. An intentional
 `retry_storage:true` repeats only that frozen idempotent post/key. Never change
 modes, keys or route to evade a pending operation. The current service limit is
@@ -63,7 +70,10 @@ Policy, exact post payload and native arguments remain frozen in the private
 transcript-free notification receipts are unchanged. The payload journal
 necessarily contains unsent message text: keep it private, without credentials,
 and exclude it from packages/Git. A lock/conflict/corrupt record requires
-reconciliation, not deletion or an invented request ID.
+reconciliation, not deletion or an invented request ID. Legacy inline-linked
+operations remain frozen and blocked (`linked_operation_unreconciled`), never
+silently reselected or replayed. Reconcile their prior native outcome before an
+explicit storage-first replacement; do not drop correlation to continue.
 
 The recipient must call supported `get_message({board,message_id})` and verify
 ID, board and `receiver_id` against its own canonical address before acting.

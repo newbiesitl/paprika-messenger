@@ -1,4 +1,4 @@
-import { deliveryPolicy } from './delivery-policy.mjs';
+import { deliveryPolicy, hasLinkedMetadata } from './delivery-policy.mjs';
 import { existsSync, realpathSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
@@ -143,6 +143,7 @@ export function prepareRelayedDelivery(input, env = process.env) {
 }
 
 export function prepareDirectDelivery(input, env = process.env) {
+  if (hasLinkedMetadata(input)) throw Error('Linked collaboration/reply messages require confirmed storage/reference delivery; direct preparation cannot discard their metadata.');
   if (deliveryPolicy(input.body, input.delivery_policy).mode !== 'inline')
     throw Error('Reference delivery required: use adaptive-delivery with confirmed storage; oversized bodies cannot be forced inline.');
   const reply = validateRoutes(input, env);

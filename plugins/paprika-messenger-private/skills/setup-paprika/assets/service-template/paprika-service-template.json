@@ -245,8 +245,8 @@
     },
     {
       "path": "skills/paprika-messenger/references/adaptive-delivery.md",
-      "size_bytes": 5779,
-      "sha256": "a176f221ed23777da038f7d7e6c0203d2316a0f8a2d4ac2161b8efa638c12348"
+      "size_bytes": 6615,
+      "sha256": "9eb2c4f2748f4fa768f701b0e6d2bc75fdf86be8b186189dfd2c4c4a24bf7e1a"
     },
     {
       "path": "skills/paprika-messenger/references/address-cache.md",
@@ -255,8 +255,8 @@
     },
     {
       "path": "skills/paprika-messenger/references/autonomous-collaboration.md",
-      "size_bytes": 7915,
-      "sha256": "03d2a55d721e2962a1f3f172051de85653910f229077fd8efd05d29723d963ee"
+      "size_bytes": 8112,
+      "sha256": "655a2bdc89f7b5089a6d57688e808782ed950ca2a3700570681666db7bb9ef62"
     },
     {
       "path": "skills/paprika-messenger/references/connect.md",
@@ -270,8 +270,8 @@
     },
     {
       "path": "skills/paprika-messenger/references/direct.md",
-      "size_bytes": 19918,
-      "sha256": "49f611917f84f10030ab838d3dcfd0e727de068d622f3fc16a0cc18ea9588410"
+      "size_bytes": 20066,
+      "sha256": "0ae12127331ee033b0abdff44d19f89928ae190f07d33fca4fa847dc75e09d28"
     },
     {
       "path": "skills/paprika-messenger/references/message-presentation.md",
@@ -295,8 +295,8 @@
     },
     {
       "path": "skills/paprika-messenger/scripts/adaptive-delivery.mjs",
-      "size_bytes": 9276,
-      "sha256": "6001b823ffd27ceb45a5fbd1d5eb40f0f6b303c1042dfabe7ddb832df3c293e1"
+      "size_bytes": 9930,
+      "sha256": "c7b67bf8ced5fc2b82dc18cafd598b48d0b3bf40516d5b798cfb468c92e77cfa"
     },
     {
       "path": "skills/paprika-messenger/scripts/conversation-link.mjs",
@@ -305,8 +305,8 @@
     },
     {
       "path": "skills/paprika-messenger/scripts/delivery-policy.mjs",
-      "size_bytes": 1826,
-      "sha256": "2f11988457191558f180be6c7aa7514739c37eb58b2b71ea20fd03262a6e6345"
+      "size_bytes": 2318,
+      "sha256": "24bd05af0f6d2860d02ebbe4e9993d3b9f63a86b124dadc45be82d1b424b1933"
     },
     {
       "path": "skills/paprika-messenger/scripts/get-thread-id.mjs",
@@ -340,8 +340,8 @@
     },
     {
       "path": "skills/paprika-messenger/scripts/prepare-delivery.mjs",
-      "size_bytes": 12229,
-      "sha256": "49a6d10f2e300b76eb8bb75419fd71b504eecc0ea15698c4fb2181c2d78086bf"
+      "size_bytes": 12428,
+      "sha256": "8be2df74e96dfeb3e705c8c34c88de26062e74664ef05ac9ec43ee6090cc2b0b"
     },
     {
       "path": "skills/paprika-messenger/scripts/prepare-notification.mjs",
@@ -355,8 +355,8 @@
     },
     {
       "path": "skills/paprika-messenger/SKILL.md",
-      "size_bytes": 24282,
-      "sha256": "0e3aa8f82331596caa8d594af3240c4eb00fb63265b6026b942589a924b2db8c"
+      "size_bytes": 24472,
+      "sha256": "0e77c7c31cd999d45792e8c96783cd8885c9b9255f5a4f0561c62ac7417dddb5"
     },
     {
       "path": "src/collaboration.mjs",
@@ -427,6 +427,11 @@
       "path": "src/worker.mjs",
       "size_bytes": 12270,
       "sha256": "563e897dfc0623c12c21dec51e5c159a71686590301a836a24edf2cb1c2d7df1"
+    },
+    {
+      "path": "tests/adaptive-correlation.test.mjs",
+      "size_bytes": 8414,
+      "sha256": "a96a738bf6d3f8fc8ef539bca9a4e54dc9e6ca588a579ee93ebde37b18af8484"
     },
     {
       "path": "tests/adaptive-delivery.test.mjs",

@@ -3,15 +3,19 @@ export const DEFAULT_SHORT_MESSAGE_LIMIT = 1500;
 // Count the original body before branding/routing: JS string iteration counts
 // Unicode code points, including combining marks and CR/LF separately. Do not
 // normalize, trim, count UTF-16 units, or count grapheme clusters.
-export function deliveryPolicy(body, policy = {}) {
+export const hasLinkedMetadata = input => ['collaboration_id','reply_to_id'].some(key=>input?.[key] !== undefined);
+export function deliveryPolicy(body, policy = {}, linkage = {}) {
   if (typeof body !== 'string' || !body.trim()) throw Error('Require the original nonempty message body.');
   const {short_message_limit = DEFAULT_SHORT_MESSAGE_LIMIT, force_reference = false} = policy;
   if (!Number.isSafeInteger(short_message_limit) || short_message_limit < 1 || short_message_limit > 15000
       || typeof force_reference !== 'boolean' || Object.keys(policy).some(k => !['short_message_limit','force_reference'].includes(k)))
     throw Error('Delivery policy accepts short_message_limit (1..15000 code points) and force_reference (boolean) only.');
+  const linked = hasLinkedMetadata(linkage);
+  for (const key of ['collaboration_id','reply_to_id']) if (linkage[key] !== undefined && (typeof linkage[key] !== 'string' || !/^[A-Za-z0-9][A-Za-z0-9_.:-]{0,95}$/.test(linkage[key])))
+    throw Error('Use a confirmed routing ID for ' + key + '.');
   const code_points = [...body].length;
-  return {mode: force_reference || code_points > short_message_limit ? 'reference' : 'inline',
-    code_points, short_message_limit, force_reference, counting_rule: 'original_unicode_code_points'};
+  return {mode: linked || force_reference || code_points > short_message_limit ? 'reference' : 'inline',
+    code_points, short_message_limit, force_reference, counting_rule: 'original_unicode_code_points', ...(linked ? {reference_reason:'linked_metadata'} : {})};
 }
 
 export function verifyReferencedMessage({board, message_id, receiver_id, result}) {

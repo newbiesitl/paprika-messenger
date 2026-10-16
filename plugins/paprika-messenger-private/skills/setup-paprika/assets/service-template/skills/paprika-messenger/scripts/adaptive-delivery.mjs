@@ -3,7 +3,7 @@ import {resolve, dirname} from 'node:path';
 import {randomUUID} from 'node:crypto';
 import {existsSync, realpathSync} from 'node:fs';
 import {fileURLToPath} from 'node:url';
-import {deliveryPolicy, verifyReferencedMessage} from './delivery-policy.mjs';
+import {deliveryPolicy, verifyReferencedMessage, hasLinkedMetadata} from './delivery-policy.mjs';
 import {prepareBoardPost, prepareStoredDelivery, prepareDirectDelivery, validateRoutes,
   selectNotificationTransport, digest, routingId, readJsonInput} from './prepare-delivery.mjs';
 import {NotificationState} from './notification-state.mjs';
@@ -38,7 +38,7 @@ export class AdaptiveDelivery {
   }
   async start(input, env = process.env) {
     validateRoutes(input, env);
-    const policy = deliveryPolicy(input.body, input.delivery_policy);
+    const policy = deliveryPolicy(input.body, input.delivery_policy, input);
     const frozen = structuredClone(input);
     const fingerprint = digest(frozen);
     return this.update(input, state => {
@@ -54,6 +54,7 @@ export class AdaptiveDelivery {
       const input = state.input;
       if (env.CODEX_THREAD_ID !== input.sender.thread_id) throw Error('Resume this operation in its original sending chat.');
       const blocked = (status, detail) => ({next:state,output:{status,detail,policy:state.policy}});
+      if (state.policy.mode === 'inline' && hasLinkedMetadata(input)) return blocked('linked_operation_unreconciled','Legacy inline-linked operation preserved; reconcile any previous native submission before an explicit storage-first replacement. Do not change modes or resend.');
       if (!state.transport) {
         if (!Array.isArray(subscriptions)) return blocked('subscription_check_required','Read actual subscriptions before selecting one transport.');
         state.input.subscriptions=structuredClone(subscriptions);
@@ -89,9 +90,12 @@ export class AdaptiveDelivery {
       try {
         const message = verifyReferencedMessage({board:state.input.board,message_id:result?.message?.id,receiver_id:state.input.recipient.id,result});
         if (message.body !== state.post.body || message.sender_id !== state.input.sender.id
-            || message.reply_to_id != null && message.reply_to_id !== state.post.reply_to_id
-            || state.post.reply_to_id !== undefined && message.reply_to_id !== state.post.reply_to_id)
+            || (message.reply_to_id ?? null) !== (state.post.reply_to_id ?? null)
+            || (message.collaboration_id ?? null) !== (state.post.collaboration_id ?? null))
           throw Error('Storage confirmation conflicts with the exact frozen payload.');
+        if (state.post.collaboration_id !== undefined && (!Number.isSafeInteger(message.handoff_depth) || !Number.isSafeInteger(message.handoff_limit)
+          || message.handoff_depth < 1 || message.handoff_depth > message.handoff_limit || message.handoff_limit > 100))
+          throw Error('Require server-confirmed handoff depth and limit before notification.');
         const plan = prepareStoredDelivery({...state.input,message}, {CODEX_THREAD_ID:state.input.sender.thread_id});
         if (plan.transport !== state.transport) throw Error('Storage transport conflicts with the frozen operation.');
         state.notification_conflict = state.transport === 'native' && result.notification && !['events_not_configured','subscription_required'].includes(result.notification.state);
