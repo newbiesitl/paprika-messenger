@@ -71,6 +71,13 @@
       "when": 1791939427708,
       "tag": "0009_autonomous-collaboration",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1792454400000,
+      "tag": "0010_meetings",
+      "breakpoints": true
     }
   ]
 }

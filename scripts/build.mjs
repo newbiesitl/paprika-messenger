@@ -1,7 +1,9 @@
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
-const files=['../skills/paprika-messenger/scripts/conversation-link','validation','service-config','recipient-cache-state','thread-registration','recipient-conversations','recipient-directory','collaboration','service','webhooks','events','connection-ui','recipient-ui','protocol','worker'];
+const files=['../skills/paprika-messenger/scripts/conversation-link','validation','service-config','recipient-cache-state','thread-registration','recipient-conversations','recipient-directory','collaboration','meetings','meeting-tools','service','webhooks','events','connection-ui','recipient-ui','protocol','worker'];
 const assets={};
+for (const [path, file, type] of [['/meetings.html','web/meetings.html','text/html; charset=utf-8'],['/meetings.js','web/meetings.js','text/javascript; charset=utf-8'],['/meetings.css','web/meetings.css','text/css; charset=utf-8']])
+  assets[path]={body:await readFile(file,'utf8'),type};
 for (const [path,file,type] of [['/','web/index.html','text/html; charset=utf-8'],['/board.js','web/board.js','text/javascript; charset=utf-8'],['/state.js','web/state.js','text/javascript; charset=utf-8'],['/board.css','web/board.css','text/css; charset=utf-8'],['/conversation-link.js','skills/paprika-messenger/scripts/conversation-link.mjs','text/javascript; charset=utf-8'],['/recipient-cache.js','web/recipient-cache.js','text/javascript; charset=utf-8'],['/recipient-picker.js','web/recipient-picker.js','text/javascript; charset=utf-8'],['/recipient-picker.css','web/recipient-picker.css','text/css; charset=utf-8']])
   assets[path]={body:await readFile(file,'utf8'),type};
 const sources=await Promise.all(files.map(f=>readFile(`src/${f}.mjs`,'utf8')));

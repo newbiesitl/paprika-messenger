@@ -25,8 +25,8 @@
     },
     {
       "path": "db/schema.ts",
-      "size_bytes": 12177,
-      "sha256": "44688e6ec5f941a20e07130593e258a7eaada32618b1977a7945a3afa47efe52"
+      "size_bytes": 12540,
+      "sha256": "f62e60409bf9cf56df88885ec17ebadac02e78324c639d04e1bd3497a91d72d9"
     },
     {
       "path": "docs/CLIENT-CAPABILITIES.md",
@@ -37,6 +37,11 @@
       "path": "docs/LOCAL-PLUGIN.md",
       "size_bytes": 341,
       "sha256": "78e1ce238969bf4f076f56a0c4a39883cf89a088a1fdc1e4bc2092016dcc0e1b"
+    },
+    {
+      "path": "docs/MEETINGS.md",
+      "size_bytes": 3946,
+      "sha256": "5fb807156675cb53a5141f6e23ea8731f0596a5d7c2842f783581c45d5a81a82"
     },
     {
       "path": "docs/PARTICIPANTS.json",
@@ -139,9 +144,14 @@
       "sha256": "d1e6cb5dc0bdc11ff27eb21462a24a0bfcb09bbfd30112c053c74066f65236f0"
     },
     {
+      "path": "drizzle/0010_meetings.sql",
+      "size_bytes": 282,
+      "sha256": "066458a43ce737544ac2080662bdbe03edc393c0ed204ee9309d759ceccc8423"
+    },
+    {
       "path": "drizzle/meta/_journal.json",
-      "size_bytes": 1515,
-      "sha256": "6ab7b8e518940049581c2cef7ac0e518a19bc284c9f0f01fcaa87a55ac8016e2"
+      "size_bytes": 1653,
+      "sha256": "0a6fcaab8775647b3523dc3ec8247878dc1eb0c26b93911534e7a9d8418b14d9"
     },
     {
       "path": "drizzle/meta/0000_snapshot.json",
@@ -194,6 +204,11 @@
       "sha256": "613ecd92ba06b72c69fb1e75884eb8b97d72609fb7a43e4d1d3e1d3e814ef9fb"
     },
     {
+      "path": "drizzle/meta/0010_snapshot.json",
+      "size_bytes": 51061,
+      "sha256": "177761eb84c714f23f0dc7cd5aa1cd5736f84904d3f0eb1c714f147de6153dd1"
+    },
+    {
       "path": "LICENSE",
       "size_bytes": 1093,
       "sha256": "746457421cf7562981ed5303e08c6390e1d90c6a2a1f71f3ffe566083cc7fc81"
@@ -210,18 +225,18 @@
     },
     {
       "path": "README.md",
-      "size_bytes": 25504,
-      "sha256": "6793212892c06034577f1efac9a5bc2cbe45874bde71e8359f34005d8c4de6a9"
+      "size_bytes": 25763,
+      "sha256": "1ef82771e05d6ccdea92d30c086b36db1224e69f36b1a0cdd58055bb4cf7aa5f"
     },
     {
       "path": "scripts/build.mjs",
-      "size_bytes": 4994,
-      "sha256": "9098ba9a6a190d34df427034626dd77549abe79676378204994b71293bb451fb"
+      "size_bytes": 5310,
+      "sha256": "e2004deb1efb9d58f8b124692304b4c11500c8018ae1afabc059ba165d1a01d0"
     },
     {
       "path": "scripts/bundle.mjs",
-      "size_bytes": 9819,
-      "sha256": "23659721e034d8a03f9d5dca6ace08c780b48230d6a6214fc77627e375dfb7a9"
+      "size_bytes": 9839,
+      "sha256": "3636d20b6e6fcbe44b405d0cefd868f372c7f0d83f35c2a4ab0ef5771ba52e5b"
     },
     {
       "path": "scripts/dev.mjs",
@@ -374,9 +389,19 @@
       "sha256": "fe1f3f7608fd7a78e8adc82649aea731c5ea0d4d72edd42e00fc205c32169e08"
     },
     {
+      "path": "src/meeting-tools.mjs",
+      "size_bytes": 5687,
+      "sha256": "f70fce74c0c4ab8caaf75bc3abef48b2ad6d33073b57ee41147741852c2c367c"
+    },
+    {
+      "path": "src/meetings.mjs",
+      "size_bytes": 22403,
+      "sha256": "da53b7f5f5c814bad3b36d90a45c762bf6376a8e5258d7901cda2632524b8511"
+    },
+    {
       "path": "src/protocol.mjs",
-      "size_bytes": 42170,
-      "sha256": "d38f63650e17764cfe56550690ccc97a0a4238f1e259680c2cb134d24c092da0"
+      "size_bytes": 42241,
+      "sha256": "793845e91af098c705c7e7b0cb718f3c788cd9a32997f1371a3537cc062b25cc"
     },
     {
       "path": "src/recipient-cache-state.mjs",
@@ -405,8 +430,8 @@
     },
     {
       "path": "src/service.mjs",
-      "size_bytes": 25446,
-      "sha256": "ac3051fcafa94b64c129c7fc806b4ba20201a901fbc7b2f6999b5c15d6d925b9"
+      "size_bytes": 26350,
+      "sha256": "8ffa7e783d8ee1e6d7571921887a99d0c02ab980e4ab135fdbc7a8071c1184dc"
     },
     {
       "path": "src/thread-registration.mjs",
@@ -499,6 +524,16 @@
       "sha256": "07d97259fdf8419025417787ae139873d1f5ba87b6aac5786a22e0f394661c7a"
     },
     {
+      "path": "tests/meeting-http.test.mjs",
+      "size_bytes": 3147,
+      "sha256": "71121c5c291dff07a7c4f2899376b8701f0d56dcc6d45d66dfedb860d0be70b8"
+    },
+    {
+      "path": "tests/meetings.test.mjs",
+      "size_bytes": 11463,
+      "sha256": "2e22d33cd01285ead3a1bcb4f779d0896b88bccad2e1804d3232d1ff8b9105a7"
+    },
+    {
       "path": "tests/message-presentation.test.mjs",
       "size_bytes": 8152,
       "sha256": "fc1e85f50d9678bc69a32dfa023fd48fe64cdebb0fc01bd2c4b6c1401d97883b"
@@ -565,8 +600,8 @@
     },
     {
       "path": "web/board.js",
-      "size_bytes": 16827,
-      "sha256": "dc780bc9170c560ee85de482d956d8d72153efc6ed0703e8402c8f11ef0dd0cd"
+      "size_bytes": 16975,
+      "sha256": "16f7a315981d938f0d63f818db6c82112c2a590d1a47031bb23e01a237c2767b"
     },
     {
       "path": "web/connection-controls.html",
@@ -575,8 +610,23 @@
     },
     {
       "path": "web/index.html",
-      "size_bytes": 6311,
-      "sha256": "8b047b5050236bed6c141da6b2ad0b75a95926df0cd937961d8a8278685bb66f"
+      "size_bytes": 6376,
+      "sha256": "e31860c424c0ab635a73626d357e800c83a523307dd9bcfbe5782d697db8f6d3"
+    },
+    {
+      "path": "web/meetings.css",
+      "size_bytes": 3545,
+      "sha256": "530b9ed62eb6bb15f5a76c2736649eec2a293e94cbbfc1912bd89e3c5a56a5e7"
+    },
+    {
+      "path": "web/meetings.html",
+      "size_bytes": 6407,
+      "sha256": "8225f57bab2901383fdf3cd2385a32764105bcf03f032814343951cb268fc1b9"
+    },
+    {
+      "path": "web/meetings.js",
+      "size_bytes": 16580,
+      "sha256": "bf3a4ab826977fecf6539f90892ec07be33c965d21f4bb1308150cc7ca95f812"
     },
     {
       "path": "web/recipient-cache.js",
