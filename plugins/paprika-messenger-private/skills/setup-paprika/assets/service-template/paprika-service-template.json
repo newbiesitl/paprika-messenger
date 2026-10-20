@@ -535,8 +535,8 @@
     },
     {
       "path": "tests/meeting-picker-ui.test.mjs",
-      "size_bytes": 10934,
-      "sha256": "88dac7d315b97c9fcd3f695a9ceb7b4fb9f6278fe4abcbad8fb127a9b91ed180"
+      "size_bytes": 12191,
+      "sha256": "1cf1d50149836fd1e9f6fa2388512a8b6d856bae03bcc2dbfaadbfe1b72fb4a4"
     },
     {
       "path": "tests/meetings.test.mjs",
@@ -630,8 +630,8 @@
     },
     {
       "path": "web/meeting-participants.js",
-      "size_bytes": 13435,
-      "sha256": "4cff2f334857dc4364a1c0eafacd8f37dd09b67cd727db3319f371d6e93dc853"
+      "size_bytes": 13995,
+      "sha256": "c8ee227df0c5165956eac96a47b33d44c1bd6fb8479cdf84071ea00c480202fa"
     },
     {
       "path": "web/meetings.css",

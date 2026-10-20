@@ -125,3 +125,18 @@ test('remount restores the attached roster only on its original board and coordi
   assert.equal(h.sent.at(-1).method, 'ui/update-model-context'); h.reply(h.sent.at(-1), {}); await changing;
   assert.equal(h.elements.selected.children.length, 0); assert.deepEqual(h.inputs().map(input => input.value), ['z']);
 });
+
+test('removing the attachment during revalidation cannot resurrect the roster; host removal during Apply also wins', async () => {
+  const h = harness(); await h.initialize(); await h.show(page()); await h.choose('a');
+  const applying = h.elements.apply.onclick(); await h.verify();
+  h.reply(h.sent.findLast(item => item.method === 'ui/update-model-context'), {_meta:{'openai/modelContext':{updateId:'attached'}}}); await applying;
+  const reapplying = h.elements.apply.onclick();
+  h.emit({jsonrpc:'2.0', method:'ui/notifications/host-context-changed', params:{'openai/modelContext':null}});
+  await h.verify(); await reapplying;
+  assert.equal(h.elements.selected.children.length, 0);
+  assert.equal(h.sent.filter(item => item.method === 'ui/update-model-context').length, 1);
+  await h.choose('b'); const next = h.elements.apply.onclick(); await h.verify();
+  h.emit({jsonrpc:'2.0', method:'ui/notifications/host-context-changed', params:{'openai/modelContext':null}});
+  h.reply(h.sent.findLast(item => item.method === 'ui/update-model-context'), {_meta:{'openai/modelContext':{updateId:'new-attachment'}}}); await next;
+  assert.equal(h.elements.selected.children.length, 0); assert.match(h.elements.feedback.textContent, /attachment removed/);
+});
