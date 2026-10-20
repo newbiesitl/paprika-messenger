@@ -4,6 +4,10 @@ const now = sql`(strftime('%Y-%m-%dT%H:%M:%fZ','now'))`;
 export const boards = sqliteTable('boards', {
   id:text('id').primaryKey(),label:text('label'),description:text('description').notNull().default('')
 },t=>[check('board_id_length',sql`length(${t.id}) BETWEEN 1 AND 64`)]);
+export const meetings = sqliteTable('meetings', {
+  board:text('board').notNull().references(()=>boards.id),id:text('id').notNull(),
+  revision:integer('revision').notNull(),document:text('document').notNull()
+},t=>[primaryKey({columns:[t.board,t.id]}),check('meeting_revision',sql`${t.revision} >= 1`),check('meeting_document',sql`json_valid(${t.document})`)]);
 export const recipientDirectoryVersions=sqliteTable('recipient_directory_versions',{
   board:text('board').primaryKey().references(()=>boards.id),revision:integer('revision').notNull().default(0)
 },t=>[check('recipient_directory_revision',sql`${t.revision} >= 0`)]);

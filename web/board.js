@@ -39,6 +39,7 @@ function connection(text,kind=''){const n=$('connection');n.textContent=text;n.c
 function issue(text){$('problem').hidden=!text;$('problem').textContent=text || '';}
 function options(node,blank,selected){node.replaceChildren(new Option(blank,''));for(const p of state.participants.values())if(!p.unregistered_at)node.add(new Option(`${p.label} · ${p.id}`,p.id));if(state.participants.has(selected)&&!state.participants.get(selected).unregistered_at)node.value=selected;}
 function renderParticipants(){
+  $('meeting-link').href=`/meetings.html?board=${encodeURIComponent(board)}${$('me').value ? '&receiver='+encodeURIComponent($('me').value) : ''}`;
   const chosen=$('me').value,filter=$('filter-receiver').value;
   options($('me'),'Choose participant',chosen);options($('filter-receiver'),'All receivers',filter);
   if(!chosen && requestedReceiver && state.participants.has(requestedReceiver)&&!state.participants.get(requestedReceiver).unregistered_at)$('me').value=requestedReceiver;

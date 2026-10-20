@@ -5,6 +5,8 @@ import { setRecipientConversation } from './recipient-conversations.mjs';
 import { registrationStatus, requireActiveRegistration, changeThreadRegistration } from './thread-registration.mjs';
 import { getRecipientDirectoryState, catalogVersionStatement, directoryCacheScope } from './recipient-cache-state.mjs';
 import { getCollaborationSettings, configureCollaboration, startCollaboration, getCollaboration, stopCollaboration, checkCollaborationHandoff } from './collaboration.mjs';
+import { MeetingService } from './meetings.mjs';
+import { showMeetingParticipantPicker } from './meeting-ui.mjs';
 
 // All user identities originate at the Sites hosting boundary. Never trust caller-supplied labels.
 export function authorize(request, env) {
@@ -27,6 +29,18 @@ const participantAddressFields = ['participant_id','thread_id','label'];
 const receiverAddressFields = ['receiver_id','receiver_thread_id','receiver_label'];
 export class BoardService {
   constructor(db, subject, env = {}) { this.db = db; this.subject = subject; this.env = env; }
+  async show_meeting_participant_picker(a) { return showMeetingParticipantPicker(this, a); }
+  async create_meeting(a) { return new MeetingService(this).create(a); }
+  async list_meetings(a) { return new MeetingService(this).list(a); }
+  async get_meeting(a) { return new MeetingService(this).get(a); }
+  async accept_meeting_invitation(a) { return new MeetingService(this).accept(a); }
+  async control_meeting(a) { return new MeetingService(this).control(a); }
+  async configure_meeting(a) { return new MeetingService(this).configure(a); }
+  async get_meeting_round(a) { return new MeetingService(this).readRound(a); }
+  async submit_meeting_round(a) { return new MeetingService(this).submit(a); }
+  async update_meeting_notes(a) { return new MeetingService(this).notes(a); }
+  async record_meeting_notification(a) { return new MeetingService(this).recordNotice(a); }
+  async export_meeting_notes(a) { return new MeetingService(this).export(a); }
   async get_collaboration_settings(a) { return getCollaborationSettings(this,a); }
   async configure_collaboration(a) { return configureCollaboration(this,a); }
   async start_collaboration(a) { return startCollaboration(this,a); }

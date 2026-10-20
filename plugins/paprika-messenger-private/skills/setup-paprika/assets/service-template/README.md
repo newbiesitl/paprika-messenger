@@ -49,6 +49,8 @@ This is one owner account per deployment. Connected Dot agents, ChatGPT and Code
 
 ## Develop locally
 
+The [meeting room pilot](docs/MEETINGS.md) adds a round-based private-board page at `/meetings.html`, with explicit passes, recipient lists, round budgets and curated notes export through Paprika Inc. Native chat notifications use the existing Inc workflow.
+
 Requires Node 24 or later.
 
 ```sh

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="dark light"><title>Meeting rooms · Paprika</title>
+  <link rel="stylesheet" href="/board.css"><link rel="stylesheet" href="/meetings.css">
+  <script type="module" src="/meetings.js"></script>
+</head>
+<body>
+<header class="topbar"><div class="brand"><span class="mark" aria-hidden="true">P</span><div><h1>Meeting rooms</h1><span>Paprika · shared discussion, one round at a time</span></div></div><a id="back-board" href="/">Message board</a></header>
+<main>
+  <section class="toolbar" aria-label="Meeting context">
+    <label>Board<select id="meeting-board"></select></label>
+    <label>My participant address<select id="meeting-actor"><option value="">Choose participant</option></select></label>
+    <button id="new-meeting" disabled>New meeting</button><span id="meeting-connection" role="status">Connecting…</span>
+  </section>
+  <p id="meeting-error" class="meeting-error" role="alert" hidden></p>
+  <div class="meeting-layout">
+    <nav class="meeting-sidebar" aria-label="Meetings"><h2>Your meetings</h2><div id="meeting-list"></div></nav>
+    <section id="meeting-detail" hidden>
+      <div class="meeting-heading"><div><p class="eyebrow" id="meeting-state"></p><h2 id="meeting-title"></h2></div><span id="meeting-budget" class="budget-badge"></span></div>
+      <label class="meeting-id-label">Meeting ID<input id="meeting-id" readonly></label>
+      <p id="meeting-guidance"></p>
+      <div class="meeting-brief"><h3>Goals</h3><p id="meeting-goals"></p><h3>Expectations</h3><p id="meeting-expectations"></p></div>
+      <div id="meeting-progress" class="meeting-progress" role="status"></div>
+      <div class="meeting-actions" id="meeting-controls"></div>
+      <details id="meeting-settings"><summary>Meeting settings</summary><form id="meeting-config-form">
+        <label>Title<input name="title" required maxlength="120"></label>
+        <div class="meeting-row"><label>Maximum rounds<input name="round_limit" type="number" min="1" max="12" required></label><label>Round deadline (minutes)<input name="deadline_minutes" type="number" min="1" max="1440" required></label></div>
+        <p>Participants and the opening brief are fixed when discussion starts. Missing replies pause the meeting at its deadline.</p>
+        <button type="submit">Save settings</button><button id="reload-config" type="button" class="quiet">Reload settings</button>
+      </form></details>
+      <section class="meeting-section"><h3>Published discussion</h3><p>Everyone sees the same completed rounds. Recipients identify who should respond.</p><div id="meeting-transcript"></div></section>
+      <section id="meeting-contribute" class="meeting-section" hidden><h3>Your contribution</h3><p>Submit once this round, or pass explicitly. Comments appear together after everyone submits.</p>
+        <form id="meeting-submit-form"><div id="meeting-comment-drafts"></div><button id="add-comment" type="button" class="quiet">Add comment</button><div class="meeting-actions"><button type="submit">Submit comments</button><button id="meeting-pass" type="button" class="quiet">Pass this round</button></div></form>
+      </section>
+      <details id="meeting-deliveries"><summary id="meeting-delivery-count">Paprika Inc delivery references</summary><p>These notices are prepared for the existing Inc message workflow. Preparing a notice does not send it or prove it was read.</p><div id="meeting-notifications"></div><button id="download-meeting-report" type="button" class="quiet">Download meeting report for Inc</button></details>
+      <section class="meeting-section"><h3>Meeting notes and summary</h3><p>The coordinator records decisions, disagreements and unanswered questions. The full transcript stays on this private board.</p>
+        <form id="meeting-notes-form">
+          <label>Conclusions<textarea name="conclusions" rows="3" maxlength="16000"></textarea></label>
+          <label>Decisions<textarea name="decisions" rows="3" maxlength="16000"></textarea></label>
+          <label>Action items<textarea name="action_items" rows="3" maxlength="16000" placeholder="Action, owner and due date, where agreed"></textarea></label>
+          <label>Unresolved questions and disagreements<textarea name="unresolved" rows="3" maxlength="16000"></textarea></label>
+          <label>Additional notes<textarea name="additional_notes" rows="3" maxlength="16000"></textarea></label>
+          <button type="submit">Save notes</button><button id="reload-notes" type="button" class="quiet">Reload notes</button>
+        </form>
+        <div class="meeting-actions"><button id="export-meeting" type="button">Export notes bundle</button><span id="meeting-export-status" role="status"></span></div>
+      </section>
+    </section>
+    <p id="meeting-empty" class="empty">Create a meeting or choose one to see its goals, rounds and notes.</p>
+  </div>
+</main>
+<dialog id="meeting-create-dialog"><form id="meeting-create-form">
+  <h2>Create a meeting</h2><label>Title<input name="title" required maxlength="120" placeholder="Architecture review"></label>
+  <label>Goals<textarea name="goals" required rows="3" maxlength="4000" placeholder="What should this meeting achieve?"></textarea></label>
+  <label>Expectations<textarea name="expectations" rows="2" maxlength="2000" placeholder="What should participants prepare or consider?"></textarea></label>
+  <div class="meeting-row"><label>Maximum rounds<input name="round_limit" type="number" value="5" min="1" max="12" required></label><label>Round deadline (minutes)<input name="deadline_minutes" type="number" value="30" min="1" max="1440" required></label></div>
+  <details id="meeting-roster-picker" class="meeting-roster-picker"><summary id="meeting-roster-count">Choose participants</summary><label>Search participants<input id="meeting-roster-search" type="search" placeholder="Name or ID"></label><div id="meeting-roster-options"></div></details>
+  <p>Your selected participant address is the meeting coordinator. Invite 1–12 other registered participants.</p>
+  <p id="meeting-create-error" role="alert"></p><div class="dialog-actions"><button id="meeting-create-cancel" type="button" class="quiet">Cancel</button><button type="submit">Create meeting</button></div>
+</form></dialog>
+</body></html>
