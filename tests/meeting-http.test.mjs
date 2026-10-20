@@ -7,6 +7,38 @@ await import('../scripts/build.mjs');
 const {handle} = await import('../dist/_worker.js');
 const migration = await loadMigrations();
 
+test('in-chat meeting picker advertises its embedded resource, filters active members and performs no writes', async t => {
+  const db = new SqliteD1(); t.after(() => db.close()); db.connection.exec(migration);
+  const env = {DB:db, OWNER_USER_ID:'owner', SITE_ORIGIN:'https://board.example'};
+  const service = new BoardService(db, 'owner');
+  await service.create_board({board:'team', label:'Team'});
+  for (const participant_id of ['room', 'a', 'b', 'removed']) await service.register_participant({board:'team', participant_id, label:participant_id, kind:'thread'});
+  await service.unregister_thread({board:'team', participant_id:'removed'});
+  const rpc = async (method, params, authenticated = true) => handle(new Request('https://board.example/mcp', {method:'POST',
+    headers:{'Content-Type':'application/json', ...(authenticated ? {'oai-authenticated-user-id':'owner'} : {})},
+    body:JSON.stringify({jsonrpc:'2.0', id:1, method, params})}), env);
+  const catalog = (await (await rpc('tools/list', {})).json()).result;
+  const tool = catalog.tools.find(item => item.name === 'show_meeting_participant_picker');
+  assert.equal(tool.annotations.readOnlyHint, true); assert.ok(tool.inputSchema.required.includes('board'));
+  const args = {board:'team', coordinator_id:'room', limit:2};
+  assert.equal((await rpc('tools/call', {name:tool.name, arguments:args}, false)).status, 401);
+  const result = (await (await rpc('tools/call', {name:tool.name, arguments:args})).json()).result;
+  assert.equal(result.isError, false); assert.equal(result._meta.ui.resourceUri, tool._meta.ui.resourceUri);
+  assert.equal(result.structuredContent.selection_sends, false); assert.equal(result.structuredContent.max_participants, 12);
+  assert.ok(result.structuredContent.recipients.every(item => !['room', 'removed'].includes(item.participant_id)));
+  const next = await service.show_meeting_participant_picker({...args, cursor:result.structuredContent.next_cursor});
+  assert.ok(next.recipients.every(item => item.participant_id !== 'room'));
+  const search = await service.show_meeting_participant_picker({board:'team', query:'b'}); assert.equal(search.recipients[0].participant_id, 'b');
+  await assert.rejects(service.show_meeting_participant_picker({}), /board/);
+  await assert.rejects(service.show_meeting_participant_picker({...args, coordinator_id:'removed'}));
+  await assert.rejects(service.show_meeting_participant_picker({...args, registration_status:'unregistered'}));
+  const resource = (await (await rpc('resources/read', {uri:tool._meta.ui.resourceUri}, false)).json()).result.contents[0];
+  assert.equal(resource.mimeType, 'text/html;profile=mcp-app'); assert.match(resource.text, /createMeetingParticipantHost/);
+  assert.doesNotMatch(resource.text, /MEETING_PARTICIPANTS_SCRIPT/); assert.match(resource.text, /type = 'checkbox'/);
+  assert.equal(resource._meta['openai/ui'].preferredDisplayMode, 'inline');
+  for (const table of ['meetings', 'messages', 'event_subscriptions']) assert.equal(db.connection.prepare(`SELECT COUNT(*) n FROM ${table}`).get().n, 0);
+});
+
 test('built private meeting UI and HTTP tools retain owner authentication, origin protection and durable rounds', async t => {
   const db = new SqliteD1(); t.after(() => db.close()); db.connection.exec(migration);
   const env = {DB:db, OWNER_USER_ID:'owner', SITE_ORIGIN:'https://board.example'};

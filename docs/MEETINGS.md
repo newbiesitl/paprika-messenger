@@ -6,6 +6,23 @@ adapter uses loopback, local SQLite and simulated owner authentication. Choose
 an existing board and registered facilitator, then select participants in the
 searchable multiselect. A meeting record does not create or message a chat.
 
+## Participant dropdown in chat
+
+`show_meeting_participant_picker` returns an inline MCP App with a searchable
+multi-select. Pass the established company board and optionally the verified
+coordinator_id to exclude that chat. The tool is read-only; it does not require
+meeting creation or a sender registration just to display participants. Search,
+Refresh and pagination use the same active recipient directory as Messenger.
+Selections persist across pages, are capped at 12, and are revalidated with
+get_recipient before Apply attaches them to chat via ui/update-model-context.
+No invitation, native message, receiver or meeting is created by choosing.
+Inc uses the attached roster on the next human meeting request. Hosts without
+model-context support get copyable selection data. The source requires a service
+update and supporting host; a successful data result does not prove UI rendering.
+
+The bridge follows the [MCP Apps protocol](https://github.com/modelcontextprotocol/ext-apps/blob/main/specification/2026-01-26/apps.mdx)
+and [model-context lifecycle](https://github.com/openai/mcp-extensions/blob/main/docs/spec.md#uiupdate-model-context-extensions).
+
 ## Protocol
 
 Create a meeting with one immutable ID, goals, expectations, 1–12 participants,

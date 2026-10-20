@@ -40,8 +40,8 @@
     },
     {
       "path": "docs/MEETINGS.md",
-      "size_bytes": 3946,
-      "sha256": "5fb807156675cb53a5141f6e23ea8731f0596a5d7c2842f783581c45d5a81a82"
+      "size_bytes": 5110,
+      "sha256": "1dc6287d6b7da039cf42ecef3ea46ceb2dfb1b1f927ee8b234d09fbf78d76140"
     },
     {
       "path": "docs/PARTICIPANTS.json",
@@ -230,8 +230,8 @@
     },
     {
       "path": "scripts/build.mjs",
-      "size_bytes": 5310,
-      "sha256": "e2004deb1efb9d58f8b124692304b4c11500c8018ae1afabc059ba165d1a01d0"
+      "size_bytes": 6161,
+      "sha256": "a0ba24fbe9db181b501e533411e2e2e6a9f61778c427ae7c1e79f4f48e758626"
     },
     {
       "path": "scripts/bundle.mjs",
@@ -390,8 +390,13 @@
     },
     {
       "path": "src/meeting-tools.mjs",
-      "size_bytes": 5687,
-      "sha256": "f70fce74c0c4ab8caaf75bc3abef48b2ad6d33073b57ee41147741852c2c367c"
+      "size_bytes": 6523,
+      "sha256": "21ea9457936804f9ca72298f1b9fb6bb817221be8608f2ff7a84aa9cf73ebb6a"
+    },
+    {
+      "path": "src/meeting-ui.mjs",
+      "size_bytes": 1405,
+      "sha256": "2fb5270075fbdd81ab9534c202509a50612203d0cfd467052fcb07782f46a3d9"
     },
     {
       "path": "src/meetings.mjs",
@@ -400,8 +405,8 @@
     },
     {
       "path": "src/protocol.mjs",
-      "size_bytes": 42241,
-      "sha256": "793845e91af098c705c7e7b0cb718f3c788cd9a32997f1371a3537cc062b25cc"
+      "size_bytes": 42362,
+      "sha256": "a80acb90bfcd5a9a41df4b990acc19eafa0dd960e5192ad682d70313d4808534"
     },
     {
       "path": "src/recipient-cache-state.mjs",
@@ -430,8 +435,8 @@
     },
     {
       "path": "src/service.mjs",
-      "size_bytes": 26350,
-      "sha256": "8ffa7e783d8ee1e6d7571921887a99d0c02ab980e4ab135fdbc7a8071c1184dc"
+      "size_bytes": 26508,
+      "sha256": "0e727a35b559f4bde84ecd95c93ba7bc87ab164082567f0cfc2f524704be3a36"
     },
     {
       "path": "src/thread-registration.mjs",
@@ -525,8 +530,13 @@
     },
     {
       "path": "tests/meeting-http.test.mjs",
-      "size_bytes": 3147,
-      "sha256": "71121c5c291dff07a7c4f2899376b8701f0d56dcc6d45d66dfedb860d0be70b8"
+      "size_bytes": 6224,
+      "sha256": "a0f1c21873dc66c5da56bc04a6ab2e162ead4207a862f08c97e8e635c974feb7"
+    },
+    {
+      "path": "tests/meeting-picker-ui.test.mjs",
+      "size_bytes": 10934,
+      "sha256": "88dac7d315b97c9fcd3f695a9ceb7b4fb9f6278fe4abcbad8fb127a9b91ed180"
     },
     {
       "path": "tests/meetings.test.mjs",
@@ -612,6 +622,16 @@
       "path": "web/index.html",
       "size_bytes": 6376,
       "sha256": "e31860c424c0ab635a73626d357e800c83a523307dd9bcfbe5782d697db8f6d3"
+    },
+    {
+      "path": "web/meeting-participants.html",
+      "size_bytes": 4154,
+      "sha256": "3e93900afcccf25ce0feb86591c499ec30c9b59c0e15046c1046af1090ae1318"
+    },
+    {
+      "path": "web/meeting-participants.js",
+      "size_bytes": 13435,
+      "sha256": "4cff2f334857dc4364a1c0eafacd8f37dd09b67cd727db3319f371d6e93dc853"
     },
     {
       "path": "web/meetings.css",

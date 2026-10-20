@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Meeting participants</title>
+<style>
+:root{font-family:var(--font-sans,ui-sans-serif,system-ui,sans-serif);color-scheme:light dark;color:var(--color-text-primary,light-dark(#192639,#e7edf6));background:var(--color-background-primary,light-dark(#fff,#17202e));--line:var(--color-border-secondary,light-dark(#dae1eb,#46536a));--muted:var(--color-text-secondary,light-dark(#58677c,#aebcd0));--accent:light-dark(#264d82,#a9caff)}
+*{box-sizing:border-box}body{margin:0;padding:16px;padding-top:max(16px,var(--safe-top,0px));padding-bottom:max(16px,var(--safe-bottom,0px));padding-left:max(16px,var(--safe-left,0px));padding-right:max(16px,var(--safe-right,0px))}main{max-width:640px;margin:auto}h1{font-size:18px;margin:0 0 6px}p{font-size:13px;color:var(--muted);margin:6px 0 12px}.eyebrow{font-size:11px;letter-spacing:.04em;text-transform:uppercase;margin-bottom:4px}button,input,textarea{font:inherit}button{border:1px solid var(--line);border-radius:8px;padding:8px 12px;color:inherit;background:transparent;cursor:pointer}button:hover{background:light-dark(#edf2f8,#273448)}button:disabled{opacity:.5;cursor:default}:focus-visible{outline:2px solid var(--accent);outline-offset:3px}details{border:1px solid var(--line);border-radius:10px}summary{padding:12px;cursor:pointer;font-size:14px;font-weight:600}#search-form{display:flex;gap:6px;flex-wrap:wrap;padding:0 12px 10px}#search{flex:1;min-width:130px;width:100%;background:transparent;color:inherit;border:1px solid var(--line);border-radius:8px;padding:9px}#choices{margin:0;padding:0 12px;max-height:280px;overflow-y:auto;list-style:none}.choice{display:flex;gap:10px;padding:10px 4px;border-top:1px solid var(--line);cursor:pointer;overflow-wrap:anywhere}.choice input{align-self:start;margin-top:4px;accent-color:var(--accent)}.choice span{min-width:0}.choice strong{font-size:14px;display:block;font-weight:500}.choice small{display:block;color:var(--muted);font-size:11px;margin-top:3px}#page-status{padding:8px 12px;margin:0}#more{margin:0 12px 12px}#selected{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0;list-style:none;padding:0}#selected button{font-size:12px;padding:5px 9px;border-radius:20px;overflow-wrap:anywhere;max-width:100%}.actions{display:flex;gap:8px;flex-wrap:wrap}#apply{background:light-dark(#234a7f,#a9caff);border-color:transparent;color:light-dark(#fff,#102640)}#feedback{margin:12px 0 0;min-height:20px}#fallback{margin-top:10px}#command{width:100%;min-height:100px;background:transparent;color:inherit;padding:10px;border:0;font-size:12px} [hidden]{display:none!important}
+</style></head><body><main>
+<p class="eyebrow">Paprika · Meeting room</p><h1>Choose participants</h1>
+<p id="board">Loading the company board…</p>
+<details id="dropdown" open><summary id="selection-label">Choose participants</summary>
+<div id="search-form" role="search"><input id="search" type="search" maxlength="160" aria-label="Search participants by name or ID" placeholder="Search by name or ID" disabled><button id="search-button" type="button" disabled>Search</button><button id="refresh" type="button" disabled>Refresh</button></div>
+<ul id="choices" aria-label="Available participants"></ul><p id="page-status" role="status"></p><button id="more" type="button" hidden disabled>Load more</button>
+</details>
+<ul id="selected" aria-label="Selected participants"></ul>
+<p>Select up to 12 participants. Everyone in the meeting can read each published round.</p>
+<div class="actions"><button id="apply" type="button" disabled>Use selected participants</button><button id="clear" type="button" disabled>Clear</button></div>
+<p id="feedback" role="status">Selection does not send invitations. Describe the topic and round budget in chat when you are ready.</p>
+<details id="fallback" hidden><summary>Copy selection to chat</summary><textarea id="command" readonly aria-label="Meeting participant selection"></textarea></details>
+</main><script>/* MEETING_PARTICIPANTS_SCRIPT */
+createMeetingParticipantHost({window,document});</script></body></html>

@@ -1,3 +1,4 @@
+import { meetingPickerMeta } from './meeting-ui.mjs';
 const mtString = (maxLength = 96) => ({type:'string', maxLength});
 const mtAddress = {board:mtString(64), meeting_id:mtString()};
 const mtEdit = {...mtAddress, actor_id:mtString(), expected_revision:{type:'integer', minimum:1}};
@@ -9,6 +10,8 @@ function mtTool(name, description, properties, required, readOnly = false) {
     annotations:{readOnlyHint:readOnly, destructiveHint:false, idempotentHint:true, openWorldHint:false}};
 }
 export const meetingTools = [
+  {...mtTool('show_meeting_participant_picker', 'Show an in-chat searchable multi-select dropdown for a round-based meeting. Use this first for a meeting participant dropdown or when a meeting request needs participant selection. Use the established company board; do not guess another board or coordinator. coordinator_id is optional and excludes the verified facilitator. Selection attaches addresses to chat; it creates no meeting, sends no invitations and enables no receiver. Do not substitute a single-recipient picker or question panel. Revalidate the selection before create_meeting.',
+    {board:mtString(64), coordinator_id:mtString(), query:mtString(160), cursor:mtString(2048), limit:{type:'integer', minimum:1, maximum:50}}, ['board'], true), _meta:meetingPickerMeta},
   mtTool('create_meeting', 'Create an invited, round-based meeting on the private board with one immutable ID. Reuse that ID and exact creation details on retries. No chat is created or notified. Relay stored notification references through the existing Paprika Inc message workflow under the human meeting grant.',
     {...mtAddress, coordinator_id:mtString(), participant_ids:{type:'array', minItems:1, maxItems:12, uniqueItems:true, items:mtString()}, title:mtString(120), goals:mtString(4000), expectations:mtString(2000), round_limit:{type:'integer', minimum:1, maximum:12}, deadline_minutes:{type:'integer', minimum:1, maximum:1440, default:30}},
     ['board', 'meeting_id', 'coordinator_id', 'participant_ids', 'title', 'goals', 'round_limit']),

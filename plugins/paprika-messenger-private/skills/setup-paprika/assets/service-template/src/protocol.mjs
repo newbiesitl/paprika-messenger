@@ -5,6 +5,7 @@ import { recipientWidgetMeta, showRecipientPicker } from './recipient-ui.mjs';
 import { readRecipientResource, getRecipient } from './recipient-directory.mjs';
 import { confirmationConversationLink } from '../skills/paprika-messenger/scripts/conversation-link.mjs';
 import { meetingTools } from './meeting-tools.mjs';
+import { meetingPickerMeta } from './meeting-ui.mjs';
 const serverInfo = {
   name:'Paprika Service', version:'0.8.1'
 };
@@ -169,7 +170,7 @@ export async function rpc(payload, service, skills=null, events=null, uiResource
     else result = await service[name](args);
     if(name==='post_message')result=await addRecipientConversationLink(await addNotificationStatus(result,events),service);
     return response({content:name==='search_recipient_mentions'?[]:[{type:'text',text:JSON.stringify(result)}],structuredContent:result,isError:false,
-      ...(name==='show_connection_controls'?{_meta:connectionWidgetMeta}:name==='show_recipient_picker'?{_meta:recipientWidgetMeta}:{})});
+      ...(name==='show_connection_controls'?{_meta:connectionWidgetMeta}:name==='show_recipient_picker'?{_meta:recipientWidgetMeta}:name==='show_meeting_participant_picker'?{_meta:meetingPickerMeta}:{})});
   } catch(error) {
     if (!(error instanceof BoardError)) throw error;
     return response({content:[{type:'text',text:JSON.stringify({error:error.code,message:error.message})}],isError:true});
