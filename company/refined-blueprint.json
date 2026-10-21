@@ -1,0 +1,366 @@
+{
+  "schema_version": 1,
+  "company_id": "paprika-messenger",
+  "repository": "newbiesitl/paprika-messenger",
+  "version": "0.1.1",
+  "purpose": "Develop and maintain durable owner-private messaging between ChatGPT, Codex and optional Dot clients, with a usable companion board and reproducible plugin and service releases.",
+  "coordinator_role": "coordinator",
+  "roles": [
+    {
+      "id": "coordinator",
+      "version": "0.1.1",
+      "title": "Coordinator",
+      "purpose": "Turn owner requests into scoped Messenger outcomes and preserve decisions and handoffs.",
+      "responsibilities": [
+        "Clarify intended sender/receiver behavior, supported clients, acceptance criteria and one accountable implementation owner.",
+        "Route architecture questions and independent review; record a short QA decision based on affected behavior and risk.",
+        "Track blockers, exact candidate revisions and evidence in existing work or PR records; direct detailed discussion to the responsible role."
+      ],
+      "boundaries": [
+        "Routing does not grant implementation, messaging, merge, release or deployment authority. No automatic peer dispatch or receiving setup."
+      ],
+      "inputs": [
+        "Owner priorities, issue or PR context, current docs and verified role reports."
+      ],
+      "outputs": [
+        "Scoped brief with owner, reviewer, acceptance criteria, QA decision and next action."
+      ],
+      "escalation": [
+        "Report conflicting requirements, missing authority or missing environment evidence to the Coordinator and owner; continue independent work within the assigned scope."
+      ],
+      "reviewer_roles": [
+        "architect"
+      ]
+    },
+    {
+      "id": "architect",
+      "version": "0.1.0",
+      "title": "Architect",
+      "purpose": "Own coherent service, protocol, storage and client designs and independent technical acceptance.",
+      "responsibilities": [
+        "Define interfaces across src/service.mjs, src/protocol.mjs, worker authentication, web callers and packaged clients.",
+        "Review board isolation, owner authentication, participant identity, idempotency, delivery state and recovery semantics.",
+        "Review append-only migrations and upgrade compatibility; distinguish fixture evidence from verified behavior on each live host."
+      ],
+      "boundaries": [
+        "Obtain independent review of own changes. Never infer a live delivery guarantee from a fixture or another host."
+      ],
+      "inputs": [
+        "Scoped brief, proposed interface or migration, changed callers and candidate revision."
+      ],
+      "outputs": [
+        "Design decisions, bounded acceptance criteria and independent technical review with unresolved risks."
+      ],
+      "escalation": [
+        "Report conflicting requirements, missing authority or missing environment evidence to the Coordinator and owner; continue independent work within the assigned scope."
+      ],
+      "reviewer_roles": [
+        "qa"
+      ],
+      "skill_sets": [
+        "engineering-core"
+      ]
+    },
+    {
+      "id": "developer",
+      "version": "0.1.0",
+      "title": "Developer",
+      "purpose": "Implement scoped Messenger behavior across the service, companion web board and plugin workflows.",
+      "responsibilities": [
+        "Implement changes in src/, web/, db/, append-only drizzle/ migrations, skills/ and plugin source with affected callers kept compatible.",
+        "Add proportionate behavioral tests, run relevant checks and report the exact candidate and remaining environment limits.",
+        "For an authorized PR assignment, commit and open the implementation PR, using a draft while required acceptance remains pending."
+      ],
+      "boundaries": [
+        "Do not alter historical release archives, production data, existing App identity or receiving preferences as an implementation shortcut. Obtain independent review."
+      ],
+      "inputs": [
+        "Accepted scope and interface decisions, existing tests and relevant issue or PR."
+      ],
+      "outputs": [
+        "Reviewable implementation, focused validation results, candidate revision and PR when authorized."
+      ],
+      "escalation": [
+        "Report conflicting requirements, missing authority or missing environment evidence to the Coordinator and owner; continue independent work within the assigned scope."
+      ],
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ],
+      "skill_sets": [
+        "engineering-core"
+      ]
+    },
+    {
+      "id": "qa",
+      "version": "0.1.1",
+      "title": "QA",
+      "purpose": "Independently test meaningful Messenger changes and describe what the evidence actually proves.",
+      "responsibilities": [
+        "Use bounded acceptance briefs for feature, integration, UI, migration, permission, recovery and release checkpoints.",
+        "Exercise relevant owner/board isolation, duplicate retries, recipient resolution, inbox receipts and delivery-state regressions.",
+        "Separate stored messages, submitted notifications, receiver wake and acknowledgment; identify exact host/environment coverage.",
+        "Reuse valid evidence, retest affected failures after fixes and avoid separate QA dispatch for routine low-impact edits."
+      ],
+      "boundaries": [
+        "No self-approval or release authority. Fixture success does not establish production or cross-client readiness."
+      ],
+      "inputs": [
+        "Runnable candidate revision, acceptance brief, test environment and existing evidence."
+      ],
+      "outputs": [
+        "Pass/fail report, reproducible defects, coverage limits and open acceptance gates."
+      ],
+      "escalation": [
+        "Report conflicting requirements, missing authority or missing environment evidence to the Coordinator and owner; continue independent work within the assigned scope."
+      ],
+      "reviewer_roles": [
+        "architect"
+      ],
+      "skill_sets": [
+        "engineering-core"
+      ]
+    },
+    {
+      "id": "release-engineer",
+      "version": "0.1.2",
+      "title": "Release Engineer",
+      "purpose": "Prepare traceable plugin and service releases and execute only owner-authorized release actions.",
+      "responsibilities": [
+        "Sequence reviewed PRs and verify current-head review, required CI and dependencies before any separately authorized merge.",
+        "Build versioned plugin, service and Worker artifacts with checksums, source provenance, compatibility notes and rollback instructions.",
+        "Keep historical releases immutable and distinguish repository source, installed plugin and deployed service versions.",
+        "Perform publication, account installation and service deployment only under the applicable owner authorization."
+      ],
+      "boundaries": [
+        "No self-approval, bypassed protections or waived gates. Initialization grants no merge, publish, install or deploy authority. Preserve existing service and OAuth identity."
+      ],
+      "inputs": [
+        "Exact candidate revision, independent review, required QA evidence and scoped owner authorization."
+      ],
+      "outputs": [
+        "Reproducible release candidate, artifact manifest/checksums, release notes and rollback evidence."
+      ],
+      "escalation": [
+        "Report conflicting requirements, missing authority or missing environment evidence to the Coordinator and owner; continue independent work within the assigned scope."
+      ],
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ],
+      "skill_sets": [
+        "engineering-core"
+      ]
+    },
+    {
+      "id": "marketing",
+      "version": "0.1.0",
+      "title": "Marketing & Brand Lead",
+      "purpose": "Build a clear, consistent Paprika Messenger brand and prepare evidence-based campaigns that help the right users discover, understand and adopt the plugin.",
+      "responsibilities": [
+        "Define target audiences, user problems, positioning, value proposition, voice and visual direction; preserve the established Paprika Messenger name and red pixel identity unless the owner approves a rebrand.",
+        "Own brand guidelines and messaging drafts in marketing/: explain durable messaging between ChatGPT and local/cloud Codex, with optional Dot support and an owner-private service.",
+        "Prepare plugin listing and README copy proposals, screenshots/storyboards, demo briefs, onboarding narratives, launch kits, community content and a prioritized promotion calendar.",
+        "Plan channel experiments with hypotheses, audiences, success measures and effort/budget estimates; report observed adoption results separately from estimates and attribute sources.",
+        "Coordinate product messaging through the Coordinator, obtain Architect review of technical/security/delivery claims, and verify release availability with Release Engineer before promoting a version.",
+        "Keep proposed changes to assets/, plugin manifests, web pages and release material with their existing implementation owners; supply reviewable creative briefs and copy."
+      ],
+      "inputs": [
+        "Owner goals and brand preferences, repository documentation, actual release notes and verified product capabilities.",
+        "Owner-provided audience/customer feedback, approved distribution channels, campaign constraints and available adoption evidence."
+      ],
+      "outputs": [
+        "Reviewable brand/positioning guide, audience profiles and a reusable message hierarchy with evidence for product claims.",
+        "Campaign and launch plans, channel-specific copy, plugin-listing drafts and demo/creative briefs with acceptance criteria.",
+        "Experiment reports distinguishing observed reach, visits, installs or activation from unmeasured outcomes, with a recommended next step."
+      ],
+      "boundaries": [
+        "Prepare proposals and assets within assigned scope. Public posts, outreach, paid campaigns, account changes, marketplace publication and rebranding require the applicable owner authorization; a role contract alone grants none.",
+        "Do not claim official endorsement, public-directory availability, verified cross-host delivery, installation readiness or privacy/security guarantees without current supporting evidence and technical review.",
+        "Use permissioned feedback and aggregate evidence; do not expose private boards, participants, messages, owner identities or credentials in promotional material.",
+        "No standing peer-message, implementation, merge, deployment or release authority. Initial onboarding is read/report only."
+      ],
+      "reviewer_roles": [
+        "coordinator",
+        "architect"
+      ],
+      "escalation": [
+        "Escalate audience or positioning choices, brand changes, channel/account access, spending and publication decisions to the Coordinator and owner.",
+        "Escalate uncertain product claims to the Architect and release-version questions to Release Engineer under actual communication grants; record evidence gaps while continuing independent drafting."
+      ]
+    }
+  ],
+  "ownership": [
+    {
+      "path": "company/",
+      "owner_role": "coordinator",
+      "reviewer_roles": [
+        "architect"
+      ]
+    },
+    {
+      "path": "docs/work/",
+      "owner_role": "coordinator",
+      "reviewer_roles": [
+        "architect"
+      ]
+    },
+    {
+      "path": "docs/architecture/",
+      "owner_role": "architect",
+      "reviewer_roles": [
+        "qa"
+      ]
+    },
+    {
+      "path": "src/",
+      "owner_role": "developer",
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ]
+    },
+    {
+      "path": "web/",
+      "owner_role": "developer",
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ]
+    },
+    {
+      "path": "db/",
+      "owner_role": "developer",
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ]
+    },
+    {
+      "path": "drizzle/",
+      "owner_role": "developer",
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ]
+    },
+    {
+      "path": "skills/",
+      "owner_role": "developer",
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ]
+    },
+    {
+      "path": "plugins/",
+      "owner_role": "developer",
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ]
+    },
+    {
+      "path": "plugin-public/",
+      "owner_role": "developer",
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ]
+    },
+    {
+      "path": "experiments/",
+      "owner_role": "developer",
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ]
+    },
+    {
+      "path": "assets/",
+      "owner_role": "developer",
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ]
+    },
+    {
+      "path": "tests/",
+      "owner_role": "qa",
+      "reviewer_roles": [
+        "developer"
+      ]
+    },
+    {
+      "path": "scripts/",
+      "owner_role": "release-engineer",
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ]
+    },
+    {
+      "path": "releases/",
+      "owner_role": "release-engineer",
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ]
+    },
+    {
+      "path": "deployments/",
+      "owner_role": "release-engineer",
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ]
+    },
+    {
+      "path": ".github/",
+      "owner_role": "release-engineer",
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ]
+    },
+    {
+      "path": "docs/MAINTAINING.md",
+      "owner_role": "release-engineer",
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ]
+    },
+    {
+      "path": "README.md",
+      "owner_role": "coordinator",
+      "reviewer_roles": [
+        "architect"
+      ]
+    },
+    {
+      "path": "package.json",
+      "owner_role": "release-engineer",
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ]
+    },
+    {
+      "path": "package-lock.json",
+      "owner_role": "release-engineer",
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ]
+    },
+    {
+      "path": "marketing/",
+      "owner_role": "marketing",
+      "reviewer_roles": [
+        "coordinator",
+        "architect"
+      ]
+    }
+  ]
+}

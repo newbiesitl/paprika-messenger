@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "definition_version": "0.1.1",
+  "status": "bootstrap_candidate",
+  "company_id": "paprika-messenger",
+  "repository": "newbiesitl/paprika-messenger",
+  "topology": "single_host",
+  "runtime": "codex_local",
+  "constitution": "company/CONSTITUTION.md",
+  "coordinator_role": "coordinator",
+  "roles": [
+    {
+      "id": "coordinator",
+      "version": "0.1.1",
+      "definition": "company/roles/coordinator/agent.md"
+    },
+    {
+      "id": "architect",
+      "version": "0.1.0",
+      "definition": "company/roles/architect/agent.md",
+      "skill_sets": [
+        "engineering-core"
+      ]
+    },
+    {
+      "id": "developer",
+      "version": "0.1.0",
+      "definition": "company/roles/developer/agent.md",
+      "skill_sets": [
+        "engineering-core"
+      ]
+    },
+    {
+      "id": "qa",
+      "version": "0.1.1",
+      "definition": "company/roles/qa/agent.md",
+      "skill_sets": [
+        "engineering-core"
+      ]
+    },
+    {
+      "id": "release-engineer",
+      "version": "0.1.2",
+      "definition": "company/roles/release-engineer/agent.md",
+      "skill_sets": [
+        "engineering-core"
+      ]
+    },
+    {
+      "id": "marketing",
+      "version": "0.1.0",
+      "definition": "company/roles/marketing/agent.md"
+    }
+  ],
+  "ownership": "company/ownership.json",
+  "work_tracking": "company/WORK.md",
+  "knowledge_policy": "private_runtime_location",
+  "runtime_state": "private_enrollment_required",
+  "messaging": {
+    "default_receiving": "on_demand",
+    "background_monitoring": false
+  },
+  "lifecycle": {
+    "max_instances_per_role": 1,
+    "require_verified_project_membership": true,
+    "automatic_takeover": false
+  },
+  "adoption": {
+    "automatic": false,
+    "policy": "company/ADOPTION.md"
+  }
+}

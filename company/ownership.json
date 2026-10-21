@@ -1,0 +1,176 @@
+{
+  "schema_version": 1,
+  "entries": [
+    {
+      "path": "company/",
+      "owner_role": "coordinator",
+      "reviewer_roles": [
+        "architect"
+      ]
+    },
+    {
+      "path": "docs/work/",
+      "owner_role": "coordinator",
+      "reviewer_roles": [
+        "architect"
+      ]
+    },
+    {
+      "path": "docs/architecture/",
+      "owner_role": "architect",
+      "reviewer_roles": [
+        "qa"
+      ]
+    },
+    {
+      "path": "src/",
+      "owner_role": "developer",
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ]
+    },
+    {
+      "path": "web/",
+      "owner_role": "developer",
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ]
+    },
+    {
+      "path": "db/",
+      "owner_role": "developer",
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ]
+    },
+    {
+      "path": "drizzle/",
+      "owner_role": "developer",
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ]
+    },
+    {
+      "path": "skills/",
+      "owner_role": "developer",
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ]
+    },
+    {
+      "path": "plugins/",
+      "owner_role": "developer",
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ]
+    },
+    {
+      "path": "plugin-public/",
+      "owner_role": "developer",
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ]
+    },
+    {
+      "path": "experiments/",
+      "owner_role": "developer",
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ]
+    },
+    {
+      "path": "assets/",
+      "owner_role": "developer",
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ]
+    },
+    {
+      "path": "tests/",
+      "owner_role": "qa",
+      "reviewer_roles": [
+        "developer"
+      ]
+    },
+    {
+      "path": "scripts/",
+      "owner_role": "release-engineer",
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ]
+    },
+    {
+      "path": "releases/",
+      "owner_role": "release-engineer",
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ]
+    },
+    {
+      "path": "deployments/",
+      "owner_role": "release-engineer",
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ]
+    },
+    {
+      "path": ".github/",
+      "owner_role": "release-engineer",
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ]
+    },
+    {
+      "path": "docs/MAINTAINING.md",
+      "owner_role": "release-engineer",
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ]
+    },
+    {
+      "path": "README.md",
+      "owner_role": "coordinator",
+      "reviewer_roles": [
+        "architect"
+      ]
+    },
+    {
+      "path": "package.json",
+      "owner_role": "release-engineer",
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ]
+    },
+    {
+      "path": "package-lock.json",
+      "owner_role": "release-engineer",
+      "reviewer_roles": [
+        "architect",
+        "qa"
+      ]
+    },
+    {
+      "path": "marketing/",
+      "owner_role": "marketing",
+      "reviewer_roles": [
+        "coordinator",
+        "architect"
+      ]
+    }
+  ]
+}
