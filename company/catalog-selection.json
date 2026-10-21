@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "catalog": {
+    "version": "0.1.0",
+    "sha256": "5d82d3355155a6e3e15dfc5d697fea18878a8270da35f616f25c6ee52eaf46a0"
+  },
+  "preset_id": "software-studio",
+  "structure_id": "lean-team",
+  "business_model_tags": [
+    "open-source"
+  ],
+  "company": {
+    "id": "paprika-messenger",
+    "name": "Paprika Messenger",
+    "repository": "newbiesitl/paprika-messenger",
+    "version": "0.1.0",
+    "purpose": "Develop and maintain durable owner-private messaging between ChatGPT, Codex and optional Dot clients, with a usable companion board and reproducible plugin and service releases."
+  },
+  "roles": [
+    {
+      "role_id": "coordinator",
+      "packs": [],
+      "workflows": [
+        "reviewed-software"
+      ],
+      "reports_to": null,
+      "reviewers": [
+        "architect"
+      ]
+    },
+    {
+      "role_id": "architect",
+      "packs": [
+        "engineering-core"
+      ],
+      "workflows": [
+        "reviewed-software"
+      ],
+      "reports_to": "coordinator",
+      "reviewers": [
+        "qa"
+      ]
+    },
+    {
+      "role_id": "developer",
+      "packs": [
+        "engineering-core"
+      ],
+      "workflows": [
+        "reviewed-software"
+      ],
+      "reports_to": "coordinator",
+      "reviewers": [
+        "architect",
+        "qa"
+      ]
+    },
+    {
+      "role_id": "qa",
+      "packs": [
+        "engineering-core"
+      ],
+      "workflows": [
+        "reviewed-software"
+      ],
+      "reports_to": "coordinator",
+      "reviewers": [
+        "architect"
+      ]
+    },
+    {
+      "role_id": "release-engineer",
+      "packs": [
+        "engineering-core"
+      ],
+      "workflows": [
+        "reviewed-software"
+      ],
+      "reports_to": "coordinator",
+      "reviewers": [
+        "architect",
+        "qa"
+      ]
+    }
+  ]
+}
