@@ -163,6 +163,14 @@
         "architect",
         "qa"
       ]
+    },
+    {
+      "path": "marketing/",
+      "owner_role": "marketing",
+      "reviewer_roles": [
+        "coordinator",
+        "architect"
+      ]
     }
   ]
 }
